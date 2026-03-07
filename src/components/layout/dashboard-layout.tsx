@@ -1,0 +1,188 @@
+import { useState } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Clock,
+  CheckSquare,
+  FolderKanban,
+  FileText,
+  Wallet,
+  Heart,
+  Settings,
+  ChevronLeft,
+  Menu,
+  Search,
+  Bell,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+
+const SIDEBAR_WIDTH = 240;
+const SIDEBAR_COLLAPSED_WIDTH = 64;
+
+const navItems = [
+  { to: "/dashboard", label: "Master", icon: LayoutDashboard },
+  { to: "/dashboard/cronjobs", label: "Cronjobs", icon: Clock },
+  { to: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },
+  { to: "/dashboard/projects", label: "Projects", icon: FolderKanban },
+  { to: "/dashboard/content", label: "Content", icon: FileText },
+  { to: "/dashboard/finance", label: "Finance", icon: Wallet },
+  { to: "/dashboard/health", label: "Health", icon: Heart },
+];
+
+export function DashboardLayout() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar - desktop */}
+      <aside
+        className={cn(
+          "hidden md:flex flex-col border-r border-white/[0.03] bg-[#151718] transition-[width] duration-200",
+          collapsed ? "w-[64px]" : "w-[240px]"
+        )}
+        style={{
+          width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
+          minWidth: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
+        }}
+      >
+        <div className="flex h-14 items-center justify-between px-4 border-b border-white/[0.03]">
+          {!collapsed && (
+            <Link to="/dashboard" className="font-semibold text-foreground">
+              LifeOps
+            </Link>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="shrink-0"
+          >
+            <ChevronLeft
+              className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")}
+            />
+          </Button>
+        </div>
+        <ScrollArea className="flex-1 py-2">
+          <nav className="grid gap-1 px-2">
+            {navItems.map(({ to, label, icon: Icon }) => {
+              const isActive = location.pathname === to || location.pathname.startsWith(to + "/");
+              return (
+                <Link key={to} to={to}>
+                  <span
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-5 w-5 shrink-0" />
+                    {!collapsed && <span>{label}</span>}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+          <Separator className="my-2 bg-white/[0.03]" />
+          <nav className="px-2 pb-2">
+            <Link to="/dashboard/settings">
+              <span
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  location.pathname === "/dashboard/settings" && "bg-primary text-primary-foreground"
+                )}
+              >
+                <Settings className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>Settings</span>}
+              </span>
+            </Link>
+          </nav>
+        </ScrollArea>
+      </aside>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      {/* Mobile sidebar */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-50 flex h-full w-[240px] flex-col border-r border-white/[0.03] bg-[#151718] transition-transform md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-14 items-center justify-between px-4 border-b border-white/[0.03]">
+          <span className="font-semibold text-foreground">LifeOps</span>
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)}>
+            <ChevronLeft className="h-4 w-4 rotate-180" />
+          </Button>
+        </div>
+        <ScrollArea className="flex-1 py-2">
+          <nav className="grid gap-1 px-2">
+            {navItems.map(({ to, label, icon: Icon }) => (
+              <Link key={to} to={to} onClick={() => setMobileOpen(false)}>
+                <span
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                    location.pathname === to
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {label}
+                </span>
+              </Link>
+            ))}
+            <Link to="/dashboard/settings" onClick={() => setMobileOpen(false)}>
+              <span className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
+                <Settings className="h-5 w-5 shrink-0" />
+                Settings
+              </span>
+            </Link>
+          </nav>
+        </ScrollArea>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-white/[0.03] bg-background px-4 md:px-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex flex-1 items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search cronjobs, runs, agents..."
+                className="pl-9 bg-secondary border-0"
+              />
+            </div>
+          </div>
+          <Button variant="ghost" size="icon">
+            <Bell className="h-5 w-5" />
+          </Button>
+        </header>
+        <main className="flex-1 p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
