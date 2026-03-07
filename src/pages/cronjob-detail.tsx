@@ -62,8 +62,22 @@ export default function CronjobDetail() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>Run 1 — success (2 min ago)</li>
-            <li>Run 2 — success (1 day ago)</li>
+            <li>
+              <Link
+                to={`/dashboard/cronjobs/${id}/runs/run-1`}
+                className="text-foreground hover:underline"
+              >
+                Run 1 — success (2 min ago)
+              </Link>
+            </li>
+            <li>
+              <Link
+                to={`/dashboard/cronjobs/${id}/runs/run-2`}
+                className="text-foreground hover:underline"
+              >
+                Run 2 — success (1 day ago)
+              </Link>
+            </li>
           </ul>
         </CardContent>
       </Card>

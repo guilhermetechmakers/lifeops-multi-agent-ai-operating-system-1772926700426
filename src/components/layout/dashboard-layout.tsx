@@ -6,6 +6,7 @@ import {
   CheckSquare,
   FolderKanban,
   FileText,
+  Paperclip,
   Wallet,
   Heart,
   Settings,
@@ -29,6 +30,7 @@ const navItems = [
   { to: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },
   { to: "/dashboard/projects", label: "Projects", icon: FolderKanban },
   { to: "/dashboard/content", label: "Content", icon: FileText },
+  { to: "/dashboard/artifacts", label: "Artifacts", icon: Paperclip },
   { to: "/dashboard/finance", label: "Finance", icon: Wallet },
   { to: "/dashboard/health", label: "Health", icon: Heart },
 ];

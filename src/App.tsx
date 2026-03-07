@@ -13,10 +13,12 @@ import CronjobsDashboard from "@/pages/cronjobs-dashboard";
 import Approvals from "@/pages/approvals";
 import DashboardProjects from "@/pages/dashboard-projects";
 import DashboardContent from "@/pages/dashboard-content";
+import ArtifactsPage from "@/pages/artifacts";
 import DashboardFinance from "@/pages/dashboard-finance";
 import DashboardHealth from "@/pages/dashboard-health";
 import DashboardSettings from "@/pages/dashboard-settings";
 import CronjobDetail from "@/pages/cronjob-detail";
+import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
@@ -48,10 +50,12 @@ function App() {
             <Route path="cronjobs" element={<CronjobsDashboard />} />
             <Route path="cronjobs/new" element={<CronjobEditor />} />
             <Route path="cronjobs/:id" element={<CronjobDetail />} />
+            <Route path="cronjobs/:id/runs/:runId" element={<RunDetailsPage />} />
             <Route path="cronjobs/:id/edit" element={<CronjobEditor />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="projects" element={<DashboardProjects />} />
             <Route path="content" element={<DashboardContent />} />
+            <Route path="artifacts" element={<ArtifactsPage />} />
             <Route path="finance" element={<DashboardFinance />} />
             <Route path="health" element={<DashboardHealth />} />
             <Route path="settings" element={<DashboardSettings />} />

@@ -1,0 +1,15 @@
+# Supabase local config
+[api]
+enabled = true
+port = 54321
+scheme = "http"
+
+[db]
+port = 54322
+
+[storage]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
