@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { CentralErrorProvider } from "@/contexts/error-context";
+import { ErrorBoundary } from "@/components/error";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
@@ -17,6 +19,7 @@ import DashboardSettings from "@/pages/dashboard-settings";
 import CronjobDetail from "@/pages/cronjob-detail";
 import CronjobEditor from "@/pages/cronjob-editor";
 import NotFound from "@/pages/not-found";
+import ServerErrorPage from "@/pages/server-error";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,8 +35,10 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
+        <CentralErrorProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
+            <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -52,9 +57,12 @@ function App() {
             <Route path="settings" element={<DashboardSettings />} />
           </Route>
           <Route path="/404" element={<NotFound />} />
+          <Route path="/500" element={<ServerErrorPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </BrowserRouter>
+            </Routes>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </CentralErrorProvider>
       <Toaster
         position="bottom-right"
         toastOptions={{
