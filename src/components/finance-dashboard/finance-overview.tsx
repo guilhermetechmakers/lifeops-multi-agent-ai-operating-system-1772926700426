@@ -3,6 +3,7 @@
  */
 
 import { SnapshotTiles } from "./snapshot-tiles";
+import { FinanceKpiStrip } from "./kpi-strip";
 import { TransactionsOverview } from "./transactions-overview";
 import { SubscriptionsPanel } from "./subscriptions-panel";
 import { AnomaliesPanel } from "./anomalies-panel";
@@ -30,6 +31,11 @@ export function FinanceOverview() {
   const spend = data?.spend ?? { monthly: 0, currency: "USD" };
   const forecast = data?.forecast ?? { value: 0, currency: "USD", horizon: "30d" };
   const opportunities = data?.opportunities ?? { amount: 0, count: 0 };
+  const runwayMonths = data?.runwayMonths;
+  const mrr = data?.mrr;
+  const arr = data?.arr;
+  const churnRate = data?.churnRate;
+  const forecastVariance = data?.forecastVariance;
 
   return (
     <div className="space-y-6">

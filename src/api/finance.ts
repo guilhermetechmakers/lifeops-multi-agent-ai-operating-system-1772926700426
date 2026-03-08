@@ -58,6 +58,11 @@ export async function fetchFinanceDashboard(): Promise<FinanceDashboardData> {
     spend: data.spend ?? { monthly: 0, currency: "USD" },
     forecast: data.forecast ?? { value: 0, currency: "USD", horizon: "30d" },
     opportunities: data.opportunities ?? { amount: 0, count: 0 },
+    runwayMonths: typeof data.runwayMonths === "number" ? data.runwayMonths : undefined,
+    mrr: typeof data.mrr === "number" ? data.mrr : undefined,
+    arr: typeof data.arr === "number" ? data.arr : undefined,
+    churnRate: typeof data.churnRate === "number" ? data.churnRate : undefined,
+    forecastVariance: typeof data.forecastVariance === "number" ? data.forecastVariance : undefined,
     transactions: asTransactions(data.transactions),
     subscriptions: asSubscriptions(data.subscriptions),
     anomalies: asAnomalies(data.anomalies),
@@ -80,6 +85,49 @@ function getDefaultDashboardData(): FinanceDashboardData {
     monthlyCloseItems: [],
     recommendations: [],
   };
+}
+
+/** GET /finance/transactions — list with filter, sort, page */
+export interface FinanceTransactionFilters {
+  filter?: Record<string, unknown>;
+  sort?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export async function fetchFinanceTransactions(filters?: FinanceTransactionFilters): Promise<{ data: Transaction[]; total: number }> {
+  const params = new URLSearchParams();
+  if (filters?.sort) params.set("sort", filters.sort);
+  if (filters?.page != null) params.set("page", String(filters.page));
+  if (filters?.pageSize != null) params.set("pageSize", String(filters.pageSize));
+  const qs = params.toString();
+  const raw = await api.get<{ data?: Transaction[]; total?: number }>(`${BASE}/transactions${qs ? `?${qs}` : ""}`);
+  const data = (raw as { data?: Transaction[] })?.data;
+  const total = typeof (raw as { total?: number })?.total === "number" ? (raw as { total: number }).total : (Array.isArray(data) ? data.length : 0);
+  return {
+    data: asTransactions(data),
+    total,
+  };
+}
+
+export async function fetchFinanceTransaction(id: string): Promise<Transaction | null> {
+  const raw = await api.get<Transaction | { data?: Transaction }>(`${BASE}/transactions/${encodeURIComponent(id)}`);
+  const t = (raw as { data?: Transaction })?.data ?? (typeof (raw as Transaction).id === "string" ? (raw as Transaction) : null);
+  return t ?? null;
+}
+
+export async function createFinanceTransaction(payload: Partial<Transaction>): Promise<Transaction> {
+  const res = await api.post<Transaction | { data?: Transaction }>(`${BASE}/transactions`, payload ?? {});
+  const t = (res as { data?: Transaction })?.data ?? (typeof (res as Transaction).id === "string" ? (res as Transaction) : null);
+  if (!t) throw new Error("Failed to create transaction");
+  return t;
+}
+
+export async function updateFinanceTransaction(id: string, payload: Partial<Transaction>): Promise<Transaction> {
+  const res = await api.put<Transaction | { data?: Transaction }>(`${BASE}/transactions/${encodeURIComponent(id)}`, payload ?? {});
+  const t = (res as { data?: Transaction })?.data ?? (typeof (res as Transaction).id === "string" ? (res as Transaction) : null);
+  if (!t) throw new Error("Failed to update transaction");
+  return t;
 }
 
 export async function ingestTransactions(transactions: Transaction[]): Promise<{ count: number }> {

@@ -77,11 +77,40 @@ export interface AgentRecommendation {
   confidence: number;
 }
 
+/** Account from Plaid or linked bank — canonical schema */
+export interface Account {
+  id: string;
+  plaidId: string;
+  name: string;
+  type: string;
+  officialBalance: number;
+  currency: string;
+  lastSync: string | null;
+}
+
+/** Run artifact for audit and reversibility (traceability) */
+export interface RunArtifact {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  logs: string[];
+  traces: string[];
+  createdAt: string;
+  runId: string;
+}
+
 export interface FinanceDashboardData {
   balances: { total: number; currency: string };
   spend: { monthly: number; currency: string; trend?: number };
   forecast: { value: number; currency: string; horizon: string };
   opportunities: { amount: number; count: number };
+  /** Runway in months (optional) */
+  runwayMonths?: number;
+  /** MRR / ARR for dashboard KPIs */
+  mrr?: number;
+  arr?: number;
+  churnRate?: number;
+  forecastVariance?: number;
   transactions: Transaction[];
   subscriptions: Subscription[];
   anomalies: Anomaly[];
