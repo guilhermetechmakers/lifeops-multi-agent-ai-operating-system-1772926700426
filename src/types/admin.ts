@@ -3,7 +3,7 @@
  * All types align with API response shapes; use safe guards when consuming.
  */
 
-export type UserStatus = "active" | "suspended";
+export type UserStatus = "active" | "suspended" | "disabled";
 
 export interface AdminUser {
   id: string;
@@ -13,7 +13,54 @@ export interface AdminUser {
   orgId: string;
   roles: string[];
   lastActiveAt: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+/** Session entity for user session management */
+export interface AdminSession {
+  id: string;
+  userId: string;
+  device: string;
+  ip: string;
+  lastUsed: string;
+  valid: boolean;
+  expiresAt: string | null;
+}
+
+/** Per-user audit log entry */
+export interface AdminAuditLogEntry {
+  id: string;
+  userId: string;
+  action: string;
+  resource: string;
+  timestamp: string;
+  actor: string;
+  details?: Record<string, unknown>;
+  cronjobRunId?: string;
+}
+
+/** Audit export task for compliance */
+export interface AdminAuditExport {
+  id: string;
+  userId: string;
+  status: "pending" | "in-progress" | "completed" | "failed";
+  createdAt: string;
+  updatedAt: string;
+  exportUrl?: string;
+  reason?: string;
+}
+
+/** Data retention policy for org/user scope */
+export interface DataRetentionPolicy {
+  orgId: string;
+  policyName: string;
+  retentionDays: number;
+  scope: "org" | "user";
+}
+
+/** Alias for per-user audit log entries */
+export type AdminAuditLog = AdminAuditLogEntry | AuditLog;
 
 export interface Org {
   id: string;
@@ -21,15 +68,25 @@ export interface Org {
   ssoEnabled: boolean;
   dataPolicyId?: string;
   tenantSettings?: Record<string, unknown>;
+  policies?: Record<string, unknown>;
+  retentionPolicy?: DataRetentionPolicy;
+  usersCount?: number;
 }
 
 /** Alias for API compatibility */
 export type AdminOrg = Org;
 
+export interface RoleScope {
+  resourceType: string;
+  resourceId?: string;
+}
+
 export interface Role {
   id: string;
   name: string;
   permissions: string[];
+  scope?: RoleScope[];
+  inheritedFromOrg?: boolean;
 }
 
 /** Alias for API compatibility */
@@ -104,12 +161,15 @@ export type AdminInvoice = Invoice;
 
 export interface AuditLog {
   id: string;
-  orgId: string;
+  orgId?: string;
   userId: string;
   action: string;
   timestamp: string;
   resource: string;
+  actor?: string;
   changes?: unknown;
+  details?: Record<string, unknown>;
+  cronjobRunId?: string;
 }
 
 export interface ComplianceExport {

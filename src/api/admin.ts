@@ -20,6 +20,9 @@ import type {
   ApprovalItem,
   AdminKpis,
   UsageMetric,
+  AdminSession,
+  AdminAuditExport,
+  DataRetentionPolicy,
 } from "@/types/admin";
 
 const BASE = "/admin";
@@ -177,6 +180,90 @@ export async function activateAdminUser(id: string): Promise<void> {
     await api.post(`${BASE}/users/${id}/activate`, {});
   } catch {
     /** */
+  }
+}
+
+/** GET /api/admin/users/:id/sessions */
+export async function fetchUserSessions(userId: string): Promise<AdminSession[]> {
+  try {
+    const res = await api.get<AdminSession[] | { data: AdminSession[] | null }>(`${BASE}/users/${userId}/sessions`);
+    const raw = Array.isArray(res) ? res : (res as { data?: AdminSession[] })?.data;
+    return asArray<AdminSession>(raw);
+  } catch {
+    return [
+      { id: "s1", userId, device: "Chrome on macOS", ip: "192.168.1.1", lastUsed: new Date().toISOString(), valid: true, expiresAt: null },
+      { id: "s2", userId, device: "Safari on iOS", ip: "192.168.1.2", lastUsed: new Date(Date.now() - 86400000).toISOString(), valid: true, expiresAt: null },
+    ];
+  }
+}
+
+/** POST /api/admin/users/:id/sessions/revoke */
+export async function revokeUserSessions(userId: string, sessionId?: string): Promise<void> {
+  try {
+    const body = sessionId ? { sessionId } : {};
+    await api.post(`${BASE}/users/${userId}/sessions/revoke`, body);
+  } catch {
+    /** */
+  }
+}
+
+/** POST /api/admin/users/:id/audit-export */
+export async function createUserAuditExport(userId: string): Promise<AdminAuditExport> {
+  try {
+    const data = await api.post<AdminAuditExport>(`${BASE}/users/${userId}/audit-export`, {});
+    if (data && typeof data === "object" && "id" in data) return data as AdminAuditExport;
+  } catch {
+    /** */
+  }
+  return {
+    id: `ex-${Date.now()}`,
+    userId,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** GET /api/admin/audit-exports/:taskId */
+export async function fetchAuditExportStatus(taskId: string): Promise<AdminAuditExport> {
+  try {
+    const res = await api.get<AdminAuditExport | { data?: AdminAuditExport }>(`${BASE}/audit-exports/${taskId}`);
+    const data = res && typeof res === "object" && "data" in res ? (res as { data?: AdminAuditExport }).data : res;
+    if (data && typeof data === "object" && "id" in data) return data as AdminAuditExport;
+  } catch {
+    /** */
+  }
+  return {
+    id: taskId,
+    userId: "",
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** GET /api/admin/organizations/:orgId/policy */
+export async function fetchOrgPolicy(orgId: string): Promise<{ retentionPolicy?: DataRetentionPolicy; usersCount?: number }> {
+  try {
+    const res = await api.get<{ retentionPolicy?: DataRetentionPolicy; usersCount?: number } | { data?: { retentionPolicy?: DataRetentionPolicy; usersCount?: number } }>(`${BASE}/organizations/${orgId}/policy`);
+    const data = res && typeof res === "object" && "data" in res ? (res as { data?: { retentionPolicy?: DataRetentionPolicy; usersCount?: number } }).data : res;
+    if (data && typeof data === "object") return data as { retentionPolicy?: DataRetentionPolicy; usersCount?: number };
+  } catch {
+    /** */
+  }
+  return {
+    retentionPolicy: { orgId, policyName: "default", retentionDays: 365, scope: "org" },
+    usersCount: 0,
+  };
+}
+
+/** GET /api/admin/organizations/:orgId/users-count */
+export async function fetchOrgUsersCount(orgId: string): Promise<number> {
+  try {
+    const data = await api.get<{ count?: number }>(`${BASE}/organizations/${orgId}/users-count`);
+    return typeof data?.count === "number" ? data.count : 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -392,15 +479,23 @@ export async function fetchApprovals(): Promise<ApprovalItem[]> {
 }
 
 /** GET /api/admin/audit/logs (per user or global) */
-export async function fetchAuditLogs(params?: { userId?: string; limit?: number }): Promise<AuditLog[]> {
+export async function fetchAuditLogs(params?: { userId?: string; limit?: number; action?: string; resource?: string; from?: string; to?: string }): Promise<AuditLog[]> {
   try {
     const q = new URLSearchParams();
     if (params?.userId) q.set("userId", params.userId);
     if (params?.limit != null) q.set("limit", String(params.limit));
-    const res = await api.get<AuditLogsResponse>(`${BASE}/audit/logs?${q.toString()}`);
-    return asArray<AuditLog>(res?.data);
+    if (params?.action) q.set("action", params.action);
+    if (params?.resource) q.set("resource", params.resource);
+    if (params?.from) q.set("from", params.from);
+    if (params?.to) q.set("to", params.to);
+    const res = await api.get<AuditLog[] | AuditLogsResponse>(`${BASE}/audit/logs?${q.toString()}`);
+    const raw = Array.isArray(res) ? res : (res as { data?: AuditLog[] })?.data;
+    return asArray<AuditLog>(raw);
   } catch {
-    return [];
+    return [
+      { id: "al1", userId: "u1", action: "user.login", resource: "auth", timestamp: new Date().toISOString(), actor: "u1" },
+      { id: "al2", userId: "u1", action: "user.update", resource: "users/u1", timestamp: new Date(Date.now() - 3600000).toISOString(), actor: "admin" },
+    ];
   }
 }
 

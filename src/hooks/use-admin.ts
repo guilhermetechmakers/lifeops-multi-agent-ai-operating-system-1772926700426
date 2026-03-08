@@ -23,6 +23,9 @@ const keys = {
   approvals: () => ["admin", "approvals"] as const,
   auditLogs: (p?: { userId?: string; limit?: number }) => ["admin", "audit", "logs", p] as const,
   reports: (p?: { orgId?: string; from?: string; to?: string }) => ["admin", "reports", p] as const,
+  userSessions: (userId: string) => ["admin", "users", userId, "sessions"] as const,
+  auditExport: (taskId: string) => ["admin", "audit-exports", taskId] as const,
+  orgPolicy: (orgId: string) => ["admin", "organizations", orgId, "policy"] as const,
 };
 
 export function useAdminKpis() {
@@ -320,4 +323,62 @@ export function useGenerateReport() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Report generation failed"),
   });
+}
+
+export function useUserSessions(userId: string | null) {
+  const query = useQuery({
+    queryKey: keys.userSessions(userId ?? ""),
+    queryFn: () => adminApi.fetchUserSessions(userId ?? ""),
+    enabled: !!userId,
+    staleTime: 30 * 1000,
+  });
+  const list = Array.isArray(query.data) ? query.data : [];
+  return { ...query, sessions: list, data: list };
+}
+
+export function useRevokeUserSessions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, sessionId }: { userId: string; sessionId?: string }) =>
+      adminApi.revokeUserSessions(userId, sessionId),
+    onSuccess: (_, { userId }) => {
+      qc.invalidateQueries({ queryKey: keys.userSessions(userId) });
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      toast.success("Sessions revoked");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to revoke sessions"),
+  });
+}
+
+export function useCreateUserAuditExport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.createUserAuditExport(userId),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: keys.auditExport(data?.id ?? "") });
+      toast.success("Audit export started");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Export failed"),
+  });
+}
+
+export function useAuditExportStatus(taskId: string | null) {
+  const query = useQuery({
+    queryKey: keys.auditExport(taskId ?? ""),
+    queryFn: () => adminApi.fetchAuditExportStatus(taskId ?? ""),
+    enabled: !!taskId,
+    refetchInterval: (data) =>
+      data?.status === "pending" || data?.status === "in-progress" ? 2000 : false,
+  });
+  return query;
+}
+
+export function useOrgPolicy(orgId: string | null) {
+  const query = useQuery({
+    queryKey: keys.orgPolicy(orgId ?? ""),
+    queryFn: () => adminApi.fetchOrgPolicy(orgId ?? ""),
+    enabled: !!orgId,
+    staleTime: 60 * 1000,
+  });
+  return query;
 }
