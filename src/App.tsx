@@ -26,7 +26,9 @@ import { FinanceDashboardShell, FinanceOverview } from "@/components/finance-das
 import FinanceSubscriptionsPage from "@/pages/finance-subscriptions";
 import FinanceTransactionsPage from "@/pages/finance-transactions";
 import ForecastingReportsPage from "@/pages/forecasting-reports";
-import DashboardHealth from "@/pages/dashboard-health";
+import { HealthDashboardShell, HealthDashboardOverview } from "@/components/health-dashboard";
+import HealthHabitsPage from "@/pages/health-habits";
+import HealthTrainingMealsPage from "@/pages/health-training-meals";
 import DashboardSettings from "@/pages/dashboard-settings";
 import { UserProfileLayout } from "@/components/profile";
 import {
@@ -107,7 +109,11 @@ function App() {
               <Route path="transactions" element={<FinanceTransactionsPage />} />
               <Route path="forecasting" element={<ForecastingReportsPage />} />
             </Route>
-            <Route path="health" element={<DashboardHealth />} />
+            <Route path="health" element={<HealthDashboardShell />}>
+              <Route index element={<HealthDashboardOverview />} />
+              <Route path="habits" element={<HealthHabitsPage />} />
+              <Route path="training-meals" element={<HealthTrainingMealsPage />} />
+            </Route>
             <Route path="settings" element={<DashboardSettings />} />
             <Route path="profile" element={<UserProfileLayout />}>
               <Route index element={<Navigate to="personal" replace />} />

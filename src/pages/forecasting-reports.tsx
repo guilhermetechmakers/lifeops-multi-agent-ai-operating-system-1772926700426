@@ -2,7 +2,7 @@
  * Forecasting & Reports — Cash flow forecasts, scenario planning, report exports.
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AnimatedPage } from "@/components/animated-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ForecastGraph } from "@/components/forecasting/forecast-graph";
@@ -18,16 +18,38 @@ import {
 } from "@/hooks/use-forecasting";
 import { applyScenarioInputs } from "@/api/forecasting-mock";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   TrendingUp,
   TrendingDown,
   Wallet,
   Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 function getDefaultPeriod(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getPeriodOptions(): Array<{ value: string; label: string }> {
+  const opts: Array<{ value: string; label: string }> = [];
+  const d = new Date();
+  for (let i = 0; i < 18; i++) {
+    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    const value = `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}`;
+    opts.push({
+      value,
+      label: m.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+    });
+  }
+  return opts;
 }
 
 export default function ForecastingReportsPage() {
@@ -89,15 +111,74 @@ export default function ForecastingReportsPage() {
     };
   }, [baseline]);
 
+  const periodOptions = useMemo(() => getPeriodOptions(), []);
+  const activeScenario = activeScenarioId
+    ? (scenarios ?? []).find((s) => s.id === activeScenarioId)
+    : null;
+
+  const handleApplyInsight = useCallback(
+    (id: string) => {
+      const item = (insights ?? []).find((i) => i.id === id);
+      if (!item?.suggestedAction) return;
+      if (!activeScenarioId || !activeScenario) {
+        toast.info("Select a scenario in Scenario Builder to apply this recommendation.");
+        return;
+      }
+      const current = activeScenario.inputs ?? {};
+      if (id === "ins-1") {
+        updateScenario(activeScenarioId, {
+          inputs: {
+            ...current,
+            revenueGrowth: Math.max(-0.2, (current.revenueGrowth ?? 0) - 0.02),
+          },
+        });
+        toast.success("Revenue growth reduced in scenario.");
+      } else if (id === "ins-2") {
+        updateScenario(activeScenarioId, {
+          inputs: {
+            ...current,
+            subscriptionDelta: (current.subscriptionDelta ?? 0) + 500,
+          },
+        });
+        toast.success("Subscription delta applied to scenario.");
+      }
+    },
+    [insights, activeScenarioId, activeScenario, updateScenario]
+  );
+
   return (
     <AnimatedPage className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Forecasting & Reports
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Cash flow forecasts, scenario planning, and month-end report exports
-        </p>
+      <header className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              Forecasting & Reports
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Cash flow forecasts, scenario planning, and month-end report exports
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="forecast-period" className="text-xs text-muted-foreground whitespace-nowrap">
+              Forecast period
+            </label>
+            <Select
+              value={effectivePeriod}
+              onValueChange={(v) => setPeriod(v)}
+            >
+              <SelectTrigger id="forecast-period" className="w-[140px] h-9">
+                <SelectValue placeholder="Period" />
+              </SelectTrigger>
+              <SelectContent>
+                {periodOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </header>
 
       {/* KPI banner */}
@@ -165,7 +246,21 @@ export default function ForecastingReportsPage() {
           <CardTitle className="text-base font-semibold">
             Rolling Forecast
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => toggleScenario("baseline")}
+              className={cn(
+                "rounded px-2 py-1 text-xs font-medium transition-colors",
+                selectedScenarioIds.has("baseline")
+                  ? "bg-teal/20 text-teal"
+                  : "text-muted-foreground hover:bg-secondary"
+              )}
+              aria-pressed={selectedScenarioIds.has("baseline")}
+              aria-label="Toggle baseline series"
+            >
+              Baseline
+            </button>
             <button
               type="button"
               onClick={() => setShowConfidence(!showConfidence)}
@@ -175,6 +270,8 @@ export default function ForecastingReportsPage() {
                   ? "bg-teal/20 text-teal"
                   : "text-muted-foreground hover:bg-secondary"
               )}
+              aria-pressed={showConfidence}
+              aria-label="Toggle confidence band"
             >
               Confidence
             </button>
@@ -185,7 +282,7 @@ export default function ForecastingReportsPage() {
             dates={dates}
             baseline={baseline}
             scenarios={chartScenarios}
-            confidence={baseline.map(() => 0.88)}
+            confidence={(baseline ?? []).map(() => 0.88)}
             selectedScenarioIds={selectedScenarioIds}
             showConfidence={showConfidence}
             isLoading={baselineLoading}
@@ -211,12 +308,7 @@ export default function ForecastingReportsPage() {
           <AgentInsightsPanel
             items={insights}
             isLoading={insightsLoading}
-            onApply={(id) => {
-              const item = insights.find((i) => i.id === id);
-              if (item?.suggestedAction) {
-                // Could map suggestedAction to scenario input updates
-              }
-            }}
+            onApply={handleApplyInsight}
           />
         </div>
         <div>

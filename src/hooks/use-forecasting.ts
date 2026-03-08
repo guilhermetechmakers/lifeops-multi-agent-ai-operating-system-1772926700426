@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import * as api from "@/api/forecasting";
 import {
@@ -172,6 +172,15 @@ export function useForecastingState() {
     new Set(["baseline"])
   );
   const [showConfidence, setShowConfidence] = useState(true);
+  const pendingDuplicatedIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const id = pendingDuplicatedIdRef.current;
+    if (id) {
+      pendingDuplicatedIdRef.current = null;
+      setSelectedScenarioIds((prev) => new Set([...prev, id]));
+    }
+  }, [scenarios]);
 
   const addScenario = useCallback((name: string, inputs: ScenarioInputs) => {
     const id = `sc-${Date.now()}`;
@@ -221,7 +230,7 @@ export function useForecastingState() {
         inputs: { ...s.inputs },
         createdAt: new Date().toISOString(),
       };
-      setSelectedScenarioIds((prevIds) => new Set([...prevIds, newId]));
+      pendingDuplicatedIdRef.current = newId;
       return [...prev, newScenario];
     });
   }, []);

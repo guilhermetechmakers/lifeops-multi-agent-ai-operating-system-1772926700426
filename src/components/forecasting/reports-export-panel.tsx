@@ -116,10 +116,11 @@ export function ReportsExportPanel({
         </div>
 
         <Button
-          className="w-full"
+          className="w-full transition-transform duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
           onClick={() => onExport({ period, format })}
           disabled={isExporting}
           aria-busy={isExporting}
+          aria-label={isExporting ? "Export in progress" : `Export ${format.toUpperCase()} report`}
         >
           {isExporting ? (
             <>
@@ -180,7 +181,9 @@ export function ReportsExportPanel({
                     <a
                       href={a.url}
                       download
-                      className="text-xs text-teal hover:underline"
+                      rel="noopener noreferrer"
+                      className="text-xs text-teal hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+                      aria-label={`Download ${a.period} ${a.type.toUpperCase()} report`}
                     >
                       Download
                     </a>

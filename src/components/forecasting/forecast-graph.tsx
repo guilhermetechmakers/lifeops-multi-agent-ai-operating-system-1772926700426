@@ -57,13 +57,14 @@ export function ForecastGraph({
   const chartData = useMemo(() => {
     const d = dates ?? [];
     const b = baseline ?? [];
-    const maxLen = Math.max(d.length, b.length, ...(scenarios ?? []).map((s) => (s.values ?? []).length));
+    const sc = scenarios ?? [];
+    const maxLen = Math.max(d.length, b.length, ...sc.map((s) => (s.values ?? []).length));
     return Array.from({ length: maxLen }, (_, i) => {
       const point: Record<string, string | number> = {
         date: d[i] ?? `M${i + 1}`,
         baseline: b[i] ?? 0,
       };
-      (scenarios ?? []).forEach((s) => {
+      sc.forEach((s) => {
         if (selectedScenarioIds.has(s.id)) {
           const vals = s.values ?? [];
           point[`scenario_${s.id}`] = vals[i] ?? 0;
@@ -73,8 +74,11 @@ export function ForecastGraph({
         const c = confidence[i] ?? 0.9;
         const v = b[i] ?? 0;
         const band = Math.abs(v) * (1 - c) * 0.15;
-        point.confidenceLow = Math.round(v - band);
-        point.confidenceHigh = Math.round(v + band);
+        const low = Math.round(v - band);
+        const high = Math.round(v + band);
+        point.confidenceLow = low;
+        point.confidenceHigh = high;
+        point.confidenceBandHeight = Math.max(0, high - low);
       }
       return point;
     });
@@ -131,15 +135,28 @@ export function ForecastGraph({
             formatter={(value) => <span className="text-muted-foreground">{value}</span>}
           />
           {showConfidence && selectedScenarioIds.has("baseline") && (
-            <Area
-              type="monotone"
-              dataKey="baseline"
-              stroke="none"
-              fill={COLORS.confidence}
-              fillOpacity={0.4}
-              name="Confidence band"
-              connectNulls
-            />
+            <>
+              <Area
+                type="monotone"
+                dataKey="confidenceLow"
+                stackId="confidenceBand"
+                stroke="none"
+                fill="rgb(21 23 24)"
+                name="Confidence band"
+                connectNulls
+                hide
+              />
+              <Area
+                type="monotone"
+                dataKey="confidenceBandHeight"
+                stackId="confidenceBand"
+                stroke="none"
+                fill={COLORS.confidence}
+                fillOpacity={0.4}
+                name="Confidence band"
+                connectNulls
+              />
+            </>
           )}
           {selectedScenarioIds.has("baseline") && (
             <Line
