@@ -27,3 +27,31 @@ export function safeObject<T extends Record<string, unknown>>(data: unknown, fal
   }
   return fallback;
 }
+
+/**
+ * Safe map — never call on null/undefined; returns [] if not array.
+ */
+export function safeMap<T, U>(data: unknown, fn: (item: T, index: number) => U): U[] {
+  const arr = data ?? [];
+  return Array.isArray(arr) ? (arr as T[]).map(fn) : [];
+}
+
+/**
+ * Safe filter — never call on null/undefined; returns [] if not array.
+ */
+export function safeFilter<T>(data: unknown, fn: (item: T, index: number) => boolean): T[] {
+  const arr = data ?? [];
+  return Array.isArray(arr) ? (arr as T[]).filter(fn) : [];
+}
+
+/**
+ * Safe reduce — never call on null/undefined; returns initial if not array.
+ */
+export function safeReduce<T, U>(
+  data: unknown,
+  fn: (acc: U, item: T, index: number) => U,
+  initial: U
+): U {
+  const arr = data ?? [];
+  return Array.isArray(arr) ? (arr as T[]).reduce(fn, initial) : initial;
+}

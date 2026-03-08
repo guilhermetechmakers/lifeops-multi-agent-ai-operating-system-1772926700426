@@ -276,3 +276,78 @@ export interface NotificationItemBilling {
   timestamp: string;
   actionUrl?: string | null;
 }
+
+/** Forecasting & Reports — data models aligned with API contracts */
+export interface ForecastPoint {
+  date: string;
+  value: number;
+  scenario?: string;
+  confidence?: number;
+}
+
+export interface ScenarioInputs {
+  revenueGrowth: number;
+  expenseGrowth: number;
+  churnRate: number;
+  seasonality: number;
+  subscriptionDelta: number;
+  oneOffs: number;
+}
+
+export interface Scenario {
+  id: string;
+  name: string;
+  inputs: ScenarioInputs;
+  createdAt: string;
+}
+
+export interface ForecastRun {
+  id: string;
+  period: string;
+  baseline: number[];
+  scenarios: Array<{
+    id: string;
+    name: string;
+    inputs: ScenarioInputs;
+    values: number[];
+  }>;
+  horizon: number;
+  createdAt: string;
+  status: "completed" | "in_progress" | "failed";
+}
+
+export interface ReportArtifact {
+  id: string;
+  period: string;
+  type: "pdf" | "csv";
+  status: "ready" | "in_progress" | "failed";
+  url?: string;
+  createdAt: string;
+}
+
+export interface ForecastInsightItem {
+  id: string;
+  severity: "low" | "medium" | "high";
+  text: string;
+  suggestedAction?: string;
+}
+
+export interface ForecastInsights {
+  id: string;
+  period: string;
+  items: ForecastInsightItem[];
+}
+
+export interface BaselineForecastResponse {
+  period: string;
+  baseline: number[];
+  horizon: number;
+  status: string;
+}
+
+export interface ComputeForecastResponse {
+  runId: string;
+  forecast: { dates: string[]; values: number[] };
+  scenarios: Array<{ id: string; name: string; inputs: ScenarioInputs; values: number[] }>;
+  status: string;
+}
