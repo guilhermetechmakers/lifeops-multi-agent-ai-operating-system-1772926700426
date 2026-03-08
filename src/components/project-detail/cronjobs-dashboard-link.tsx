@@ -18,14 +18,14 @@ export interface CronjobsDashboardLinkProps {
 
 export function CronjobsDashboardLink({ projectId, className }: CronjobsDashboardLinkProps) {
   const { items: cronjobs, isLoading } = useProjectCronjobs(projectId);
-  const list = cronjobs ?? [];
-  const projectCronjobs = list.filter((c) => c.id);
-  const nextRun = projectCronjobs[0]?.nextRun;
-  const lastRun = projectCronjobs[0]?.lastRun;
+  const list = Array.isArray(cronjobs) ? cronjobs : [];
+  const firstCronjob = list[0];
+  const nextRun = firstCronjob?.nextRun;
+  const lastRun = firstCronjob?.lastRun;
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-28" />
         </CardHeader>
@@ -38,7 +38,7 @@ export function CronjobsDashboardLink({ projectId, className }: CronjobsDashboar
 
   return (
     <Link to="/dashboard/cronjobs">
-      <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover hover:border-white/[0.06]", className)}>
+      <Card className={cn("card-project-detail hover:border-white/[0.06]", className)}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
@@ -47,7 +47,7 @@ export function CronjobsDashboardLink({ projectId, className }: CronjobsDashboar
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {projectCronjobs.length === 0 ? (
+          {list.length === 0 ? (
             <p className="text-sm text-muted-foreground">No cronjobs for this project</p>
           ) : (
             <div className="space-y-1">

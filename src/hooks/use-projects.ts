@@ -407,3 +407,18 @@ export function useBulkUpdateTickets(projectId: string) {
     },
   });
 }
+
+export function useUpdateProjectStatus(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (status: string) =>
+      USE_MOCK ? Promise.resolve({}) : projectsApi.updateProjectStatus(projectId, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.detail(projectId) });
+      toast.success("Project status updated");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to update status");
+    },
+  });
+}

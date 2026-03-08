@@ -7,10 +7,9 @@ import type { Column, Sprint, Rule, Run, Artifact } from "@/types/ticket-board";
 
 const columns: Column[] = [
   { id: "backlog", projectId: "proj-1", name: "Backlog", order: 0 },
-  { id: "ready", projectId: "proj-1", name: "Ready", order: 1 },
-  { id: "in_progress", projectId: "proj-1", name: "In Progress", order: 2 },
-  { id: "in_review", projectId: "proj-1", name: "In Review", order: 3 },
-  { id: "done", projectId: "proj-1", name: "Done", order: 4 },
+  { id: "in_progress", projectId: "proj-1", name: "In Progress", order: 1 },
+  { id: "in_review", projectId: "proj-1", name: "In Review", order: 2 },
+  { id: "done", projectId: "proj-1", name: "Done", order: 3 },
 ];
 
 const sprints: Sprint[] = [
@@ -94,7 +93,7 @@ const tickets: Ticket[] = [
     id: "t5",
     projectId: "proj-1",
     title: "PR summarization automation",
-    status: "ready",
+    status: "backlog",
     priority: "high",
     labels: ["automation"],
     sprintId: "sprint-2",
@@ -149,18 +148,21 @@ const artifacts: Artifact[] = [
   { id: "art-1", runId: "run-2", type: "pr-summary", contentRef: "/artifacts/pr-summary-1" },
 ];
 
-function mapStatusToColumn(status: TicketStatus): string {
-  const map: Record<TicketStatus, string> = {
-    backlog: "backlog",
-    in_progress: "in_progress",
-    in_review: "in_review",
-    done: "done",
-  };
-  return map[status] ?? "backlog";
-}
-
-export function mockGetTickets(projectId: string, _filters?: Record<string, string>): Promise<Ticket[]> {
-  const list = tickets.filter((t) => t.projectId === projectId) ?? [];
+export function mockGetTickets(projectId: string, filters?: Record<string, string>): Promise<Ticket[]> {
+  let list = tickets.filter((t) => t.projectId === projectId) ?? [];
+  if (filters) {
+    if (filters.status) list = list.filter((t) => t.status === filters!.status);
+    if (filters.priority) list = list.filter((t) => t.priority === filters!.priority);
+    if (filters.sprintId) list = list.filter((t) => t.sprintId === filters!.sprintId);
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          (t.description ?? "").toLowerCase().includes(q)
+      );
+    }
+  }
   return Promise.resolve(list);
 }
 

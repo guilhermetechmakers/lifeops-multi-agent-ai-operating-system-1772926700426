@@ -17,6 +17,7 @@ import CronjobsDashboard from "@/pages/cronjobs-dashboard";
 import Approvals from "@/pages/approvals";
 import { ProjectsDashboardShell } from "@/components/projects-dashboard";
 import ProjectDetail from "@/pages/project-detail";
+import TicketBoardPage from "@/pages/ticket-board";
 import DashboardContent from "@/pages/dashboard-content";
 import ArtifactsPage from "@/pages/artifacts";
 import DashboardFinance from "@/pages/dashboard-finance";
@@ -83,6 +84,7 @@ function App() {
               <Route index element={<ProjectsDashboardShell />} />
               <Route path=":projectId" element={<ProjectsDashboardShell />} />
               <Route path=":projectId/detail" element={<ProjectDetail />} />
+              <Route path=":projectId/ticket-board" element={<TicketBoardPage />} />
             </Route>
             <Route path="content" element={<DashboardContent />} />
             <Route path="artifacts" element={<ArtifactsPage />} />

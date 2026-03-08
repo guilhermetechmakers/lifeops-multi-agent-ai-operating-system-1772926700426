@@ -37,7 +37,7 @@ export function AgentHistoryPanel({ projectId, className }: AgentHistoryPanelPro
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-32" />
         </CardHeader>
@@ -53,7 +53,7 @@ export function AgentHistoryPanel({ projectId, className }: AgentHistoryPanelPro
   }
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Bot className="h-4 w-4 text-purple" />
@@ -106,18 +106,28 @@ export function AgentHistoryPanel({ projectId, className }: AgentHistoryPanelPro
                       {run.status}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center justify-between mt-2 flex-wrap gap-1">
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(run.startedAt), { addSuffix: true })}
                     </span>
-                    {run.logsUrl && (
-                      <Link to={run.logsUrl}>
-                        <span className="flex items-center gap-1 text-xs text-primary hover:underline">
-                          Logs
-                          <ChevronRight className="h-3 w-3" />
-                        </span>
-                      </Link>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {run.logsUrl && (
+                        <Link to={run.logsUrl}>
+                          <span className="flex items-center gap-1 text-xs text-primary hover:underline">
+                            Logs
+                            <ChevronRight className="h-3 w-3" />
+                          </span>
+                        </Link>
+                      )}
+                      {run.artifactsUrl && (
+                        <Link to={run.artifactsUrl}>
+                          <span className="flex items-center gap-1 text-xs text-primary hover:underline">
+                            Artifacts
+                            <ChevronRight className="h-3 w-3" />
+                          </span>
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

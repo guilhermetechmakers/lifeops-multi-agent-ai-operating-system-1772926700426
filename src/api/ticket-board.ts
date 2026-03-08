@@ -10,11 +10,6 @@ import type { Column, Sprint, Rule, Run, Artifact } from "@/types/ticket-board";
 
 const BASE = "projects";
 
-function safeList<T>(data: unknown): T[] {
-  const raw = data ?? [];
-  return Array.isArray(raw) ? (raw as T[]) : [];
-}
-
 export interface TicketFilters {
   assigneeId?: string;
   labels?: string;

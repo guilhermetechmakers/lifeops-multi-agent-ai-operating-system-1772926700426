@@ -63,7 +63,7 @@ export function TicketsPanel({ projectId, className }: TicketsPanelProps) {
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-24" />
         </CardHeader>
@@ -80,7 +80,7 @@ export function TicketsPanel({ projectId, className }: TicketsPanelProps) {
 
   return (
     <>
-      <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-2">

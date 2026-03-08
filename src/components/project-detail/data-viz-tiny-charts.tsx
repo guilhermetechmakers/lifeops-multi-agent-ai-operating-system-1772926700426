@@ -41,7 +41,7 @@ export function DataVizTinyCharts({ projectId, className }: DataVizTinyChartsPro
   ];
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Metrics</CardTitle>
       </CardHeader>

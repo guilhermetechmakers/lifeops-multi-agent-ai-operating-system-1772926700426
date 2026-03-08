@@ -50,12 +50,19 @@ export function ProjectDetailLinkCard({ projectId, className }: ProjectDetailLin
             {project?.description ?? "Developer hub — roadmap, PRs, CI status"}
           </p>
         </div>
-        <Link to={`/dashboard/projects/${projectId}/detail`}>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            View detail
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to={`/dashboard/projects/${projectId}/ticket-board`}>
+            <Button variant="default" size="sm" className="gap-1.5">
+              Ticket Board
+            </Button>
+          </Link>
+          <Link to={`/dashboard/projects/${projectId}/detail`}>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              View detail
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex gap-6 text-sm">

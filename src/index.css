@@ -54,6 +54,16 @@
   .card-elevated {
     @apply rounded-lg border border-[rgb(255_255_255/0.03)] bg-card p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover;
   }
+
+  /* Project Detail panels: 8–12px radius, gradient surface, subtle top highlight */
+  .card-project-detail {
+    @apply rounded-xl border border-[rgb(255_255_255/0.03)] p-4 shadow-card transition-all duration-200 hover:shadow-card-hover;
+    background: linear-gradient(180deg, rgb(var(--background)) 0%, rgb(var(--card)) 100%);
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .card-project-detail:hover {
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -76,7 +76,7 @@ export function BacklogPanel({ projectId, className }: BacklogPanelProps) {
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-32" />
         </CardHeader>
@@ -92,7 +92,7 @@ export function BacklogPanel({ projectId, className }: BacklogPanelProps) {
   }
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">

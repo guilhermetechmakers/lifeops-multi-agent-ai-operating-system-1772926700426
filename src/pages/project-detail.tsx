@@ -2,8 +2,11 @@
  * Project Detail — single project cockpit with backlog, roadmap, tickets, PRs, agent history.
  */
 
-import { useParams } from "react-router-dom";
+import { useCallback } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import { AnimatedPage } from "@/components/animated-page";
+import { Button } from "@/components/ui/button";
 import {
   ProjectHeader,
   BacklogPanel,
@@ -22,10 +25,29 @@ import {
   CronjobOverview,
   AuditTrailPanel,
 } from "@/components/projects-dashboard";
-import { useProjectCronjobs } from "@/hooks/use-projects";
+import { useProjectCronjobs, useProject, useUpdateProjectStatus, useRunAgent } from "@/hooks/use-projects";
+import type { ProjectStatus } from "@/types/projects";
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
+
+  const { data: project } = useProject(projectId ?? null);
+  const updateStatus = useUpdateProjectStatus(projectId ?? "");
+  const runAgent = useRunAgent(projectId ?? "");
+
+  const handleStatusChange = useCallback(
+    (status: ProjectStatus) => {
+      if (projectId) updateStatus.mutate(status);
+    },
+    [projectId, updateStatus]
+  );
+
+  const handleSummarizePR = useCallback(
+    (_prId: string) => {
+      runAgent.mutate("summarizePR");
+    },
+    [runAgent]
+  );
 
   if (!projectId) {
     return (
@@ -41,12 +63,31 @@ export default function ProjectDetail() {
 
   return (
     <AnimatedPage className="space-y-6">
-      <ProjectHeader projectId={projectId} />
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link to="/dashboard/projects" className="hover:text-foreground transition-colors">
+          Projects
+        </Link>
+        <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
+        <Link to={`/dashboard/projects/${projectId}`} className="hover:text-foreground transition-colors truncate max-w-[180px] md:max-w-none">
+          {project?.name ?? "Project"}
+        </Link>
+        <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
+        <span className="text-foreground font-medium">Detail</span>
+      </nav>
+
+      <ProjectHeader projectId={projectId} onStatusChange={handleStatusChange} />
 
       <div className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Quick actions</h2>
-          <ActionsWidgetBar projectId={projectId} cronjobId={firstCronjobId} />
+          <div className="flex gap-2">
+            <Link to={`/dashboard/projects/${projectId}/ticket-board`}>
+              <Button variant="outline" size="sm">
+                Open Ticket Board
+              </Button>
+            </Link>
+            <ActionsWidgetBar projectId={projectId} cronjobId={firstCronjobId} />
+          </div>
         </div>
       </div>
 
@@ -56,7 +97,7 @@ export default function ProjectDetail() {
           <RoadmapPanel projectId={projectId} />
           <div className="grid gap-6 sm:grid-cols-2">
             <TicketsPanel projectId={projectId} />
-            <PRsPanel projectId={projectId} />
+            <PRsPanel projectId={projectId} onSummarize={handleSummarizePR} />
           </div>
         </div>
         <div className="space-y-6">

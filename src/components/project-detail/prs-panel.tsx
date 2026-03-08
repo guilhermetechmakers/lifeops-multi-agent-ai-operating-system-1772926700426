@@ -24,7 +24,7 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-24" />
         </CardHeader>
@@ -40,7 +40,7 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
   }
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <GitPullRequest className="h-4 w-4 text-muted-foreground" />
@@ -76,8 +76,15 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
                     {pr.status}
                   </Badge>
                 </div>
-                {pr.summary && (
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{pr.summary}</p>
+                {(pr.summary ?? pr.checksSummary) && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {pr.summary ?? pr.checksSummary}
+                  </p>
+                )}
+                {Array.isArray(pr.linkedTicketIds) && pr.linkedTicketIds.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Linked: {pr.linkedTicketIds.length} ticket{pr.linkedTicketIds.length !== 1 ? "s" : ""}
+                  </p>
                 )}
                 <div className="flex items-center justify-between mt-2">
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">

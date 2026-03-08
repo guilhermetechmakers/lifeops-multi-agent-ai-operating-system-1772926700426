@@ -33,7 +33,11 @@ const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
 
 export function ProjectHeader({ projectId, onStatusChange, className }: ProjectHeaderProps) {
   const { data: project, isLoading } = useProject(projectId);
-  const owners = (project?.owners ?? [project?.owner].filter(Boolean)) as string[];
+  const owners = Array.isArray(project?.owners)
+    ? project.owners
+    : project?.owner
+      ? [project.owner]
+      : [];
   const integrations = project?.integrations ?? [];
   const status = (project?.status ?? "active") as ProjectStatus;
 

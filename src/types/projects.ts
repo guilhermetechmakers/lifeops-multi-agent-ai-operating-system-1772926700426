@@ -166,10 +166,12 @@ export interface PR {
   title: string;
   description?: string;
   status: PRStatus;
+  checksSummary?: string;
   authorId?: string;
   authorName?: string;
   reviewers?: string[];
   summary?: string;
+  linkedTicketIds?: string[];
   createdAt: string;
   updatedAt: string;
 }

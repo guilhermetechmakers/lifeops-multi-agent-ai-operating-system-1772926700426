@@ -22,7 +22,7 @@ export function RoadmapPanel({ projectId, className }: RoadmapPanelProps) {
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-32" />
         </CardHeader>
@@ -38,7 +38,7 @@ export function RoadmapPanel({ projectId, className }: RoadmapPanelProps) {
   }
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />
