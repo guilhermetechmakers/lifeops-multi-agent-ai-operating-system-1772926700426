@@ -23,6 +23,8 @@ import {
   AgentTemplatesCatalog,
   OverviewWidgetsGrid,
   CronjobsDashboardLink,
+  ChartPanel,
+  ApprovalsQueueWidget,
 } from "@/components/master-dashboard";
 import { NotificationCenter } from "@/components/notifications";
 
@@ -79,6 +81,13 @@ export default function DashboardMaster() {
           </div>
 
           <AgentTemplatesCatalog />
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-foreground">
+              Cronjob metrics & alert trends
+            </h2>
+            <ChartPanel />
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -142,6 +151,8 @@ export default function DashboardMaster() {
           </div>
 
           <CronjobsDashboardLink />
+
+          <ApprovalsQueueWidget />
 
           <NotificationCenter maxHeight="500px" />
 

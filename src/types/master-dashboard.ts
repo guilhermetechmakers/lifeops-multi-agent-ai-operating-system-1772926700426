@@ -53,6 +53,13 @@ export interface MasterCronjob {
   outputs?: CronjobOutputs;
   nextRun: string;
   lastRunResult: string;
+  /** Last run info for per-run detail panel */
+  lastRun?: {
+    runId: string;
+    startedAt: string;
+    endedAt?: string;
+    status: string;
+  };
 }
 
 export type TemplateDomain = "developer" | "content" | "finance" | "health";
@@ -147,4 +154,20 @@ export interface GlobalSearchResult {
   subtitle?: string;
   url: string;
   metadata?: Record<string, string>;
+}
+
+/** Chart metrics for cronjob success rate and run duration. */
+export interface CronjobMetrics {
+  successRate: number;
+  totalRuns: number;
+  successCount: number;
+  failedCount: number;
+  byDay: Array<{ day: string; success: number; failed: number }>;
+  durationDistribution: Array<{ bucket: string; count: number }>;
+}
+
+/** Chart metrics for alert trends by severity and over time. */
+export interface AlertTrends {
+  bySeverity: Array<{ severity: string; count: number }>;
+  byDay: Array<{ day: string; count: number }>;
 }

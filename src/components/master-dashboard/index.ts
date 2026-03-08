@@ -5,3 +5,5 @@ export { QuickAccessWorkflows } from "./quick-access-workflows";
 export { AgentTemplatesCatalog } from "./agent-templates-catalog";
 export { OverviewWidgetsGrid } from "./overview-widgets-grid";
 export { CronjobsDashboardLink } from "./cronjobs-dashboard-link";
+export { ChartPanel } from "./chart-panel";
+export { ApprovalsQueueWidget } from "./approvals-queue-widget";

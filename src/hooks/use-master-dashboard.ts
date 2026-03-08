@@ -21,6 +21,7 @@ const USE_MOCK =
 
 const keys = {
   cronjobs: ["master-dashboard", "cronjobs"] as const,
+  runArtifact: (runId: string) => ["master-dashboard", "run-artifact", runId] as const,
   alerts: ["master-dashboard", "alerts"] as const,
   templates: ["master-dashboard", "templates"] as const,
   approvals: ["master-dashboard", "approvals"] as const,
@@ -29,7 +30,23 @@ const keys = {
   healthWorkload: ["master-dashboard", "health", "workload"] as const,
   publishingQueue: ["master-dashboard", "publishing", "queue"] as const,
   search: (q: string) => ["master-dashboard", "search", q] as const,
+  cronjobMetrics: ["master-dashboard", "cronjobs", "metrics"] as const,
+  alertTrends: ["master-dashboard", "alerts", "trends"] as const,
 };
+
+export function useRunArtifact(runId: string | null) {
+  return useQuery({
+    queryKey: keys.runArtifact(runId ?? ""),
+    queryFn: () =>
+      runId
+        ? USE_MOCK
+          ? mock.mockGetRunArtifact(runId)
+          : masterDashboardApi.getRunArtifact(runId)
+        : Promise.reject(new Error("No runId")),
+    enabled: Boolean(runId),
+    staleTime: 30 * 1000,
+  });
+}
 
 export function useMasterCronjobs() {
   const query = useQuery({
@@ -101,6 +118,22 @@ export function useDigestAlert() {
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.alerts }),
     onError: (err) =>
       toast.error(err instanceof Error ? err.message : "Failed to digest alert"),
+  });
+}
+
+export function useAcknowledgeAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      USE_MOCK
+        ? mock.mockAcknowledgeAlert(id)
+        : masterDashboardApi.acknowledgeAlert(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.alerts });
+      toast.success("Alert acknowledged");
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to acknowledge alert"),
   });
 }
 
@@ -237,4 +270,48 @@ export function useMasterSearch(query: string) {
   const { items, isFetching } = useGlobalSearch(query);
   const data = items ?? [];
   return { data, isLoading: isFetching };
+}
+
+const DEFAULT_CRONJOB_METRICS = {
+  successRate: 0,
+  totalRuns: 0,
+  successCount: 0,
+  failedCount: 0,
+  byDay: [] as Array<{ day: string; success: number; failed: number }>,
+  durationDistribution: [] as Array<{ bucket: string; count: number }>,
+};
+
+const DEFAULT_ALERT_TRENDS = {
+  bySeverity: [] as Array<{ severity: string; count: number }>,
+  byDay: [] as Array<{ day: string; count: number }>,
+};
+
+export function useCronjobMetrics() {
+  return useQuery({
+    queryKey: keys.cronjobMetrics,
+    queryFn: async () => {
+      if (USE_MOCK) return mock.mockGetCronjobMetrics();
+      try {
+        return await masterDashboardApi.getCronjobMetrics();
+      } catch {
+        return DEFAULT_CRONJOB_METRICS;
+      }
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useAlertTrends() {
+  return useQuery({
+    queryKey: keys.alertTrends,
+    queryFn: async () => {
+      if (USE_MOCK) return mock.mockGetAlertTrends();
+      try {
+        return await masterDashboardApi.getAlertTrends();
+      } catch {
+        return DEFAULT_ALERT_TRENDS;
+      }
+    },
+    staleTime: 60 * 1000,
+  });
 }

@@ -30,6 +30,18 @@ import { Separator } from "@/components/ui/separator";
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
+const SIDEBAR_COLLAPSED_KEY = "lifeops_sidebar_collapsed_v1";
+
+function getInitialCollapsed(): boolean {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    if (stored === "true") return true;
+    if (stored === "false") return false;
+  } catch {
+    // ignore
+  }
+  return false;
+}
 
 const navItems = [
   { to: "/dashboard", label: "Master", icon: LayoutDashboard },
@@ -46,7 +58,19 @@ const navItems = [
 ];
 
 export function DashboardLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(getInitialCollapsed);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { items: notifications } = useNotificationsList();
@@ -78,8 +102,9 @@ export function DashboardLayout() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleCollapsed}
             className="shrink-0"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <ChevronLeft
               className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")}
@@ -140,17 +165,6 @@ export function DashboardLayout() {
               >
                 <Settings className="h-5 w-5 shrink-0" />
                 {!collapsed && <span>Settings</span>}
-              </span>
-            </Link>
-            <Link to="/dashboard/about-help">
-              <span
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
-                  location.pathname === "/dashboard/about-help" && "bg-primary text-primary-foreground"
-                )}
-              >
-                <HelpCircle className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>About &amp; Help</span>}
               </span>
             </Link>
           </nav>
@@ -227,17 +241,6 @@ export function DashboardLayout() {
               )}>
                 <Settings className="h-5 w-5 shrink-0" />
                 Settings
-              </span>
-            </Link>
-            <Link to="/dashboard/about-help" onClick={() => setMobileOpen(false)}>
-              <span className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
-                location.pathname === "/dashboard/about-help"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              )}>
-                <HelpCircle className="h-5 w-5 shrink-0" />
-                About &amp; Help
               </span>
             </Link>
           </nav>

@@ -16,6 +16,8 @@ import type {
   HealthWorkload,
   PublishingQueueSummary,
   GlobalSearchResult,
+  CronjobMetrics,
+  AlertTrends,
 } from "@/types/master-dashboard";
 
 const BASE = "master-dashboard";
@@ -44,6 +46,9 @@ export const masterDashboardApi = {
 
   digestAlert: (id: string) =>
     api.post<MasterAlert>(`${BASE}/alerts/${id}/digest`, {}),
+
+  acknowledgeAlert: (id: string) =>
+    api.post<MasterAlert>(`${BASE}/alerts/${id}/acknowledge`, {}),
 
   snoozeAlert: (id: string, until: string) =>
     api.post<MasterAlert>(`${BASE}/alerts/${id}/snooze`, { until }),
@@ -77,4 +82,10 @@ export const masterDashboardApi = {
 
   getRunArtifact: (runId: string) =>
     api.get<RunArtifact>(`${BASE}/run-artifacts/${runId}`),
+
+  getCronjobMetrics: () =>
+    api.get<CronjobMetrics>(`${BASE}/cronjobs/metrics`),
+
+  getAlertTrends: () =>
+    api.get<AlertTrends>(`${BASE}/alerts/trends`),
 };

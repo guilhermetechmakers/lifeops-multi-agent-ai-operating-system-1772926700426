@@ -3,12 +3,12 @@
  */
 
 import { Link } from "react-router-dom";
-import { AlertCircle, ChevronRight, BellOff, Inbox } from "lucide-react";
+import { AlertCircle, ChevronRight, BellOff, Inbox, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMasterAlerts, useDigestAlert, useSnoozeAlert } from "@/hooks/use-master-dashboard";
+import { useMasterAlerts, useDigestAlert, useSnoozeAlert, useAcknowledgeAlert } from "@/hooks/use-master-dashboard";
 import type { MasterAlert, AlertSeverity } from "@/types/master-dashboard";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -36,11 +36,16 @@ export function CrossModuleAlertsPanel() {
   const { items: alerts, isLoading } = useMasterAlerts();
   const digestAlert = useDigestAlert();
   const snoozeAlert = useSnoozeAlert();
+  const acknowledgeAlert = useAcknowledgeAlert();
 
   const list = alerts ?? [];
 
   const handleDigest = (id: string) => {
     digestAlert.mutate(id);
+  };
+
+  const handleAcknowledge = (id: string) => {
+    acknowledgeAlert.mutate(id);
   };
 
   const handleSnooze = (id: string) => {
@@ -121,6 +126,19 @@ export function CrossModuleAlertsPanel() {
                     <p className="text-xs text-muted-foreground">{alert.sourceModule}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    {!alert.acknowledged && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleAcknowledge(alert.id)}
+                        disabled={acknowledgeAlert.isPending}
+                        aria-label="Acknowledge"
+                        title="Acknowledge"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                    )}
                     {alert.digestible && (
                       <Button
                         variant="ghost"

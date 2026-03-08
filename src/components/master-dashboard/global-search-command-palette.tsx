@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Clock,
@@ -14,6 +14,7 @@ import {
   FileCode,
   Paperclip,
   Trash2,
+  ExternalLink,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -27,7 +28,17 @@ import {
 import { useCommandPalette } from "@/contexts/command-palette-context";
 import { useMasterSearch } from "@/hooks/use-master-dashboard";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import type { GlobalSearchResult } from "@/types/master-dashboard";
+import type { GlobalSearchResult, SearchResultModule } from "@/types/master-dashboard";
+import { cn } from "@/lib/utils";
+
+const MODULE_LABELS: Record<SearchResultModule, string> = {
+  projects: "Projects",
+  cronjobs: "Cronjobs",
+  agents: "Agents",
+  templates: "Templates",
+  approvals: "Approvals",
+  alerts: "Alerts",
+};
 
 interface GlobalSearchCommandPaletteProps {
   searchValue: string;
@@ -42,7 +53,25 @@ function GlobalSearchCommandPaletteContent({
   const { open, setOpen } = useCommandPalette();
   const debouncedQuery = useDebouncedValue(searchValue, 300);
   const { data: searchResults = [], isLoading } = useMasterSearch(debouncedQuery);
-  const results = (Array.isArray(searchResults) ? searchResults : []) as GlobalSearchResult[];
+  const allResults = (Array.isArray(searchResults) ? searchResults : []) as GlobalSearchResult[];
+  const [facetModule, setFacetModule] = useState<SearchResultModule | "all">("all");
+
+  useEffect(() => {
+    setFacetModule("all");
+  }, [debouncedQuery]);
+
+  const results = useMemo(() => {
+    if (facetModule === "all") return allResults;
+    return allResults.filter((r) => r.module === facetModule);
+  }, [allResults, facetModule]);
+
+  const availableModules = useMemo(() => {
+    const modules = new Set<SearchResultModule>();
+    (allResults ?? []).forEach((r) => {
+      if (r.module) modules.add(r.module);
+    });
+    return Array.from(modules);
+  }, [allResults]);
 
   const runCommand = useCallback(
     (path: string) => {
@@ -66,6 +95,39 @@ function GlobalSearchCommandPaletteContent({
         onValueChange={onSearchChange}
         aria-label="Global search"
       />
+      {allResults.length > 0 && availableModules.length > 0 && (
+        <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-white/[0.03]">
+          <button
+            type="button"
+            onClick={() => setFacetModule("all")}
+            className={cn(
+              "rounded-md px-2 py-1 text-xs font-medium transition-colors",
+              facetModule === "all"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+            aria-pressed={facetModule === "all"}
+          >
+            All
+          </button>
+          {(availableModules ?? []).map((mod) => (
+            <button
+              key={mod}
+              type="button"
+              onClick={() => setFacetModule(mod)}
+              className={cn(
+                "rounded-md px-2 py-1 text-xs font-medium transition-colors",
+                facetModule === mod
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}
+              aria-pressed={facetModule === mod}
+            >
+              {MODULE_LABELS[mod] ?? mod}
+            </button>
+          ))}
+        </div>
+      )}
       <CommandList className="max-h-[400px]">
         <CommandEmpty>
           {searchValue.length >= 2 && isLoading
@@ -80,16 +142,21 @@ function GlobalSearchCommandPaletteContent({
                 key={`${r.module}-${r.id}`}
                 value={`${r.module}-${r.id}-${r.title}`}
                 onSelect={() => runCommand(r.url)}
+                className="flex items-center gap-2"
               >
-                <span className="font-medium">{r.title}</span>
+                <span className="font-medium flex-1 truncate">{r.title}</span>
                 {r.subtitle && (
-                  <span className="ml-2 text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground truncate max-w-[120px]">
                     {r.subtitle}
                   </span>
                 )}
-                <span className="ml-auto text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground shrink-0">
                   {r.module}
                 </span>
+                <ExternalLink
+                  className="h-3.5 w-3.5 text-muted-foreground shrink-0"
+                  aria-hidden
+                />
               </CommandItem>
             ))}
           </CommandGroup>

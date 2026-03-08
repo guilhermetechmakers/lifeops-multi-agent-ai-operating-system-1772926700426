@@ -13,6 +13,9 @@ import type {
   HealthWorkload,
   PublishingQueueSummary,
   GlobalSearchResult,
+  CronjobMetrics,
+  AlertTrends,
+  RunArtifact,
 } from "@/types/master-dashboard";
 
 const MOCK_CRONJOBS: MasterCronjob[] = [
@@ -28,6 +31,12 @@ const MOCK_CRONJOBS: MasterCronjob[] = [
     permissions: { automationLevel: "approval-required" },
     nextRun: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     lastRunResult: "success",
+    lastRun: {
+      runId: "run-1",
+      startedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      endedAt: new Date(Date.now() - 28 * 60 * 1000).toISOString(),
+      status: "success",
+    },
   },
   {
     id: "2",
@@ -41,6 +50,12 @@ const MOCK_CRONJOBS: MasterCronjob[] = [
     permissions: { automationLevel: "bounded-autopilot" },
     nextRun: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     lastRunResult: "success",
+    lastRun: {
+      runId: "run-2",
+      startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      endedAt: new Date(Date.now() - 2 * 60 * 60 * 1000 + 5 * 60 * 1000).toISOString(),
+      status: "success",
+    },
   },
   {
     id: "3",
@@ -54,6 +69,11 @@ const MOCK_CRONJOBS: MasterCronjob[] = [
     permissions: { automationLevel: "approval-required" },
     nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     lastRunResult: "approval",
+    lastRun: {
+      runId: "run-3",
+      startedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      status: "pending",
+    },
   },
 ];
 
@@ -129,8 +149,47 @@ const MOCK_APPROVALS: MasterApproval[] = [
   },
 ];
 
+const MOCK_RUN_ARTIFACTS: Record<string, RunArtifact> = {
+  "run-1": {
+    runId: "run-1",
+    cronjobId: "1",
+    status: "success",
+    logs: ["[INFO] Starting PR triage", "[INFO] Found 3 PRs", "[INFO] Triage complete"],
+    artifacts: ["triage-report-1.json"],
+    diffs: [],
+    errors: [],
+    traceLink: "/dashboard/cronjobs/1/runs/run-1",
+  },
+  "run-2": {
+    runId: "run-2",
+    cronjobId: "2",
+    status: "success",
+    logs: ["[INFO] Generating digest", "[INFO] Digest sent"],
+    artifacts: ["digest-2.html"],
+    diffs: [],
+    errors: [],
+    traceLink: "/dashboard/cronjobs/2/runs/run-2",
+  },
+  "run-3": {
+    runId: "run-3",
+    cronjobId: "3",
+    status: "pending",
+    logs: ["[INFO] Monthly close initiated", "[INFO] Awaiting approval"],
+    artifacts: [],
+    diffs: [],
+    errors: [],
+    traceLink: "/dashboard/cronjobs/3/runs/run-3",
+  },
+};
+
 export async function mockGetCronjobs(): Promise<MasterCronjob[]> {
   return Promise.resolve([...MOCK_CRONJOBS]);
+}
+
+export async function mockGetRunArtifact(runId: string): Promise<RunArtifact> {
+  const artifact = MOCK_RUN_ARTIFACTS[runId];
+  if (!artifact) throw new Error("Run not found");
+  return artifact;
 }
 
 export async function mockCreateCronjob(
@@ -168,6 +227,13 @@ export async function mockGetAlerts(): Promise<MasterAlert[]> {
 }
 
 export async function mockDigestAlert(id: string): Promise<MasterAlert> {
+  const a = MOCK_ALERTS.find((x) => x.id === id);
+  if (!a) throw new Error("Alert not found");
+  a.acknowledged = true;
+  return a;
+}
+
+export async function mockAcknowledgeAlert(id: string): Promise<MasterAlert> {
   const a = MOCK_ALERTS.find((x) => x.id === id);
   if (!a) throw new Error("Alert not found");
   a.acknowledged = true;
@@ -288,4 +354,51 @@ export async function mockSearch(q: string): Promise<GlobalSearchResult[]> {
       });
   });
   return results.slice(0, 20);
+}
+
+export async function mockGetCronjobMetrics(): Promise<CronjobMetrics> {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const byDay = days.map((day) => ({
+    day,
+    success: 8 + Math.floor(Math.random() * 4),
+    failed: Math.floor(Math.random() * 2),
+  }));
+  const byDayData = Array.isArray(byDay) ? byDay : [];
+  const successCount = byDayData.reduce((s, d) => s + d.success, 0);
+  const failedCount = byDayData.reduce((s, d) => s + d.failed, 0);
+  const totalRuns = successCount + failedCount;
+  return {
+    successRate: totalRuns > 0 ? Math.round((successCount / totalRuns) * 100) : 0,
+    totalRuns,
+    successCount,
+    failedCount,
+    byDay: byDayData,
+    durationDistribution: [
+      { bucket: "<1m", count: 12 },
+      { bucket: "1–5m", count: 28 },
+      { bucket: "5–15m", count: 15 },
+      { bucket: "15–30m", count: 6 },
+      { bucket: ">30m", count: 2 },
+    ],
+  };
+}
+
+export async function mockGetAlertTrends(): Promise<AlertTrends> {
+  return {
+    bySeverity: [
+      { severity: "info", count: 12 },
+      { severity: "warning", count: 5 },
+      { severity: "critical", count: 2 },
+      { severity: "error", count: 1 },
+    ],
+    byDay: [
+      { day: "Mon", count: 3 },
+      { day: "Tue", count: 5 },
+      { day: "Wed", count: 4 },
+      { day: "Thu", count: 6 },
+      { day: "Fri", count: 2 },
+      { day: "Sat", count: 1 },
+      { day: "Sun", count: 0 },
+    ],
+  };
 }
