@@ -1,13 +1,17 @@
 /**
- * page_loading_success_040 — Generic loading spinner and operation success/error state.
+ * LoadingSuccessPage — Generic loading spinner and operation success/error state.
+ * Uses LoadingSpinner, StatusBanner, ErrorSnippet, NextStepsPanel primitives.
  * Reusable for async flows: Loading → Success or Error with retry and correlationId.
  */
 
 import { Button } from "@/components/ui/button";
 import { AnimatedPage } from "@/components/animated-page";
-import { RetryPanel } from "@/components/error";
+import {
+  LoadingSpinner,
+  StatusBanner,
+} from "@/components/loading-success";
 import type { APIError } from "@/lib/errors/types";
-import { Check, Loader2 } from "lucide-react";
+import type { NextStep } from "@/types/loading-success";
 import { cn } from "@/lib/utils";
 
 export type LoadingSuccessStatus = "idle" | "loading" | "success" | "error";
@@ -28,6 +32,8 @@ export interface LoadingSuccessPageProps {
   onCancel?: () => void;
   /** Optional action button in success state */
   successAction?: { label: string; onClick: () => void };
+  /** Optional next steps for success state */
+  nextSteps?: NextStep[] | null;
   className?: string;
   /** Optional descriptive text below spinner */
   loadingDescription?: string;
@@ -42,10 +48,36 @@ export function LoadingSuccessPage({
   onRetry,
   onCancel,
   successAction,
+  nextSteps,
   className,
   loadingDescription,
 }: LoadingSuccessPageProps) {
   if (status === "idle") return null;
+
+  const nextStepsSafe = Array.isArray(nextSteps) ? nextSteps : [];
+
+  const successActions = [
+    ...(onSuccessRedirect
+      ? [
+          {
+            label: "Continue",
+            onClick: () => {
+              window.location.href = onSuccessRedirect;
+            },
+            kind: "primary" as const,
+          },
+        ]
+      : []),
+    ...(successAction
+      ? [
+          {
+            label: successAction.label,
+            onClick: successAction.onClick,
+            kind: "secondary" as const,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <AnimatedPage
@@ -55,62 +87,47 @@ export function LoadingSuccessPage({
       )}
     >
       {status === "loading" && (
-        <div
-          className="flex flex-col items-center gap-4 animate-fade-in"
-          role="status"
-          aria-live="polite"
-          aria-label={loadingMessage}
-        >
-          <Loader2 className="h-12 w-12 animate-spin text-primary" aria-hidden />
-          <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
-          {loadingDescription && (
-            <p className="text-xs text-muted-foreground max-w-sm text-center">
-              {loadingDescription}
-            </p>
+        <div className="w-full max-w-md flex flex-col items-center gap-4 animate-fade-in">
+          <LoadingSpinner
+            size="lg"
+            label={loadingMessage}
+            description={loadingDescription}
+            status="loading"
+          />
+          {onCancel && (
+            <Button variant="outline" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
           )}
-          <div className="flex gap-2 mt-2">
-            {onCancel && (
-              <Button variant="outline" size="sm" onClick={onCancel}>
-                Cancel
-              </Button>
-            )}
-          </div>
         </div>
       )}
 
       {status === "success" && (
-        <div
-          className="flex flex-col items-center gap-4 animate-scale-in"
-          role="status"
-          aria-live="polite"
-          aria-label={successMessage}
-        >
-          <div className="rounded-full bg-teal/20 p-4">
-            <Check className="h-12 w-12 text-teal" aria-hidden />
-          </div>
-          <p className="text-sm font-medium text-foreground">{successMessage}</p>
-          <div className="flex gap-2 mt-2">
-            {onSuccessRedirect && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => (window.location.href = onSuccessRedirect)}
-              >
-                Continue
-              </Button>
-            )}
-            {successAction && (
-              <Button variant="outline" size="sm" onClick={successAction.onClick}>
-                {successAction.label}
-              </Button>
-            )}
-          </div>
+        <div className="w-full max-w-md animate-scale-in">
+          <StatusBanner
+            variant="success"
+            title={successMessage}
+            nextSteps={nextStepsSafe.length > 0 ? nextStepsSafe : undefined}
+            actions={successActions.length > 0 ? successActions : undefined}
+          />
         </div>
       )}
 
       {status === "error" && error && (
         <div className="w-full max-w-md animate-fade-in">
-          <RetryPanel error={error} onRetry={onRetry} showDiagnostics />
+          <StatusBanner
+            variant="failure"
+            title="Operation failed"
+            subtitle={error.message}
+            errorCode={error.code}
+            errorMessage={error.message}
+            errorDetails={
+              error.correlationId
+                ? `Reference: ${error.correlationId}`
+                : undefined
+            }
+            retryHandler={onRetry}
+          />
         </div>
       )}
     </AnimatedPage>

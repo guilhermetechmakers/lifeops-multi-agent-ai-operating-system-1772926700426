@@ -3,6 +3,7 @@
  * All data from useAboutHelp hooks; arrays guarded. Route: /dashboard/about-help.
  */
 
+import { Link } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -83,6 +84,12 @@ export default function AboutHelpPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <GlobalSearchBar docs={docs} faqs={faqs} />
+          <Link
+            to="/dashboard/loading-success-demo"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Loading &amp; success states
+          </Link>
           <AppInfoDrawer history={versionHistory} />
         </div>
       </header>

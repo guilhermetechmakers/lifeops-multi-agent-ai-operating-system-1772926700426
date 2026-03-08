@@ -73,6 +73,7 @@ import CookiePolicyPage from "@/pages/cookie-policy";
 import TermsOfServicePage from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
+import LoadingSuccessDemoPage from "@/pages/loading-success-demo";
 import {
   DocsLayout,
   DocsHome,
@@ -182,6 +183,7 @@ function App() {
               <Route index element={<AnalyticsReportsOverview />} />
             </Route>
             <Route path="about-help" element={<AboutHelpPage />} />
+            <Route path="loading-success-demo" element={<LoadingSuccessDemoPage />} />
             <Route path="settings" element={<SettingsDashboardShell />}>
               <Route index element={<SettingsGlobalPage />} />
               <Route path="profile" element={<SettingsProfileRedirectPage />} />
