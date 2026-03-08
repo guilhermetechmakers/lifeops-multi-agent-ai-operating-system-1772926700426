@@ -1,96 +1,169 @@
 /**
- * Run Details page — inspect a single run with artifacts, trace, logs.
- * LifeOps design system; artifacts section for run outputs.
+ * Run Details page — comprehensive view of a single cron/agent run.
+ * Inputs, trace, logs, diffs, artifacts, timing, outcome, reversibility, audit trail.
+ * LifeOps design system; runtime-safe array handling.
  */
 
-import { useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useState } from "react";
+import { useParams } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
-import { ArtifactManagerPanel } from "@/components/artifacts";
-import { ArrowLeft, FileText, Activity } from "lucide-react";
-import { useCronjobRuns } from "@/hooks/use-cronjobs";
-import { formatDistanceToNow } from "date-fns";
-
-function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-}
+import { useRunDetails, useRevertRun } from "@/hooks/use-run-details";
+import {
+  RunDetailsHeader,
+  InputsPanel,
+  MessageTraceViewer,
+  LogsEventsPanel,
+  RunDetailsDiffsViewer,
+  ArtifactsPanel,
+  TimingPane,
+  ReversibilityPanel,
+  AuditTrailPanel,
+  RelatedContextPanel,
+} from "@/components/run-details";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function RunDetailsPage() {
-  const { id: cronjobId, runId } = useParams<{ id: string; runId: string }>();
-  const { items: runs } = useCronjobRuns(cronjobId ?? null);
-  const run = useMemo(
-    () => (runs ?? []).find((r) => r.runId === runId),
-    [runs, runId]
+  const { id: cronjobId, runId } = useParams<{ id?: string; runId: string }>();
+  const { run, trace, logs, diffs, artifacts, timing, reversibleActions, auditTrail, isLoading, error } =
+    useRunDetails(runId ?? null, cronjobId);
+  const revertMutation = useRevertRun(runId ?? null);
+  const [revertDialogOpen, setRevertDialogOpen] = useState(false);
+
+  const canRevert =
+    Boolean(run) &&
+    (run?.status === "succeeded" || run?.status === "failed") &&
+    Array.isArray(reversibleActions) &&
+    reversibleActions.length > 0 &&
+    reversibleActions.every(
+      (a: { status?: string }) => a.status === "passed" || a.status === "approved"
+    );
+
+  const revertDisabledReason = !canRevert
+    ? run?.status === "running"
+      ? "Run is still in progress"
+      : (reversibleActions ?? []).length === 0
+        ? "No reversible actions"
+        : "Validators not passed"
+    : undefined;
+
+  const handleRevert = useCallback(() => {
+    setRevertDialogOpen(true);
+  }, []);
+
+  const handleConfirmRevert = useCallback(
+    (reason: string) => {
+      revertMutation.mutate({
+        reason: reason || "User-initiated revert",
+        confirmations: [],
+      });
+      setRevertDialogOpen(false);
+    },
+    [revertMutation]
   );
 
-  const status = run?.status ?? "unknown";
-  const variant =
-    status === "success"
-      ? "success"
-      : status === "failure"
-        ? "destructive"
-        : "secondary";
+  const handleReRun = useCallback(() => {
+    toast.info("Re-run functionality requires integration with Cronjobs API");
+  }, []);
+
+  const handleExportArtifacts = useCallback(() => {
+    const list = artifacts ?? [];
+    if (list.length === 0) {
+      toast.info("No artifacts to export");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(list, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `run-${runId}-artifacts.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Artifacts exported");
+  }, [artifacts, runId]);
+
+  if (error) {
+    return (
+      <AnimatedPage>
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error.message}
+        </div>
+      </AnimatedPage>
+    );
+  }
+
+  if (isLoading || !runId) {
+    return (
+      <AnimatedPage>
+        <div className="space-y-6">
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-48 rounded-lg" />
+            <Skeleton className="h-48 rounded-lg" />
+          </div>
+          <Skeleton className="h-64 rounded-lg" />
+        </div>
+      </AnimatedPage>
+    );
+  }
+
+  if (!run) {
+    return (
+      <AnimatedPage>
+        <div className="rounded-lg border border-white/[0.06] bg-secondary/20 p-4 text-center text-muted-foreground">
+          Run not found.
+        </div>
+      </AnimatedPage>
+    );
+  }
 
   return (
     <AnimatedPage className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link to={cronjobId ? `/dashboard/cronjobs/${cronjobId}` : "/dashboard/cronjobs"}>
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-foreground">Run details</h1>
-          <p className="text-sm text-muted-foreground">
-            Run ID: {runId}
-            {run && (
-              <> · {formatDistanceToNow(new Date(run.startedAt), { addSuffix: true })} · {formatDuration(run.durationMs)}</>
-            )}
-          </p>
-        </div>
-        <Badge variant={variant as "success" | "destructive" | "secondary"}>{status}</Badge>
+      <RunDetailsHeader
+        run={run}
+        canRevert={canRevert}
+        revertDisabledReason={revertDisabledReason}
+        onRevert={handleRevert}
+        onReRun={handleReRun}
+        onExportArtifacts={handleExportArtifacts}
+        isReverting={revertMutation.isPending}
+      />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <InputsPanel
+          inputs={run.inputs}
+          effectiveInputs={run.effectiveInputs}
+          scope={run.scope}
+          permissions={run.permissions}
+        />
+        <RelatedContextPanel run={run} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-white/[0.03] bg-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Activity className="h-4 w-4" />
-              Message trace
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {run?.trace
-                ? "Trace data available."
-                : "Trace viewer placeholder — agent-to-agent messages"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-white/[0.03] bg-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4" />
-              Logs & events
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              {(run?.logs ?? []).length > 0
-                ? (run?.logs ?? []).map((log, i) => (
-                    <li key={i}>{log}</li>
-                  ))
-                : "Logs placeholder — run events and timestamps"}
-            </ul>
-          </CardContent>
-        </Card>
+      <MessageTraceViewer trace={trace} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <LogsEventsPanel logs={logs} />
+        <RunDetailsDiffsViewer diffs={diffs} />
       </div>
 
-      <ArtifactManagerPanel compact />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ArtifactsPanel artifacts={artifacts} />
+        <TimingPane timing={timing} durationMs={run.durationMs} />
+      </div>
+
+      <ReversibilityPanel
+        reversibleActions={reversibleActions}
+        canRevert={canRevert}
+        revertDisabledReason={revertDisabledReason}
+        onConfirmRevert={handleConfirmRevert}
+        isReverting={revertMutation.isPending}
+        revertDialogOpen={revertDialogOpen}
+        onRevertDialogOpenChange={setRevertDialogOpen}
+      />
+
+      <AuditTrailPanel auditTrail={auditTrail} />
     </AnimatedPage>
   );
 }

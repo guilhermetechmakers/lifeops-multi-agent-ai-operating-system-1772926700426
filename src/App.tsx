@@ -73,6 +73,7 @@ function App() {
             <Route path="cronjobs/new" element={<CronjobEditor />} />
             <Route path="cronjobs/:id" element={<CronjobDetail />} />
             <Route path="cronjobs/:id/runs/:runId" element={<RunDetailsPage />} />
+            <Route path="runs/:runId" element={<RunDetailsPage />} />
             <Route path="cronjobs/:id/edit" element={<CronjobEditor />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="projects" element={<DashboardProjects />} />
