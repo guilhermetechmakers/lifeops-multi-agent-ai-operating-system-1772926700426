@@ -10,12 +10,15 @@ export interface AdminUser {
   name: string;
   email: string;
   status: UserStatus;
-  orgId: string;
+  orgId: string | null;
   roles: string[];
   lastActiveAt: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
+
+/** Alias for Session entity in user management */
+export type UserSession = AdminSession;
 
 /** Session entity for user session management */
 export interface AdminSession {
@@ -49,7 +52,11 @@ export interface AdminAuditExport {
   updatedAt: string;
   exportUrl?: string;
   reason?: string;
+  completedAt?: string;
 }
+
+/** Alias for audit export task */
+export type AuditExportTask = AdminAuditExport;
 
 /** Data retention policy for org/user scope */
 export interface DataRetentionPolicy {
@@ -69,7 +76,7 @@ export interface Org {
   dataPolicyId?: string;
   tenantSettings?: Record<string, unknown>;
   policies?: Record<string, unknown>;
-  retentionPolicy?: DataRetentionPolicy;
+  retentionPolicy?: DataRetentionPolicy | null;
   usersCount?: number;
 }
 

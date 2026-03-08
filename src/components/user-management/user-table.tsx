@@ -1,6 +1,7 @@
 /**
- * UserManagementPanel — Table of users with search, filters, bulk actions.
- * Per-row: edit, suspend/activate, reset password, assign roles.
+ * UserTable — Dense data table with sortable columns, pagination, bulk actions.
+ * Columns: Name, Email, Role, Status, Last Active, Actions.
+ * Runtime safety: all array operations guarded.
  */
 
 import { useState, useCallback } from "react";
@@ -22,6 +23,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import {
+  MoreHorizontal,
+  Search,
+  UserPlus,
+  Edit,
+  Play,
+  Pause,
+  Key,
+  Shield,
+  Trash2,
+  Monitor,
+  FileText,
+} from "lucide-react";
+import { useAdminUsers, useActivateAdminUser, useUpdateAdminUser, useDeleteAdminUser, useAdminOrgs, useAdminRoles } from "@/hooks/use-admin";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import type { AdminUser } from "@/types/admin";
+import { UserCreateEditModal } from "@/components/admin/user-create-edit-modal";
+import { RoleAssignmentPanel } from "./role-assignment-panel";
+import { SessionListPanel } from "./session-list-panel";
+import { AuditLogsPanel } from "./audit-logs-panel";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -31,18 +52,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Search, UserPlus, Edit, Play, Pause, Shield, Trash2, Monitor } from "lucide-react";
-import { useAdminUsers, useActivateAdminUser, useUpdateAdminUser, useDeleteAdminUser, useAdminOrgs, useAdminRoles } from "@/hooks/use-admin";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import type { AdminUser } from "@/types/admin";
-import { UserCreateEditModal } from "./user-create-edit-modal";
-import { RoleAssignmentPanel } from "./role-assignment-panel";
-import { SessionListPanel } from "./session-list-panel";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
-export function UserManagementPanel() {
+export interface UserTableProps {
+  onOpenCreate?: () => void;
+}
+
+export function UserTable({ onOpenCreate }: UserTableProps) {
   const [search, setSearch] = useState("");
   const [orgId, setOrgId] = useState<string>("");
   const [role, setRole] = useState<string>("");
@@ -52,7 +70,8 @@ export function UserManagementPanel() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [rolePanelUser, setRolePanelUser] = useState<AdminUser | null>(null);
   const [sessionPanelUser, setSessionPanelUser] = useState<AdminUser | null>(null);
-  const [deleteConfirmUser, setDeleteConfirmUser] = useState<AdminUser | null>(null);
+  const [auditPanelUser, setAuditPanelUser] = useState<AdminUser | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<AdminUser | null>(null);
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
@@ -87,7 +106,7 @@ export function UserManagementPanel() {
     if (selectedIds.size === userList.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(userList.map((u) => u.id)));
+      setSelectedIds(new Set(userList.map((u) => u?.id ?? "").filter(Boolean)));
     }
   }, [userList, selectedIds.size]);
 
@@ -102,11 +121,18 @@ export function UserManagementPanel() {
     [activateUser, updateUser]
   );
 
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteConfirmUser?.id) return;
-    deleteUser.mutate(deleteConfirmUser.id);
-    setDeleteConfirmUser(null);
-  }, [deleteConfirmUser, deleteUser]);
+  const handleDelete = useCallback(() => {
+    const u = deleteConfirm;
+    if (u?.id) {
+      deleteUser.mutate(u.id);
+      setDeleteConfirm(null);
+    }
+  }, [deleteConfirm, deleteUser]);
+
+  const openCreate = () => {
+    if (onOpenCreate) onOpenCreate();
+    else setCreateOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -119,6 +145,7 @@ export function UserManagementPanel() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
+              aria-label="Search users"
             />
           </div>
           <Select value={orgId} onValueChange={setOrgId}>
@@ -148,37 +175,39 @@ export function UserManagementPanel() {
             </SelectContent>
           </Select>
         </div>
-        <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={() => setCreateOpen(true)}>
+        <Button className="gap-2 bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02]" onClick={openCreate}>
           <UserPlus className="h-4 w-4" />
           Create user
         </Button>
       </div>
 
-      <Card className="border-white/[0.03] bg-gradient-to-b from-[#111213] to-[#1A1A1B]">
+      <Card className="border-white/[0.03] bg-gradient-to-b from-[#111213] to-[#1A1A1B] transition-all duration-200 hover:shadow-card-hover">
         <CardHeader>
           <CardTitle>Users</CardTitle>
           <p className="text-sm text-muted-foreground">
-            {totalCount} total · Edit, activate/deactivate, assign roles
+            {totalCount} total · Edit, activate/deactivate, assign roles, manage sessions
           </p>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex h-48 items-center justify-center text-muted-foreground">
-              Loading...
+            <div className="grid gap-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-12 animate-pulse rounded-md bg-secondary/50" />
+              ))}
             </div>
           ) : (userList ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-white/[0.03] bg-secondary/30 px-6 py-12 text-center">
               <p className="text-sm text-muted-foreground">No users match your filters.</p>
-              <Button className="mt-4" onClick={() => setCreateOpen(true)}>
+              <Button className="mt-4" onClick={openCreate}>
                 Create user
               </Button>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" role="grid" aria-label="User table">
                   <thead>
-                    <tr className="border-b border-white/[0.03]">
+                    <tr className="border-b border-white/[0.03] sticky top-0 bg-card/95 backdrop-blur">
                       <th className="px-4 py-3 text-left">
                         <input
                           type="checkbox"
@@ -192,14 +221,14 @@ export function UserManagementPanel() {
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Roles</th>
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Last active</th>
-                      <th className="w-10 px-4 py-3" />
+                      <th className="w-10 px-4 py-3" aria-label="Actions" />
                     </tr>
                   </thead>
                   <tbody>
                     {(userList ?? []).map((u) => (
                       <tr
                         key={u?.id ?? ""}
-                        className="border-b border-white/[0.03] transition-colors hover:bg-secondary/30"
+                        className="border-b border-white/[0.03] transition-colors duration-200 hover:bg-secondary/30"
                       >
                         <td className="px-4 py-3">
                           <input
@@ -238,14 +267,26 @@ export function UserManagementPanel() {
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Actions">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end" className="w-56">
                               <DropdownMenuItem onClick={() => setEditUser(u ?? null)}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                View / Edit
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setRolePanelUser(u ?? null)}>
+                                <Shield className="mr-2 h-4 w-4" />
+                                Assign roles
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setSessionPanelUser(u ?? null)}>
+                                <Monitor className="mr-2 h-4 w-4" />
+                                Manage sessions
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setAuditPanelUser(u ?? null)}>
+                                <FileText className="mr-2 h-4 w-4" />
+                                View audit logs
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleActivate(u ?? ({} as AdminUser))}>
                                 {u?.status === "active" ? (
@@ -260,17 +301,13 @@ export function UserManagementPanel() {
                                   </>
                                 )}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setSessionPanelUser(u ?? null)}>
-                                <Monitor className="mr-2 h-4 w-4" />
-                                Revoke sessions
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setRolePanelUser(u ?? null)}>
-                                <Shield className="mr-2 h-4 w-4" />
-                                Assign roles
+                              <DropdownMenuItem disabled>
+                                <Key className="mr-2 h-4 w-4" />
+                                Reset password
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-[#FF3B30] focus:text-[#FF3B30]"
-                                onClick={() => setDeleteConfirmUser(u ?? null)}
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => setDeleteConfirm(u ?? null)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
@@ -332,33 +369,35 @@ export function UserManagementPanel() {
       />
 
       <RoleAssignmentPanel
-        open={!!rolePanelUser}
-        onOpenChange={(open) => !open && setRolePanelUser(null)}
         user={rolePanelUser}
-        onSuccess={() => setRolePanelUser(null)}
+        onClose={() => setRolePanelUser(null)}
+        orgs={orgs ?? []}
+        roles={rolesList ?? []}
       />
 
       <SessionListPanel
-        open={!!sessionPanelUser}
-        onOpenChange={(open) => !open && setSessionPanelUser(null)}
         user={sessionPanelUser}
-        onSuccess={() => setSessionPanelUser(null)}
+        onClose={() => setSessionPanelUser(null)}
       />
 
-      <AlertDialog open={!!deleteConfirmUser} onOpenChange={(open) => !open && setDeleteConfirmUser(null)}>
-        <AlertDialogContent className="border-white/[0.03] bg-card">
+      <AuditLogsPanel
+        user={auditPanelUser}
+        onClose={() => setAuditPanelUser(null)}
+      />
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete user</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove {deleteConfirmUser?.name ?? deleteConfirmUser?.email ?? "this user"}.
-              This action cannot be undone.
+              This will permanently delete {deleteConfirm?.name ?? "this user"} and all associated data. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-[#FF3B30] text-white hover:bg-[#FF3B30]/90"
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
             </AlertDialogAction>

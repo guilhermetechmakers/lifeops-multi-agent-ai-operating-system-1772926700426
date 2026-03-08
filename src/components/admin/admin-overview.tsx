@@ -6,6 +6,7 @@
 import { Users, Building2, FileText, Clock, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "./kpi-card";
+import { AdminDashboardWidgets } from "./admin-dashboard-widgets";
 import { useAdminKpis, useComplianceAudits } from "@/hooks/use-admin";
 import { AnimatedPage } from "@/components/animated-page";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ export function AdminOverview() {
 
   return (
     <AnimatedPage className="space-y-8">
+      <AdminDashboardWidgets />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KPICard title="Total users" value={totalUsers} icon={Users} />
         <KPICard title="Active orgs" value={activeOrgs} icon={Building2} />

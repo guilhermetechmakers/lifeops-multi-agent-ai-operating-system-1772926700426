@@ -49,7 +49,7 @@ import AboutHelpPage from "@/pages/about-help";
 import {
   AdminDashboardShell,
   AdminOverview,
-  UserManagementPanel,
+  UserManagementPage,
   OrganizationsPanel,
   RolesPanel,
   IntegrationsPanel as AdminIntegrationsPanel,
@@ -113,7 +113,7 @@ function App() {
             <Route path="approvals" element={<Approvals />} />
             <Route path="admin" element={<AdminDashboardShell />}>
               <Route index element={<AdminOverview />} />
-              <Route path="users" element={<UserManagementPanel />} />
+              <Route path="users" element={<UserManagementPage />} />
               <Route path="organizations" element={<OrganizationsPanel />} />
               <Route path="roles" element={<RolesPanel />} />
               <Route path="integrations" element={<AdminIntegrationsPanel />} />

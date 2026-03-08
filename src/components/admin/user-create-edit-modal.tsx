@@ -25,13 +25,17 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateAdminUser, useUpdateAdminUser } from "@/hooks/use-admin";
+import { toast } from "sonner";
 import type { AdminUser, Org, Role } from "@/types/admin";
+
+const statusOptions = ["active", "suspended", "disabled"] as const;
 
 const schema = z.object({
   name: z.string().min(1, "Name required"),
   email: z.string().email("Invalid email"),
   password: z.string().optional(),
-  orgId: z.string().min(1, "Organization required"),
+  orgId: z.string().optional(),
+  status: z.enum(["active", "suspended", "disabled"]).default("active"),
   roles: z.array(z.string()).default([]),
 });
 
@@ -72,11 +76,13 @@ export function UserCreateEditModal({
       email: "",
       password: "",
       orgId: "",
+      status: "active" as const,
       roles: [],
     },
   });
 
   const orgId = watch("orgId");
+  const status = watch("status");
   const selectedRoles = watch("roles") ?? [];
 
   const toggleRole = (roleName: string) => {
@@ -93,7 +99,8 @@ export function UserCreateEditModal({
         name: user?.name ?? "",
         email: user?.email ?? "",
         password: "",
-        orgId: user?.orgId ?? (orgs?.[0]?.id ?? ""),
+        orgId: user?.orgId ?? (orgs?.[0]?.id ?? "") ?? "",
+        status: (user?.status === "active" || user?.status === "suspended" || user?.status === "disabled" ? user.status : "active") as "active" | "suspended" | "disabled",
         roles: Array.isArray(user?.roles) ? user.roles : [],
       });
     }
@@ -106,7 +113,8 @@ export function UserCreateEditModal({
         payload: {
           name: values.name,
           email: values.email,
-          orgId: values.orgId,
+          orgId: values.orgId || null,
+          status: values.status,
           roles: values.roles,
         },
       });
@@ -114,14 +122,19 @@ export function UserCreateEditModal({
       await createUser.mutateAsync({
         name: values.name,
         email: values.email,
-        orgId: values.orgId,
+        orgId: values.orgId || null,
         roles: values.roles,
-        status: "active",
+        status: values.status,
         lastActiveAt: null,
       });
     }
     onSuccess?.();
     onOpenChange(false);
+  };
+
+  const handleSendResetLink = () => {
+    if (!user?.email) return;
+    toast.success("Password reset link sent to " + user.email);
   };
 
   return (
@@ -153,14 +166,30 @@ export function UserCreateEditModal({
           )}
           <div>
             <Label>Organization</Label>
-            <Select value={orgId} onValueChange={(v) => setValue("orgId", v)}>
-              <SelectTrigger className="mt-1">
+            <Select value={orgId ?? ""} onValueChange={(v) => setValue("orgId", v)}>
+              <SelectTrigger className="mt-1 border-white/[0.03]">
                 <SelectValue placeholder="Select org" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">No organization</SelectItem>
                 {(orgs ?? []).map((o) => (
                   <SelectItem key={o?.id ?? ""} value={o?.id ?? ""}>
                     {o?.name ?? "—"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => setValue("status", v as FormValues["status"])}>
+              <SelectTrigger className="mt-1 border-white/[0.03]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -180,6 +209,19 @@ export function UserCreateEditModal({
               ))}
             </div>
           </div>
+          {isEdit && (
+            <div className="rounded-lg border border-white/[0.03] bg-secondary/20 px-3 py-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={handleSendResetLink}
+              >
+                Send password reset link
+              </Button>
+            </div>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

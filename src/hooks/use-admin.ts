@@ -21,11 +21,13 @@ const keys = {
   invoices: () => ["admin", "billing", "invoices"] as const,
   cronjobs: () => ["admin", "cronjobs"] as const,
   approvals: () => ["admin", "approvals"] as const,
-  auditLogs: (p?: { userId?: string; limit?: number }) => ["admin", "audit", "logs", p] as const,
+  auditLogs: (p?: { userId?: string; limit?: number; action?: string; resource?: string; from?: string; to?: string }) => ["admin", "audit", "logs", p] as const,
   reports: (p?: { orgId?: string; from?: string; to?: string }) => ["admin", "reports", p] as const,
   userSessions: (userId: string) => ["admin", "users", userId, "sessions"] as const,
+  allSessions: () => ["admin", "sessions"] as const,
   auditExport: (taskId: string) => ["admin", "audit-exports", taskId] as const,
   orgPolicy: (orgId: string) => ["admin", "organizations", orgId, "policy"] as const,
+  orgUsersCount: (orgId: string) => ["admin", "organizations", orgId, "users-count"] as const,
 };
 
 export function useAdminKpis() {
@@ -283,7 +285,7 @@ export function useApprovals() {
   return { ...query, approvals: list, data: list };
 }
 
-export function useAuditLogs(params?: { userId?: string; limit?: number }) {
+export function useAuditLogs(params?: { userId?: string; limit?: number; action?: string; resource?: string; from?: string; to?: string }) {
   const query = useQuery({
     queryKey: keys.auditLogs(params),
     queryFn: () => adminApi.fetchAuditLogs(params),
@@ -323,6 +325,16 @@ export function useGenerateReport() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Report generation failed"),
   });
+}
+
+export function useAllSessions() {
+  const query = useQuery({
+    queryKey: keys.allSessions(),
+    queryFn: () => adminApi.fetchAllSessions(),
+    staleTime: 30 * 1000,
+  });
+  const list = Array.isArray(query.data) ? query.data : [];
+  return { ...query, sessions: list, data: list };
 }
 
 export function useUserSessions(userId: string | null) {
@@ -367,8 +379,10 @@ export function useAuditExportStatus(taskId: string | null) {
     queryKey: keys.auditExport(taskId ?? ""),
     queryFn: () => adminApi.fetchAuditExportStatus(taskId ?? ""),
     enabled: !!taskId,
-    refetchInterval: (data) =>
-      data?.status === "pending" || data?.status === "in-progress" ? 2000 : false,
+    refetchInterval: (q) => {
+      const d = q.state?.data as { status?: string } | undefined;
+      return d?.status === "pending" || d?.status === "in-progress" ? 2000 : false;
+    },
   });
   return query;
 }
@@ -381,4 +395,14 @@ export function useOrgPolicy(orgId: string | null) {
     staleTime: 60 * 1000,
   });
   return query;
+}
+
+export function useOrgUsersCount(orgId: string | null) {
+  const query = useQuery({
+    queryKey: keys.orgUsersCount(orgId ?? ""),
+    queryFn: () => (orgId ? adminApi.fetchOrgUsersCount(orgId) : Promise.resolve(0)),
+    enabled: !!orgId,
+    staleTime: 60 * 1000,
+  });
+  return { ...query, count: typeof query.data === "number" ? query.data : 0 };
 }

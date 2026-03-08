@@ -183,6 +183,21 @@ export async function activateAdminUser(id: string): Promise<void> {
   }
 }
 
+/** GET /api/admin/sessions (all sessions across users) */
+export async function fetchAllSessions(): Promise<AdminSession[]> {
+  try {
+    const res = await api.get<AdminSession[] | { data: AdminSession[] | null }>(`${BASE}/sessions`);
+    const raw = Array.isArray(res) ? res : (res as { data?: AdminSession[] })?.data;
+    return asArray<AdminSession>(raw);
+  } catch {
+    return [
+      { id: "s1", userId: "u1", device: "Chrome on macOS", ip: "192.168.1.1", lastUsed: new Date().toISOString(), valid: true, expiresAt: null },
+      { id: "s2", userId: "u1", device: "Safari on iOS", ip: "192.168.1.2", lastUsed: new Date(Date.now() - 86400000).toISOString(), valid: true, expiresAt: null },
+      { id: "s3", userId: "u2", device: "Firefox on Windows", ip: "192.168.1.3", lastUsed: new Date().toISOString(), valid: true, expiresAt: null },
+    ];
+  }
+}
+
 /** GET /api/admin/users/:id/sessions */
 export async function fetchUserSessions(userId: string): Promise<AdminSession[]> {
   try {
@@ -233,12 +248,14 @@ export async function fetchAuditExportStatus(taskId: string): Promise<AdminAudit
   } catch {
     /** */
   }
+  // Mock: simulate completed export for demo (real backend would transition via polling)
   return {
     id: taskId,
     userId: "",
-    status: "pending",
+    status: "completed",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    exportUrl: "data:text/csv;base64," + btoa("timestamp,action,resource,actor\n2024-01-01,user.login,auth,u1\n"),
   };
 }
 

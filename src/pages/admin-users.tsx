@@ -1,5 +1,5 @@
-import { UserManagementPanel } from "@/components/admin";
+import { UserManagementPage } from "@/components/user-management";
 
 export default function AdminUsersPage() {
-  return <UserManagementPanel />;
+  return <UserManagementPage />;
 }
