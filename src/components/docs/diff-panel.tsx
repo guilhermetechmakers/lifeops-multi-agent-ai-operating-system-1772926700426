@@ -1,34 +1,44 @@
-import { CodeBlock } from "./code-block";
 import { cn } from "@/lib/utils";
 
-interface DiffPanelProps {
-  beforeLabel?: string;
-  afterLabel?: string;
-  beforeCode: string;
-  afterCode: string;
+export interface DiffPanelProps {
+  oldContent?: string;
+  newContent?: string;
+  labelOld?: string;
+  labelNew?: string;
   className?: string;
 }
 
 export function DiffPanel({
-  beforeLabel = "Before",
-  afterLabel = "After",
-  beforeCode,
-  afterCode,
+  oldContent = "",
+  newContent = "",
+  labelOld = "Before",
+  labelNew = "After",
   className,
 }: DiffPanelProps) {
   return (
-    <div className={cn("grid gap-4 sm:grid-cols-2", className)}>
-      <div className="space-y-2">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {beforeLabel}
-        </span>
-        <CodeBlock code={beforeCode ?? ""} language="diff" />
+    <div
+      className={cn(
+        "grid gap-4 rounded-lg border border-white/[0.06] bg-card overflow-hidden sm:grid-cols-2",
+        className
+      )}
+      role="region"
+      aria-label="Schema or template diff"
+    >
+      <div className="flex flex-col">
+        <div className="border-b border-white/[0.06] bg-secondary/30 px-3 py-2 text-xs font-medium text-muted-foreground">
+          {labelOld}
+        </div>
+        <pre className="overflow-x-auto p-4 text-sm text-muted-foreground font-mono whitespace-pre-wrap break-words">
+          <code className="text-red-400/90">{oldContent || "—"}</code>
+        </pre>
       </div>
-      <div className="space-y-2">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {afterLabel}
-        </span>
-        <CodeBlock code={afterCode ?? ""} language="diff" />
+      <div className="flex flex-col">
+        <div className="border-b border-white/[0.06] bg-secondary/30 px-3 py-2 text-xs font-medium text-muted-foreground">
+          {labelNew}
+        </div>
+        <pre className="overflow-x-auto p-4 text-sm text-muted-foreground font-mono whitespace-pre-wrap break-words">
+          <code className="text-teal/90">{newContent || "—"}</code>
+        </pre>
       </div>
     </div>
   );

@@ -6,5 +6,7 @@ export { HowItWorks } from "./how-it-works";
 export { PricingTeaser } from "./pricing-teaser";
 export { IntegrationsStrip } from "./integrations-strip";
 export { Testimonials } from "./testimonials";
+export { TestimonialsCarousel } from "./testimonials-carousel";
+export { CTAPanel } from "./cta-panel";
 export { FooterLinks } from "./footer-links";
 export { BookDemoDialog } from "./book-demo-dialog";

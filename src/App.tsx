@@ -69,7 +69,14 @@ import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
 import { AnalyticsDashboardShell, AnalyticsReportsOverview } from "@/components/analytics-reports";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
-import Docs from "@/pages/docs";
+import {
+  DocsLayout,
+  DocsHome,
+  APIDocPage,
+  ConnectorGuidePage,
+  AgentTemplateCatalog,
+  WorkflowSchemaExplorer,
+} from "@/components/docs";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,7 +98,14 @@ function App() {
           <ErrorBoundary>
             <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/docs" element={<Docs />} />
+          <Route path="/docs" element={<DocsLayout />}>
+            <Route index element={<DocsHome />} />
+            <Route path="api" element={<APIDocPage />} />
+            <Route path="connectors" element={<ConnectorGuidePage />} />
+            <Route path="connectors/:id" element={<ConnectorGuidePage />} />
+            <Route path="templates" element={<AgentTemplateCatalog />} />
+            <Route path="workflow-schema" element={<WorkflowSchemaExplorer />} />
+          </Route>
           <Route path="/about-help" element={<Navigate to="/dashboard/about-help" replace />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />

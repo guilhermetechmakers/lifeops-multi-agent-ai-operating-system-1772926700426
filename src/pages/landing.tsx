@@ -7,7 +7,8 @@ import {
   HowItWorks,
   PricingTeaser,
   IntegrationsStrip,
-  Testimonials,
+  TestimonialsCarousel,
+  CTAPanel,
   FooterLinks,
   BookDemoDialog,
 } from "@/components/landing";
@@ -60,7 +61,10 @@ export default function Landing() {
               <PricingTeaser tiers={pricing} />
             </section>
             <IntegrationsStrip logos={integrations} />
-            <Testimonials testimonials={testimonials} />
+            <TestimonialsCarousel testimonials={testimonials} />
+            <section id="cta" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+              <CTAPanel onBookDemoClick={() => setBookDemoOpen(true)} />
+            </section>
             <FooterLinks />
           </main>
         </div>

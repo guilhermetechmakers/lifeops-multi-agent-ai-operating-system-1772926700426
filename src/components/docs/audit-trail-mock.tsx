@@ -1,52 +1,52 @@
 import { cn } from "@/lib/utils";
 
-interface AuditLogEntry {
+export interface AuditLogEntry {
   id: string;
   action: string;
   timestamp: string;
-  user?: string;
   artifactRef?: string;
 }
 
-interface AuditTrailMockProps {
-  logs?: AuditLogEntry[];
+export interface AuditTrailMockProps {
+  entries?: AuditLogEntry[];
   className?: string;
 }
 
-const defaultLogs: AuditLogEntry[] = [
-  { id: "1", action: "schedule_adjusted", timestamp: "2024-03-08T10:00:00Z", user: "system", artifactRef: "run_abc123" },
-  { id: "2", action: "approval_granted", timestamp: "2024-03-08T09:45:00Z", user: "sarah@example.com" },
-  { id: "3", action: "cronjob_created", timestamp: "2024-03-08T09:30:00Z", user: "marcus@example.com", artifactRef: "cron_xyz" },
-];
-
-export function AuditTrailMock({ logs = [], className }: AuditTrailMockProps) {
-  const items = Array.isArray(logs) ? logs : defaultLogs;
+export function AuditTrailMock({ entries = [], className }: AuditTrailMockProps) {
+  const list = Array.isArray(entries) ? entries : [];
 
   return (
     <div
       className={cn(
-        "rounded-lg border border-white/[0.03] bg-card p-4",
+        "rounded-lg border border-white/[0.06] bg-card overflow-hidden",
         className
       )}
       role="region"
-      aria-label="Audit trail (demo)"
+      aria-label="Audit trail (read-only demo)"
     >
-      <h3 className="text-sm font-medium text-foreground mb-3">Recent activity</h3>
-      <ul className="space-y-2">
-        {(items ?? []).map((log) => (
-          <li
-            key={log?.id ?? ""}
-            className="flex items-center gap-3 text-sm text-muted-foreground"
-          >
-            <span className="text-xs font-mono text-teal/80">{log?.timestamp ?? ""}</span>
-            <span className="text-foreground">
-              {log?.action ?? ""}
-              {log?.artifactRef && (
-                <span className="text-muted-foreground ml-1">({log.artifactRef})</span>
-              )}
-            </span>
+      <div className="border-b border-white/[0.06] px-4 py-2">
+        <h3 className="text-sm font-medium text-foreground">Run artifacts / audit log</h3>
+        <p className="text-xs text-muted-foreground">Read-only demo</p>
+      </div>
+      <ul className="divide-y divide-white/[0.03] max-h-48 overflow-y-auto">
+        {list.length === 0 ? (
+          <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+            No entries. Actions will appear here when applied.
           </li>
-        ))}
+        ) : (
+          list.map((entry) => (
+            <li
+              key={entry?.id ?? ""}
+              className="px-4 py-2 text-sm flex flex-wrap items-center gap-2"
+            >
+              <span className="font-medium text-foreground">{entry?.action ?? ""}</span>
+              <span className="text-muted-foreground text-xs">{entry?.timestamp ?? ""}</span>
+              {entry?.artifactRef && (
+                <span className="font-mono text-xs text-teal">{entry.artifactRef}</span>
+              )}
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );

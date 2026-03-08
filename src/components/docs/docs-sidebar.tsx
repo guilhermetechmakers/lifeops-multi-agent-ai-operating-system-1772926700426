@@ -1,57 +1,94 @@
-import { NavLink } from "react-router-dom";
-import {
-  BookOpen,
-  Code2,
-  Plug,
-  Bot,
-  FileCode,
-  ChevronRight,
-} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { BookOpen, Code2, Plug, Bot, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const navSections = [
-  { id: "overview", label: "Overview", href: "/docs", icon: BookOpen },
-  { id: "api", label: "API Reference", href: "/docs/api", icon: Code2 },
-  { id: "connectors", label: "Connectors", href: "/docs/connectors", icon: Plug },
-  { id: "templates", label: "Agent Templates", href: "/docs/templates", icon: Bot },
-  { id: "workflow", label: "Workflow Schema", href: "/docs/workflow-schema", icon: FileCode },
+  { id: "overview", label: "Overview", to: "/docs", icon: BookOpen },
+  { id: "api", label: "API Reference", to: "/docs/api", icon: Code2 },
+  { id: "connectors", label: "Connectors", to: "/docs/connectors", icon: Plug },
+  { id: "templates", label: "Agent Templates", to: "/docs/templates", icon: Bot },
+  { id: "workflow", label: "Workflow Schema", to: "/docs/workflow-schema", icon: GitBranch },
 ];
 
-interface DocsSidebarProps {
+export interface DocsSidebarProps {
+  collapsed?: boolean;
   className?: string;
 }
 
-export function DocsSidebar({ className }: DocsSidebarProps) {
+export function DocsSidebar({ collapsed = false, className }: DocsSidebarProps) {
+  const location = useLocation();
+
+  if (collapsed) {
+    return (
+      <aside
+        className={cn(
+          "hidden md:flex w-16 flex-col border-r border-white/[0.03] bg-card transition-[width] duration-200",
+          className
+        )}
+        aria-label="Documentation navigation"
+      >
+        <ScrollArea className="flex-1 py-4">
+          <nav className="grid gap-1 px-2">
+            {(navSections ?? []).map((item) => {
+              const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors duration-200",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-secondary hover:text-foreground"
+                  )}
+                  title={item.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon className="h-5 w-5" aria-hidden />
+                </Link>
+              );
+            })}
+          </nav>
+        </ScrollArea>
+      </aside>
+    );
+  }
+
   return (
     <aside
       className={cn(
-        "w-[240px] shrink-0 border-r border-white/[0.03] bg-card/50 p-4 overflow-y-auto",
+        "hidden md:flex w-[260px] shrink-0 flex-col border-r border-white/[0.03] bg-card transition-[width] duration-200",
         className
       )}
-      role="navigation"
       aria-label="Documentation navigation"
     >
-      <nav className="space-y-1">
-        {(navSections ?? []).map((section) => (
-          <NavLink
-            key={section.id}
-            to={section.href}
-            end={section.href === "/docs"}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-120",
-                isActive
-                  ? "bg-primary/10 text-primary border-l-2 border-primary -ml-0.5 pl-3.5"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )
-            }
-          >
-            <section.icon className="h-4 w-4 shrink-0" aria-hidden />
-            <span>{section.label}</span>
-            <ChevronRight className="h-4 w-4 shrink-0 ml-auto opacity-50" aria-hidden />
-          </NavLink>
-        ))}
-      </nav>
+      <ScrollArea className="flex-1 py-4">
+        <nav className="grid gap-1 px-3">
+          {(navSections ?? []).map((item) => {
+            const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+            const Icon = item.icon;
+            return (
+              <div key={item.id}>
+                <Link
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200",
+                    isActive
+                      ? "bg-primary/10 text-primary border-l-2 border-primary pl-[10px]"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  <span>{item.label}</span>
+                </Link>
+              </div>
+            );
+          })}
+        </nav>
+      </ScrollArea>
     </aside>
   );
 }

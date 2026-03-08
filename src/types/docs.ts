@@ -1,11 +1,11 @@
 /**
  * Documentation / Developer Docs data models.
- * All types support runtime safety with optional fields and array guards.
+ * All list types are consumed with (data ?? []) and Array.isArray guards.
  */
 
 export interface Param {
   name: string;
-  in: "path" | "query" | "header" | "body";
+  in: "query" | "path" | "header" | "body";
   required: boolean;
   type: string;
   description?: string;
@@ -18,7 +18,8 @@ export interface ResponseBlock {
 }
 
 export interface CodeSample {
-  language: string;
+  lang?: "curl" | "javascript" | "json";
+  language?: string;
   label: string;
   code: string;
 }
@@ -31,6 +32,7 @@ export interface Endpoint {
   params?: Param[];
   responses?: ResponseBlock[];
   examples?: CodeSample[];
+  status?: "stable" | "beta" | "deprecated";
 }
 
 export interface APIDocSection {
@@ -41,9 +43,11 @@ export interface APIDocSection {
 }
 
 export interface Step {
-  number: number;
+  order?: number;
+  number?: number;
   title: string;
-  description: string;
+  body?: string;
+  description?: string;
 }
 
 export interface Permission {
@@ -58,6 +62,7 @@ export interface ConnectorGuide {
   prerequisites?: string[];
   steps?: Step[];
   permissions?: Permission[];
+  troubleshooting?: string;
 }
 
 export interface AgentTemplate {
@@ -75,6 +80,7 @@ export interface Field {
   type: string;
   required: boolean;
   description?: string;
+  children?: Field[];
   fields?: Field[];
 }
 
@@ -92,10 +98,16 @@ export interface PricingPlan {
   features: string[];
 }
 
-export interface Testimonial {
+export interface TestimonialDoc {
   id: string;
   author: string;
   company: string;
   text: string;
   rating?: number;
+}
+
+export interface DocsLandingData {
+  features: { id: string; title: string; description: string }[];
+  pricing: PricingPlan[];
+  testimonials: TestimonialDoc[];
 }

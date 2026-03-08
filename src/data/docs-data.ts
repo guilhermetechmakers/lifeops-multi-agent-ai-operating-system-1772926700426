@@ -9,7 +9,7 @@ import type {
   AgentTemplate,
   WorkflowSchema,
   PricingPlan,
-  Testimonial,
+  TestimonialDoc,
 } from "@/types/docs";
 
 export const apiDocSections: APIDocSection[] = [
@@ -30,13 +30,13 @@ export const apiDocSections: APIDocSection[] = [
         responses: [{ code: 200, contentType: "application/json", schema: "CronjobList" }],
         examples: [
           {
-            language: "curl",
+            lang: "curl",
             label: "cURL",
             code: `curl -X GET "https://api.lifeops.io/api/v1/cronjobs" \\
   -H "Authorization: Bearer YOUR_TOKEN"`,
           },
           {
-            language: "javascript",
+            lang: "javascript",
             label: "fetch",
             code: `const res = await fetch("https://api.lifeops.io/api/v1/cronjobs", {
   headers: { Authorization: "Bearer YOUR_TOKEN" },
@@ -56,7 +56,7 @@ const data = await res.json();`,
         responses: [{ code: 201, contentType: "application/json", schema: "Cronjob" }],
         examples: [
           {
-            language: "curl",
+            lang: "curl",
             label: "cURL",
             code: `curl -X POST "https://api.lifeops.io/api/v1/cronjobs" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
@@ -81,7 +81,7 @@ const data = await res.json();`,
         responses: [{ code: 200, contentType: "application/json", schema: "AgentList" }],
         examples: [
           {
-            language: "curl",
+            lang: "curl",
             label: "cURL",
             code: `curl -X GET "https://api.lifeops.io/api/v1/agents" \\
   -H "Authorization: Bearer YOUR_TOKEN"`,
@@ -106,7 +106,7 @@ const data = await res.json();`,
         responses: [{ code: 200, contentType: "application/json", schema: "Run" }],
         examples: [
           {
-            language: "curl",
+            lang: "curl",
             label: "cURL",
             code: `curl -X GET "https://api.lifeops.io/api/v1/runs/run_abc123" \\
   -H "Authorization: Bearer YOUR_TOKEN"`,
@@ -123,9 +123,9 @@ export const connectorGuides: ConnectorGuide[] = [
     title: "GitHub",
     prerequisites: ["GitHub account", "Organization admin access"],
     steps: [
-      { number: 1, title: "Create OAuth App", description: "In GitHub Settings > Developer settings, create a new OAuth App. Set callback URL to your LifeOps redirect URI." },
-      { number: 2, title: "Add credentials", description: "In LifeOps Settings > Integrations, add your GitHub Client ID and Client Secret." },
-      { number: 3, title: "Connect repository", description: "Authorize LifeOps to access the repositories you want to automate." },
+      { order: 1, number: 1, title: "Create OAuth App", description: "In GitHub Settings > Developer settings, create a new OAuth App. Set callback URL to your LifeOps redirect URI." },
+      { order: 2, number: 2, title: "Add credentials", description: "In LifeOps Settings > Integrations, add your GitHub Client ID and Client Secret." },
+      { order: 3, number: 3, title: "Connect repository", description: "Authorize LifeOps to access the repositories you want to automate." },
     ],
     permissions: [
       { scope: "repo", description: "Full control of private repositories", required: true },
@@ -137,9 +137,9 @@ export const connectorGuides: ConnectorGuide[] = [
     title: "Stripe",
     prerequisites: ["Stripe account", "API keys"],
     steps: [
-      { number: 1, title: "Get API keys", description: "From Stripe Dashboard > Developers > API keys, copy your Secret key." },
-      { number: 2, title: "Configure webhook", description: "Create a webhook endpoint pointing to LifeOps. Subscribe to payment_intent.succeeded and charge.succeeded." },
-      { number: 3, title: "Add to LifeOps", description: "In LifeOps Settings > Integrations, paste your Secret key and webhook signing secret." },
+      { order: 1, number: 1, title: "Get API keys", description: "From Stripe Dashboard > Developers > API keys, copy your Secret key." },
+      { order: 2, number: 2, title: "Configure webhook", description: "Create a webhook endpoint pointing to LifeOps. Subscribe to payment_intent.succeeded and charge.succeeded." },
+      { order: 3, number: 3, title: "Add to LifeOps", description: "In LifeOps Settings > Integrations, paste your Secret key and webhook signing secret." },
     ],
     permissions: [
       { scope: "read", description: "Read access to Stripe data", required: true },
@@ -150,9 +150,9 @@ export const connectorGuides: ConnectorGuide[] = [
     title: "Plaid",
     prerequisites: ["Plaid account", "Sandbox or Production keys"],
     steps: [
-      { number: 1, title: "Register app", description: "Create an application in Plaid Dashboard and obtain client_id and secret." },
-      { number: 2, title: "Configure Link", description: "Set redirect URI and webhook URL for Plaid Link flow." },
-      { number: 3, title: "Connect in LifeOps", description: "Add Plaid credentials in LifeOps Finance settings. Users will link accounts via Plaid Link." },
+      { order: 1, number: 1, title: "Register app", description: "Create an application in Plaid Dashboard and obtain client_id and secret." },
+      { order: 2, number: 2, title: "Configure Link", description: "Set redirect URI and webhook URL for Plaid Link flow." },
+      { order: 3, number: 3, title: "Connect in LifeOps", description: "Add Plaid credentials in LifeOps Finance settings. Users will link accounts via Plaid Link." },
     ],
     permissions: [
       { scope: "transactions", description: "Read transaction history", required: true },
@@ -177,7 +177,7 @@ export const workflowSchemas: WorkflowSchema[] = [
       { name: "id", type: "string", required: true, description: "Unique identifier" },
       { name: "schedule", type: "string", required: true, description: "Cron expression (e.g. 0 9 * * *)" },
       { name: "agentId", type: "string", required: true, description: "Agent template ID" },
-      { name: "config", type: "object", required: false, description: "Agent-specific config", fields: [
+      { name: "config", type: "object", required: false, description: "Agent-specific config", children: [
         { name: "inputs", type: "object", required: false, description: "Input parameters" },
       ]},
       { name: "enabled", type: "boolean", required: false, description: "Whether cronjob is active" },
@@ -205,7 +205,7 @@ export const pricingPlans: PricingPlan[] = [
   { id: "enterprise", name: "Enterprise", price: "Custom", features: ["Everything in Pro", "SSO & RBAC", "Dedicated support", "Compliance exports"] },
 ];
 
-export const docsTestimonials: Testimonial[] = [
+export const docsTestimonials: TestimonialDoc[] = [
   { id: "1", author: "Sarah Chen", company: "ScaleUp", text: "LifeOps transformed how we handle PR triage. The agent suggestions are accurate and the approval workflow keeps us in control.", rating: 5 },
   { id: "2", author: "Marcus Webb", company: "Solo Founder", text: "Finally, a platform that combines project automation with finance and health. The workload balancer alone is worth it.", rating: 5 },
   { id: "3", author: "Elena Rodriguez", company: "FinTech Co", text: "The audit trail and reversibility gave our compliance team confidence to enable bounded autopilot. Game changer.", rating: 5 },
