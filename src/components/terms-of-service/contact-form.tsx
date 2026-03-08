@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,7 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
     formState: { errors, isSubmitting },
     reset,
   } = useForm<ContactFormValues>({
+    mode: "onBlur",
     resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",
@@ -80,7 +81,7 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
   });
 
   const onSubmit = useCallback(
-    async (data: ContactFormValues) => {
+    async (_data: ContactFormValues) => {
       try {
         // No API - simulate success for demo
         await new Promise((r) => setTimeout(r, 500));
@@ -94,6 +95,9 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
     },
     [reset, onSuccess]
   );
+
+  const messageValue = useWatch({ control, name: "message", defaultValue: "" });
+  const messageLength = typeof messageValue === "string" ? messageValue.length : 0;
 
   if (isSubmitted) {
     return (
@@ -226,15 +230,29 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
           aria-describedby={errors.message ? "tos-message-error" : undefined}
           className={cn("resize-y", errors.message ? "border-destructive" : "")}
         />
-        {errors.message && (
-          <p
-            id="tos-message-error"
-            className="text-xs text-destructive"
-            role="alert"
+        <div className="flex justify-between items-baseline gap-2 min-h-[1.25rem]">
+          {errors.message ? (
+            <p
+              id="tos-message-error"
+              className="text-xs text-destructive"
+              role="alert"
+            >
+              {errors.message.message}
+            </p>
+          ) : (
+            <span />
+          )}
+          <span
+            className={cn(
+              "text-xs tabular-nums",
+              messageLength > MAX_MESSAGE ? "text-destructive" : "text-muted-foreground"
+            )}
+            aria-live="polite"
+            aria-label={`${messageLength} of ${MAX_MESSAGE} characters`}
           >
-            {errors.message.message}
-          </p>
-        )}
+            {messageLength}/{MAX_MESSAGE}
+          </span>
+        </div>
       </div>
 
       <Button type="submit" disabled={isSubmitting}>

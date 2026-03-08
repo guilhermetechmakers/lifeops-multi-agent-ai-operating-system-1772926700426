@@ -69,7 +69,6 @@ import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
 import { AnalyticsDashboardShell, AnalyticsReportsOverview } from "@/components/analytics-reports";
 import PrivacyPolicyPage from "@/pages/privacy-policy";
 import TermsOfServicePage from "@/pages/terms-of-service";
-import TermsOfServicePage from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
 import {
@@ -118,7 +117,6 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
-          <Route path="/terms" element={<TermsOfServicePage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
           <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />

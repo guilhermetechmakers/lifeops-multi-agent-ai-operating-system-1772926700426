@@ -27,7 +27,7 @@ export function ToSPage({ sections, className }: ToSPageProps) {
     <AnimatedPage className={cn("min-h-screen", className)}>
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:bg-secondary focus:text-foreground"
       >
         Skip to content
       </a>
@@ -45,7 +45,7 @@ export function ToSPage({ sections, className }: ToSPageProps) {
             <ArrowLeft className="h-4 w-4" aria-hidden />
             Back to home
           </Link>
-          <h1 className="text-2xl sm:text-[1.75rem] font-semibold tracking-tight text-foreground mb-2">
+          <h1 className="text-[1.25rem] sm:text-[1.5rem] lg:text-[1.75rem] font-semibold tracking-tight text-foreground mb-2">
             Terms of Service
           </h1>
           <VersionBadge versionInfo={TOS_VERSION_INFO} className="mb-4" />

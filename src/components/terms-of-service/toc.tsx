@@ -47,7 +47,7 @@ export function TOC({ sections = [], className }: TOCProps) {
                   e.preventDefault();
                   scrollToSection(id);
                 }}
-                className="text-sm text-muted-foreground hover:text-teal transition-colors duration-120 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
+                className="text-sm text-muted-foreground hover:text-teal focus-visible:text-teal transition-colors duration-120 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
               >
                 {title}
               </a>
