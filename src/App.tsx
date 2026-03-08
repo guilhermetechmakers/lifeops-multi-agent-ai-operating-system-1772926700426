@@ -26,6 +26,7 @@ import ContentDashboardPage from "@/pages/content-dashboard";
 import ContentLibraryPage from "@/pages/content-library";
 import ContentEditorPage from "@/pages/content-editor";
 import ContentCalendarPage from "@/pages/content-calendar";
+import SearchPage from "@/pages/search";
 import ArtifactsPage from "@/pages/artifacts";
 import { FinanceDashboardShell, FinanceOverview } from "@/components/finance-dashboard";
 import FinanceSubscriptionsPage from "@/pages/finance-subscriptions";
@@ -176,6 +177,7 @@ function App() {
             <Route path="content/library" element={<ContentLibraryPage />} />
             <Route path="content/editor" element={<ContentEditorPage />} />
             <Route path="content/calendar" element={<ContentCalendarPage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="artifacts" element={<ArtifactsPage />} />
             <Route path="checkout" element={<CheckoutPage />} />
             <Route path="finance" element={<FinanceDashboardShell />}>

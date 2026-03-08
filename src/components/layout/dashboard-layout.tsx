@@ -58,6 +58,7 @@ const navItems = [
   { to: "/dashboard/conflict-resolution", label: "Conflict Resolution", icon: GitMerge },
   { to: "/dashboard/projects", label: "Projects", icon: FolderKanban },
   { to: "/dashboard/content", label: "Content", icon: FileText },
+  { to: "/dashboard/search", label: "Search", icon: Search },
   { to: "/dashboard/artifacts", label: "Artifacts", icon: Paperclip },
   { to: "/dashboard/finance", label: "Finance", icon: Wallet },
   { to: "/dashboard/health", label: "Health", icon: Heart },
