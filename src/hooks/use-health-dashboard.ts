@@ -15,6 +15,11 @@ import {
   fetchHealthSnapshot,
   applyWorkloadAdjustment,
   syncCalendar,
+  fetchConsents,
+  updateConsents,
+  fetchCalendarEvents,
+  healthIngest,
+  type HealthIngestPayload,
 } from "@/api/health";
 import type { WorkloadRecommendationItem } from "@/types/health";
 
@@ -136,6 +141,59 @@ export function useSyncCalendar() {
     onError: () => {
       toast.error("Failed to sync calendar");
     },
+  });
+}
+
+export const HEALTH_CONSENTS_QUERY_KEY = ["health", "consents"] as const;
+
+export function useHealthConsents(userId: string) {
+  return useQuery({
+    queryKey: [...HEALTH_CONSENTS_QUERY_KEY, userId],
+    queryFn: () => fetchConsents(userId),
+    enabled: !!userId,
+  });
+}
+
+export function useUpdateHealthConsents(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof updateConsents>[1]) =>
+      updateConsents(userId, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: HEALTH_CONSENTS_QUERY_KEY });
+      toast.success("Consent preferences updated");
+    },
+    onError: () => toast.error("Failed to update consent preferences"),
+  });
+}
+
+export function useCalendarEvents(
+  userId: string,
+  dateRange: { from: string; to: string }
+) {
+  const q = useQuery({
+    queryKey: ["health", "calendar", userId, dateRange.from, dateRange.to],
+    queryFn: () => fetchCalendarEvents(userId, dateRange),
+    enabled: !!userId && !!dateRange.from && !!dateRange.to,
+  });
+  return {
+    ...q,
+    events: Array.isArray(q.data) ? q.data : [],
+  };
+}
+
+export function useHealthIngest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: HealthIngestPayload) => healthIngest(payload),
+    onSuccess: (result) => {
+      if (result?.success && (result.ingested ?? 0) > 0) {
+        qc.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.snapshot });
+        qc.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.recovery });
+        toast.success(`Ingested ${result.ingested} health data points`);
+      }
+    },
+    onError: () => toast.error("Failed to ingest health data"),
   });
 }
 

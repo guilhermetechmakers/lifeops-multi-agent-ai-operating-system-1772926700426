@@ -17,6 +17,10 @@ import type {
   WorkloadRecommendation,
   GroceryItem,
   AuditLog,
+  HealthDataSource,
+  HealthDataPoint,
+  HealthConsents,
+  CalendarEvent,
 } from "@/types/health";
 
 const MOCK_DELAY = 300;
@@ -384,6 +388,93 @@ export async function recordCoachingAction(
     createdAt: new Date().toISOString(),
     approvedAt: new Date().toISOString(),
   };
+}
+
+/** Health data ingestion (HealthKit / Google Fit) — POST /api/health/ingest */
+export interface HealthIngestPayload {
+  source: HealthDataSource;
+  userId: string;
+  data: unknown;
+}
+
+export interface HealthIngestResponse {
+  success: boolean;
+  ingested?: number;
+  errors?: unknown[];
+}
+
+export async function healthIngest(payload: HealthIngestPayload): Promise<HealthIngestResponse> {
+  try {
+    const res = await api.post<HealthIngestResponse>("/health/ingest", payload);
+    return res && typeof res === "object" && "success" in res
+      ? (res as HealthIngestResponse)
+      : { success: false };
+  } catch {
+    await delay(MOCK_DELAY);
+    return { success: true, ingested: 0 };
+  }
+}
+
+/** Consents — GET /api/consents, POST /api/consents, PATCH /api/consents */
+export async function fetchConsents(userId: string): Promise<HealthConsents | null> {
+  try {
+    const data = await api.get<HealthConsents | { data?: HealthConsents }>(
+      `/consents?userId=${encodeURIComponent(userId)}`
+    );
+    const raw = (data as { data?: HealthConsents })?.data ?? data;
+    return raw && typeof raw === "object" && raw.userId ? (raw as HealthConsents) : null;
+  } catch {
+    await delay(MOCK_DELAY);
+    return {
+      userId,
+      sources: { healthkit: false, google_fit: false, calendar: false },
+    };
+  }
+}
+
+export async function updateConsents(
+  userId: string,
+  payload: Partial<Pick<HealthConsents, "sources" | "dataSharingPrefs">>
+): Promise<HealthConsents> {
+  try {
+    const data = await api.patch<HealthConsents | { data?: HealthConsents }>("/consents", {
+      userId,
+      ...payload,
+    });
+    const raw = (data as { data?: HealthConsents })?.data ?? data;
+    if (raw && typeof raw === "object") return raw as HealthConsents;
+  } catch {
+    /**/
+  }
+  await delay(MOCK_DELAY);
+  return {
+    userId,
+    sources: payload.sources ?? { healthkit: false, google_fit: false, calendar: false },
+    dataSharingPrefs: payload.dataSharingPrefs,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** Calendar events — GET /api/calendar/events (for workload balancing) */
+export async function fetchCalendarEvents(
+  userId: string,
+  dateRange: { from: string; to: string }
+): Promise<CalendarEvent[]> {
+  try {
+    const params = new URLSearchParams({
+      userId,
+      from: dateRange.from,
+      to: dateRange.to,
+    });
+    const data = await api.get<CalendarEvent[] | { data?: CalendarEvent[] }>(
+      `/calendar/events?${params}`
+    );
+    const raw = (data as { data?: CalendarEvent[] })?.data ?? data;
+    return safeArray<CalendarEvent>(raw);
+  } catch {
+    await delay(MOCK_DELAY);
+    return [];
+  }
 }
 
 /** Habits Tracker: fetch habit history (checkins for streak/calendar) */

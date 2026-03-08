@@ -165,3 +165,37 @@ export interface Intervention {
   timestamp?: string;
   acknowledged?: boolean;
 }
+
+/** Health data source (HealthKit / Google Fit) */
+export type HealthDataSource = "healthkit" | "google_fit";
+
+/** Normalized health metric for storage (after adapter normalization) */
+export interface HealthDataPoint {
+  id?: string;
+  userId: string;
+  source: HealthDataSource;
+  type: string;
+  timestamp: string;
+  value: number | string | Record<string, unknown>;
+}
+
+/** Consent preferences for health and calendar data (opt-in) */
+export interface HealthConsents {
+  userId: string;
+  sources: {
+    healthkit: boolean;
+    google_fit: boolean;
+    calendar: boolean;
+  };
+  dataSharingPrefs?: Record<string, boolean>;
+  updatedAt?: string;
+}
+
+/** Calendar event from sync (for workload balancing) */
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  source?: string;
+}

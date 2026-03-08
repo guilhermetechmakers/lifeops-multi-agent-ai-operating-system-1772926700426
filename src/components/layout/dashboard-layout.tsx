@@ -424,6 +424,50 @@ export function DashboardLayout() {
               })()}
             </nav>
           )}
+          {location.pathname.startsWith("/dashboard/health") && (
+            <nav
+              className="flex gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-white/[0.03]"
+              aria-label="Health section"
+            >
+              <NavLink
+                to="/dashboard/health"
+                end
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/dashboard/health/habits"
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Habits Tracker
+              </NavLink>
+              <NavLink
+                to="/dashboard/health/training-meals"
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Training & Meal Planner
+              </NavLink>
+            </nav>
+          )}
           {location.pathname.startsWith("/dashboard/finance") && (
             <nav
               className="flex gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-white/[0.03]"
