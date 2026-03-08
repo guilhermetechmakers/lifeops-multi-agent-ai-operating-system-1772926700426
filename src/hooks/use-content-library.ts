@@ -58,11 +58,12 @@ export function useContentLibraryMetadata() {
       USE_MOCK ? mock.mockFetchContentLibraryMetadata() : api.fetchContentLibraryMetadata(),
     placeholderData: { owners: [], channels: [], tags: [] },
   });
-  const data = query.data ?? { owners: [], channels: [], tags: [] };
+  const data = query.data ?? { owners: [], channels: [], tags: [], platforms: [] };
   const owners = Array.isArray(data.owners) ? data.owners : [];
   const channels = Array.isArray(data.channels) ? data.channels : [];
   const tags = Array.isArray(data.tags) ? data.tags : [];
-  return { ...query, owners, channels, tags };
+  const platforms = Array.isArray(data.platforms) ? data.platforms : [];
+  return { ...query, owners, channels, tags, platforms };
 }
 
 export function useContentItemPipelineState(id: string | null) {

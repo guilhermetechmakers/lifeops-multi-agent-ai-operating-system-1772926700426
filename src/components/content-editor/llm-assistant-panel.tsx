@@ -1,8 +1,9 @@
 /**
  * LLMAssistantPanel — prompts, tone controls, expansion, rewrite, summarize, outline.
+ * Uses Content LLM Adapter for drafting, editing, and suggestions.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles, Expand, RefreshCw, FileText, List } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  draftContent,
+  editContent,
+  seoSuggestions,
+} from "@/lib/content-llm-adapter";
+import { toast } from "sonner";
 
 const TONE_OPTIONS = [
   { value: "professional", label: "Professional" },
@@ -25,12 +32,14 @@ const TONE_OPTIONS = [
 
 export interface LLMAssistantPanelProps {
   content: string;
+  draftId?: string | null;
   onApplySuggestion?: (suggestion: string) => void;
   className?: string;
 }
 
 export function LLMAssistantPanel({
   content,
+  draftId,
   onApplySuggestion,
   className,
 }: LLMAssistantPanelProps) {
@@ -38,26 +47,48 @@ export function LLMAssistantPanel({
   const [suggestion, setSuggestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAction = async (
-    action: "expand" | "rewrite" | "summarize" | "outline"
-  ) => {
-    setIsLoading(true);
-    setSuggestion("");
-    try {
-      await new Promise((r) => setTimeout(r, 800));
-      const mockSuggestion =
-        action === "expand"
-          ? `${content}\n\n[Expanded content would appear here from LLM]`
-          : action === "rewrite"
-            ? `[Rewritten version in ${tone} tone would appear here]`
-            : action === "summarize"
-              ? "[Summary would appear here]"
-              : "1. Introduction\n2. Main points\n3. Conclusion";
-      setSuggestion(mockSuggestion);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleAction = useCallback(
+    async (action: "expand" | "rewrite" | "summarize" | "outline") => {
+      setIsLoading(true);
+      setSuggestion("");
+      try {
+        if (action === "expand") {
+          const result = await draftContent({
+            idea: content || "Expand this section",
+            constraints: { tone, maxLength: 2000 },
+          });
+          setSuggestion(result?.draft ?? "");
+        } else if (action === "rewrite") {
+          const result = await editContent({
+            draftId: draftId ?? undefined,
+            content,
+            edits: `Rewrite this content in a ${tone} tone`,
+            constraints: { tone },
+          });
+          setSuggestion(result?.editedDraft ?? "");
+        } else if (action === "summarize") {
+          const result = await seoSuggestions({
+            content,
+            targetKeywords: [],
+          });
+          const meta = result?.seoMeta?.metaDescription ?? "";
+          setSuggestion(meta || `Summary: ${content.slice(0, 200)}${content.length > 200 ? "..." : ""}`);
+        } else {
+          const result = await draftContent({
+            idea: `Create an outline for: ${content.slice(0, 300)}`,
+            constraints: { tone },
+          });
+          const outline = result?.draft ?? "1. Introduction\n2. Main points\n3. Conclusion";
+          setSuggestion(outline);
+        }
+      } catch {
+        toast.error("LLM request failed. Retry or check connection.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [content, tone, draftId]
+  );
 
   return (
     <Card className={cn("border-white/[0.03] bg-card", className)}>

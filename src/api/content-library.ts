@@ -39,6 +39,8 @@ export async function fetchContentLibraryItems(params?: {
     searchParams.set("statuses", f.statuses.join(","));
   if (f.channel) searchParams.set("channel", f.channel);
   if (f.owner) searchParams.set("owner", f.owner);
+  if (f.platform) searchParams.set("platform", f.platform);
+  if (f.seoScoreMin != null) searchParams.set("seoScoreMin", String(f.seoScoreMin));
   if (f.scope) searchParams.set("scope", f.scope);
   if (f.dateFrom) searchParams.set("dateFrom", f.dateFrom);
   if (f.dateTo) searchParams.set("dateTo", f.dateTo);
@@ -82,6 +84,7 @@ export async function fetchContentLibraryMetadata(): Promise<ContentLibraryMetad
       owners: Array.isArray((data as ContentLibraryMetadata)?.owners) ? (data as ContentLibraryMetadata).owners : [],
       channels: Array.isArray((data as ContentLibraryMetadata)?.channels) ? (data as ContentLibraryMetadata).channels : [],
       tags: Array.isArray((data as ContentLibraryMetadata)?.tags) ? (data as ContentLibraryMetadata).tags : [],
+      platforms: Array.isArray((data as ContentLibraryMetadata)?.platforms) ? (data as ContentLibraryMetadata).platforms : [],
     };
   } catch {
     const [ownersRes, channelsRes, tagsRes] = await Promise.all([

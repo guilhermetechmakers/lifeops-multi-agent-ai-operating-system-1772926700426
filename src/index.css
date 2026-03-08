@@ -28,6 +28,10 @@
     --soft-highlight: 230 231 232;
     --destructive: 255 59 48;
     --radius: 0.5rem;
+    /* Chart / data viz (Design Reference: teal, amber, purple) */
+    --chart-teal: 0 194 168;
+    --chart-amber: 255 176 32;
+    --chart-purple: 139 92 246;
   }
 
   * {

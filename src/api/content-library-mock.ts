@@ -25,7 +25,15 @@ const MOCK_ITEMS: ContentItem[] = [
     channel: "Blog",
     owner: "Marketing",
     summary: "Intro to the LifeOps platform.",
+    seoScore: 72,
+    version: 3,
+    platform: "Web",
     pipeline: { state: "draft", next: "editing" },
+    versionHistory: [
+      { id: "v1", versionNumber: 1, changedBy: "Alex Chen", changedAt: "2025-03-01T10:00:00Z" },
+      { id: "v2", versionNumber: 2, changedBy: "Alex Chen", changedAt: "2025-03-02T14:00:00Z" },
+      { id: "v3", versionNumber: 3, changedBy: "Alex Chen", changedAt: "2025-03-03T09:00:00Z" },
+    ],
   },
   {
     id: "cl-2",
@@ -60,8 +68,15 @@ const MOCK_ITEMS: ContentItem[] = [
     tags: ["seo", "optimization"],
     channel: "Blog",
     owner: "Marketing",
+    seoScore: 92,
+    version: 5,
+    platform: "Web",
     metrics: { views: 1200, engagements: 340 },
     pipeline: { state: "published" },
+    versionHistory: [
+      { id: "v1", versionNumber: 1, changedBy: "Jordan Lee", changedAt: "2025-02-01T10:00:00Z" },
+      { id: "v5", versionNumber: 5, changedBy: "Jordan Lee", changedAt: "2025-03-09T16:00:00Z" },
+    ],
   },
   {
     id: "cl-5",
@@ -104,6 +119,7 @@ const MOCK_ITEMS: ContentItem[] = [
 const MOCK_METADATA: ContentLibraryMetadata = {
   owners: ["Marketing", "Content", "Product", "Engineering"],
   channels: ["Blog", "Docs", "Changelog", "Email", "Social"],
+  platforms: ["Web", "CMS", "Newsletter", "Social"],
   tags: ["lifeops", "automation", "content", "pipeline", "ai", "workflow", "seo", "optimization", "agents", "release", "campaign"],
 };
 
@@ -136,6 +152,9 @@ function filterItems(items: ContentItem[], filters: ContentLibraryFilters | unde
     );
   if (filters.scope === "published") out = out.filter((i) => i.status === "published");
   if (filters.scope === "assets") out = out.filter((i) => i.status !== "published");
+  if (filters.platform) out = out.filter((i) => i.platform === filters.platform);
+  if (filters.seoScoreMin != null)
+    out = out.filter((i) => (i.seoScore ?? 0) >= filters.seoScoreMin!);
   return out;
 }
 

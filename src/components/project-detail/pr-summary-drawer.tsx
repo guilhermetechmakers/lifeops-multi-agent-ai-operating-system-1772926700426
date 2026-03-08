@@ -30,6 +30,7 @@ export interface PRSummaryDrawerProps {
   pr: PR | null;
   onExport?: (pr: PR) => void;
   onAttachArtifact?: (pr: PR) => void;
+  onSummarize?: (prId: string) => void;
   className?: string;
 }
 

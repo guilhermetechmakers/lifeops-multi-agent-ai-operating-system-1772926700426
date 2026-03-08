@@ -58,11 +58,12 @@ export default function ContentCalendarPage() {
   const { logs, isLoading: auditLoading } = useAuditLogs({ limit: 20 });
   const logAudit = useLogAudit();
 
-  const channelList = channels ?? [];
+  const safeItems = Array.isArray(items) ? items : [];
+  const channelList = Array.isArray(channels) ? channels : (channels ?? []);
   const capacityMap = capacity ?? {};
   const conflicts = useMemo(
-    () => detectConflicts(items, channelList, capacityMap),
-    [items, channelList, capacityMap]
+    () => detectConflicts(safeItems, channelList, capacityMap),
+    [safeItems, channelList, capacityMap]
   );
 
   const handleItemMove = useCallback(
@@ -194,7 +195,7 @@ export default function ContentCalendarPage() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
           <div className="min-w-0">
             <CalendarView
-              items={items}
+              items={safeItems}
               channels={channelList}
               capacityMap={capacityMap}
               viewDate={viewDate}

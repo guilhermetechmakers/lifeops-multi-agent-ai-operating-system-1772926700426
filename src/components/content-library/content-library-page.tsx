@@ -50,7 +50,7 @@ export function ContentLibraryPage() {
     page: 1,
     limit: 50,
   });
-  const { owners, channels, tags } = useContentLibraryMetadata();
+  const { owners, channels, tags, platforms } = useContentLibraryMetadata();
   const bulkAction = useBulkActionContentLibrary();
 
   const itemList = Array.isArray(items) ? items : [];
@@ -149,6 +149,7 @@ export function ContentLibraryPage() {
           owners={owners}
           channels={channels}
           tags={tags}
+          platforms={platforms}
           searchValue={searchInput}
           onSearchChange={handleSearchChange}
         />

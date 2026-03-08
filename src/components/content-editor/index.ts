@@ -2,6 +2,7 @@ export { EditorWorkspace, type EditorMode, type EditorWorkspaceProps } from "./e
 export { AutosaveEngine, type SaveStatus, type AutosaveEngineProps } from "./autosave-engine";
 export { VersionBadgeStrip, type VersionBadgeStripProps } from "./version-badge-strip";
 export { LLMAssistantPanel } from "./llm-assistant-panel";
+export { IdeaCaptureCard } from "./idea-capture-card";
 export { ResearchPanel } from "./research-panel";
 export { AttachmentsPanel } from "./attachments-panel";
 export { PublishControlsPanel } from "./publish-controls-panel";

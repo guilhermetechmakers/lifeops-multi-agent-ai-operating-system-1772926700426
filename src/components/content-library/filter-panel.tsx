@@ -28,6 +28,7 @@ export interface FilterPanelProps {
   owners: string[];
   channels: string[];
   tags: string[];
+  platforms?: string[];
   searchValue?: string;
   searchPlaceholder?: string;
   onSearchChange?: (value: string) => void;
@@ -36,7 +37,10 @@ export interface FilterPanelProps {
 
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
+  { value: "idea", label: "Idea" },
+  { value: "research", label: "Research" },
   { value: "draft", label: "Draft" },
+  { value: "edit", label: "Edit" },
   { value: "scheduled", label: "Scheduled" },
   { value: "published", label: "Published" },
   { value: "archived", label: "Archived" },
@@ -55,6 +59,7 @@ export function FilterPanel({
   owners = [],
   channels = [],
   tags: _tags = [],
+  platforms = [],
   searchValue,
   searchPlaceholder: _searchPlaceholder = "Search...",
   onSearchChange,
@@ -82,6 +87,8 @@ export function FilterPanel({
     Boolean(filters?.status) ||
     filters?.channel ||
     filters?.owner ||
+    filters?.platform ||
+    filters?.seoScoreMin != null ||
     filters?.dateFrom ||
     filters?.dateTo ||
     (Array.isArray(filters?.tags) && filters.tags.length > 0) ||
@@ -196,6 +203,42 @@ export function FilterPanel({
                   {o}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters?.platform ?? ""}
+            onValueChange={(v) => handleChange({ ...filters, platform: v || undefined })}
+          >
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue placeholder="Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All platforms</SelectItem>
+              {(platforms ?? []).map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters?.seoScoreMin != null ? String(filters.seoScoreMin) : ""}
+            onValueChange={(v) =>
+              handleChange({
+                ...filters,
+                seoScoreMin: v ? Number(v) : undefined,
+              })
+            }
+          >
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue placeholder="SEO min" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Any SEO</SelectItem>
+              <SelectItem value="50">50+</SelectItem>
+              <SelectItem value="70">70+</SelectItem>
+              <SelectItem value="85">85+</SelectItem>
+              <SelectItem value="90">90+</SelectItem>
             </SelectContent>
           </Select>
           <Input

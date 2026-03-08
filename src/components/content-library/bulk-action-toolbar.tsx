@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Upload, Download, Archive, XCircle } from "lucide-react";
+import { Upload, Download, Archive, XCircle, Sparkles, RefreshCw, FileEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BulkActionType } from "@/types/content-library";
 
@@ -26,11 +26,14 @@ export interface BulkActionToolbarProps {
   className?: string;
 }
 
-const ACTIONS: { type: BulkActionType; label: string; icon: React.ElementType }[] = [
-  { type: "publish", label: "Publish", icon: Upload },
-  { type: "unpublish", label: "Unpublish", icon: XCircle },
-  { type: "archive", label: "Archive", icon: Archive },
-  { type: "export", label: "Export", icon: Download },
+const ACTIONS: { type: BulkActionType; label: string; icon: React.ElementType; confirm?: boolean }[] = [
+  { type: "publish", label: "Publish", icon: Upload, confirm: true },
+  { type: "unpublish", label: "Unpublish", icon: XCircle, confirm: true },
+  { type: "archive", label: "Archive", icon: Archive, confirm: true },
+  { type: "move-to-draft", label: "Move to draft", icon: FileEdit, confirm: true },
+  { type: "re-run-llm", label: "Re-run LLM", icon: Sparkles, confirm: true },
+  { type: "schedule-republish", label: "Schedule re-publish", icon: RefreshCw, confirm: true },
+  { type: "export", label: "Export", icon: Download, confirm: false },
 ];
 
 export function BulkActionToolbar({
@@ -45,7 +48,8 @@ export function BulkActionToolbar({
   if (selectedCount === 0) return null;
 
   const handleClick = (action: BulkActionType) => {
-    if (action === "export") {
+    const needsConfirm = ACTIONS.find((a) => a.type === action)?.confirm !== false;
+    if (!needsConfirm) {
       onAction(action);
       return;
     }
@@ -105,6 +109,9 @@ export function BulkActionToolbar({
               {confirmAction === "publish" && "Publish selected items?"}
               {confirmAction === "unpublish" && "Unpublish selected items?"}
               {confirmAction === "archive" && "Archive selected items?"}
+              {confirmAction === "move-to-draft" && "Move to draft?"}
+              {confirmAction === "re-run-llm" && "Re-run LLM drafting?"}
+              {confirmAction === "schedule-republish" && "Schedule re-publish?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction === "publish" &&
@@ -113,6 +120,12 @@ export function BulkActionToolbar({
                 "Selected content will be unpublished and reverted to draft."}
               {confirmAction === "archive" &&
                 "Selected items will be moved to archive. You can restore them later."}
+              {confirmAction === "move-to-draft" &&
+                "Selected items will be reverted to draft status."}
+              {confirmAction === "re-run-llm" &&
+                "LLM drafting will be re-run for selected items. This may take a moment."}
+              {confirmAction === "schedule-republish" &&
+                "Selected items will be scheduled for re-publishing."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

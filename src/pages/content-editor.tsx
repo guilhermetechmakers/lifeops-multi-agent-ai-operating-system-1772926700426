@@ -16,6 +16,7 @@ import {
   AutosaveEngine,
   VersionBadgeStrip,
   LLMAssistantPanel,
+  IdeaCaptureCard,
   ResearchPanel,
   AttachmentsPanel,
   PublishControlsPanel,
@@ -200,7 +201,7 @@ export default function ContentEditorPage() {
     [updateDraft]
   );
 
-  const versionsList = Array.isArray(versions) ? versions : [];
+  const versionsList = Array.isArray(versions) ? versions : (versions ?? []);
   const sortedVersions = [...versionsList].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -251,6 +252,12 @@ export default function ContentEditorPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
+          <IdeaCaptureCard
+            onDraftGenerated={(draft) => {
+              setContent(draft);
+              if (draftId) updateDraft.mutate({ content: draft });
+            }}
+          />
           <EditorWorkspace
             value={content}
             onChange={setContent}
@@ -268,6 +275,7 @@ export default function ContentEditorPage() {
             <TabsContent value="assistant" className="mt-4">
               <LLMAssistantPanel
                 content={content}
+                draftId={draftId}
                 onApplySuggestion={(s) => setContent(s)}
               />
             </TabsContent>
@@ -303,6 +311,7 @@ export default function ContentEditorPage() {
             isUploading={uploadArtifact.isPending}
           />
           <PublishControlsPanel
+            content={content}
             onPublish={handlePublish}
             onTestRun={() => toast.info("Test run would execute pipeline")}
             isPublishing={startPipeline.isPending}

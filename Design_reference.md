@@ -326,344 +326,397 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-# Conflict Resolution Engine
+# Content Pipeline Automation
 
 ## Overview
-Develop a deterministic Conflict Resolution Engine (CRE) that resolves inter-agent conflicts using an ordered set of priority-based rules defined in a DSL. The engine must produce reproducible outcomes with full explainability for each decision, support human-in-the-loop overrides, and emit a complete audit trail of every resolution. It will be a core service within LifeOps, interoperating with the Master Dashboard, Cronjobs, and run artifacts. The CRE should be robust to partial data, guard against null/undefined values, and provide strict validation and logging to support audits and rollback.
-
----
+Build an end-to-end Content Pipeline Automation system within LifeOps that enables ideation through publishing with LLM-assisted drafting, research, editing, scheduling, and publishing. The system integrates with publishing connectors (CMS, social platforms, email providers), supports collaborative editing and versioning, and offers a robust Content Dashboard, Content Library, Content Calendar, and Content Editor. All components must be resilient to null/undefined values, guard array operations, and follow the runtime-safety rules specified.
 
 ## Components to Build
+1. Content LLM Adapter (module-local)
+   - Purpose: Proxy requests to the canonical OpenAI API with content-specific constraints and safety checks.
+   - Responsibilities:
+     - Normalize inputs, apply content constraints (tone, length, safety filters, policy checks).
+     - Rate-limit and retry with backoff; capture request/response traces for audit.
+     - Enforce schema for prompts, variables, and outputs; validate OpenAI responses.
+     - Expose a stable, module-local API surface for other modules (drafting, editing, SEO suggestions, summarization).
+   - Interfaces:
+     - draftContent({ idea, constraints, context }) -> Draft text
+     - editContent({ draftId, edits, constraints }) -> Edited draft
+     - researchAssist({ topic, depth, sources }) -> Research notes
+     - seoSuggestions({ content, targetKeywords }) -> SEO plan and metadata
+     - safetyCheck({ content }) -> pass/fail with rationale
+   - Safeguards:
+     - Must guard against null/undefined inputs and outputs.
+     - Use data ?? {} or data ?? [] as appropriate.
+     - Validate response shapes before downstream usage.
 
-1) Conflict Resolution Engine (Core Engine)
-- Purpose: Evaluate a given set of agent conflicts, apply deterministic, prioritized rules, and produce a resolution with explanation.
-- Key features:
-  - Rule Definition DSL:
-    - Priority-ordered rules with explicit precedence.
-    - Conditional checks (predicates) with support for memory-scoped reads and tool/permission constraints.
-    - Ability to reference run inputs, agent states, and historical traces.
-  - Evaluation Kernel:
-    - Deterministic, reproducible outputs given the same inputs.
-    - Pure function mode with an optional side-effect hook for reversible actions.
-  - Explainability & Audit:
-    - For each conflict, emit a decision record containing: inputs, matched rules, rationale, final outcome, and per-agent justifications.
-  - Human-in-the-Loop:
-    - Support manual overrides, approvals, and notes that can alter the automatic outcome while preserving an audit trail.
-  - Safety & Constraints:
-    - Enforce safety rails (e.g., required confirmations for irreversible actions).
-    - Respect permissions/automation levels, quotas, and spend limits.
-  - Reversibility:
-    - Generated artifacts include a reversible delta/log that can revert actions if needed.
-- Data model:
-  - Conflicts: { id, agents: [AgentSlot], context: object, createdAt, status }
-  - Rules: { id, name, priority, conditionAST, actions }
-  - Resolutions: { id, conflictId, outcome, explanations, appliedActions, overrides, timestamp }
-  - AgentState: per-agent memory and variables used by rules
-  - History/Log: trace entries for explainability
+2. Content Dashboard Page
+   - Overview panel aggregating all content pipelines.
+   - Sub-widgets:
+     - Content Calendar summary (upcoming publishes, slots)
+     - Drafts in progress (list with status)
+     - Publishing status (live, scheduled, failed)
+     - Pending approvals queue
+     - SEO/performance insights (basic KPIs, trends, SERP previews)
+   - Data interactions:
+     - Pulls from Content Library, Content Calendar, and Publishing Connectors.
+     - Real-time appearance with optimistic UI where appropriate.
+   - Actions:
+     - Approve/reject, move to next workflow step, request revisions, re-run LLM prompts.
+   - Design notes:
+     - Align with the provided visual style (dark UI, elevated cards, dense data presentation).
+     - Ensure all lists/arrays are guarded (e.g., (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []).
 
-2) Run Details Page (Run Details View)
-- Purpose: Present a detailed view of a single cron/agent run, including inputs, inter-agent trace, logs, diffs, artifacts, timing, and outcome, with the ability to revert actions.
-- Features:
-  - Inputs Panel: Show all inputs, with redaction/abstraction for sensitive data; guard against undefined values.
-  - Agent-to-Agent Trace: Render a directed graph of messages exchanged during the run; allow filtering by agent, type, and time; robustly handle missing nodes gracefully.
-  - Logs & Events: Sequenced log stream with timestamps; support searching, filtering, and collapsing long logs.
-  - Diffs & Artifacts: Show diffs between pre/post states, artifacts produced, and their provenance; if data is missing, render placeholders with helpful hints.
-  - Timing & Timelines: Visual timeline showing start, end, and durations for each stage; handle partial timing data safely.
-  - Outcome & Reverts:
-    - Display final resolution, rationale, and per-agent outcomes.
-    - Revert Actions: UI to revert executed actions with safety confirmations; trace the revert as a reversible operation in the audit log.
-  - Validation & Safety:
-    - All data reads guarded with Array.isArray checks and data ?? [] defaults.
-    - Use nullish coalescing for all API results; never assume non-null arrays.
-- Data interactions:
-  - API: GET /runs/{runId}, GET /runs/{runId}/trace, GET /runs/{runId}/logs, POST /runs/{runId}/revert
-  - State: Use useState<T[]>([]) for array-type state; guard rendering with Array.isArray checks.
+3. Content List / Library Page
+   - Browse, filter, and search all content assets and published items with metadata and status.
+   - Features:
+     - Advanced filtering (status, author, topic, confidence score, publish date window, SEO score, platform).
+     - Full-text search on content titles, bodies, summaries.
+     - Metadata columns: title, status, author, last edited, publish date, SEO score, version.
+     - Bulk actions: archive, move to draft, re-run LLM drafting, schedule re-publish.
+   - Data handling:
+     - Ensure all arrays are safely handled: const items = Array.isArray(data?.items) ? data.items : [].
+   - Versioning:
+     - Display version history per asset; allow viewing diffs and restoring prior versions if needed.
 
-3) Agent Trace & Debugger (Debugger Tool)
-- Purpose: Debug agent behavior via an interactive tool that presents a visual conversation graph, scoped memory, variable states, and step-through execution.
-- Features:
-  - Visual Conversation Graph:
-    - Nodes represent agents/messages; edges depict handoffs and negotiations.
-    - Real-time or replayed execution modes; handle incomplete traces gracefully.
-  - Scoped Memory & Variables:
-    - Per-agent memory segments exposed as read-only by default with the ability to inspect and annotate.
-    - Variable state panels showing current values, types, and change history.
-  - Step-Through Execution:
-    - Step, pause, resume, and replay execution steps; allow stepping over or into function calls.
-  - Filtering, Search, and Safeguards:
-    - Filter trace by agent, message type, or time window.
-    - Guard against rendering null/undefined data; render empty states gracefully.
-- Data interactions:
-  - API: GET /debug/run/{runId}/trace, GET /debug/run/{runId}/memory, POST /debug/run/{runId}/step
-  - State: Initialize arrays with [] defaults; verify with Array.isArray() before mapping.
+4. Content Calendar Page
+   - Calendar-based scheduling UI for content items with publishing slots, drag-to-schedule, and conflict detection.
+   - Features:
+     - Monthly/weekly/daily calendar views.
+     - Drag-and-drop scheduling of items into slots; detect conflicts with existing slots.
+     - Timezone-aware scheduling; support for draft, scheduled, and publishing states.
+     - Conflict detection logic with clear user feedback and resolution prompts.
+     - Quick actions: reschedule, cancel schedule, toggle auto-publish windows.
+   - Data handling:
+     - Only schedule items with approved content and a ready-to-publish status.
+     - Guard arrays and results: (slots ?? []).map(...) and Array.isArray(items) ? items : [].
 
----
+5. Content Editor Page
+   - End-to-end editor that supports idea → research → draft → edit → schedule → publish workflows with LLM-assisted writing, versioning, collaboration, and publishing integrations.
+   - Features:
+     - Idea capture area with lightweight brainstorming prompts.
+     - Research pane integrated with live LLM-assisted notes and sources citation tracking.
+     - Draft editor with real-time collaborative editing (operational transforms or CRDTs), version history, change tracking, and inline comments.
+     - Editing tools: rewriter, summarizer, SEO optimizer, tone/style adjuster via Content LLM Adapter.
+     - Versioning: create, view, compare, and revert versions; watermark drafts while in-progress.
+     - Collaboration: mentions, comments, assignments, and audit trail per edit.
+     - Publishing connectors: CMS publish, social platforms scheduling, email distribution.
+     - Scheduling integration: push to Content Calendar with recommended publish date/time.
+   - UX considerations:
+     - Robust validation for inputs; guard all array methods and data access.
+     - Ensure no null/undefined dereferences in editor pipelines.
 
 ## Implementation Requirements
 
 ### Frontend
-- UI Framework: React (TypeScript) with a design system aligned to the provided Visual Style.
-- Components:
-  - CREnginePanel: Card-style container for engine configuration and status.
-  - RuleDSLEditor: DSL editor with syntax highlighting, validation, and live preview of rule evaluation impact.
-  - ConflictList: Compact, searchable list of conflicts with per-item actions (resolve, override, inspect).
-  - RunDetailsPage (page_run_details_010):
-    - Tabs: Overview, Inputs, Trace, Logs, Diffs, Artifacts, Timing, Outcome, Revert.
-    - RevertModal: Confirm irreversible actions with explicit user confirmation data.
-  - AgentTraceDebugger (page_agent_trace_011):
-    - GraphCanvas: Visual graph with pan/zoom.
-    - MemoryInspector: Per-agent memory and variable state inspector.
-    - Stepper: Controls to step through execution with play/pause.
-  - LogsView: Filterable, searchable log stream with timestamp formatting.
-  - DiffViewer: Side-by-side diffs with contextual annotations.
-- Data Safety:
-  - All arrays guarded: (data ?? []).map(...), Array.isArray(data) ? data.map(...) : [].
-  - Supabase-like results: treat data as data ?? [] for arrays; const items = data ?? [].
-  - State defaults: useState<Type[]>([]) for all array types; useState<MemoryEntry> for memory.
-- API Integration:
-  - Typed API clients with proper input validation and error handling.
-  - Validation / normalization: const list = Array.isArray(response?.data) ? response.data : [].
-- Accessibility:
-  - Keyboard navigable, proper aria attributes for graphs and controls.
-- Performance:
-  - Virtualized lists for large traces, pagination or lazy loading for logs/diffs to prevent overdraw.
-- Security:
-  - Ensure that any action requiring permissions checks is gated server-side; UI only surfaces allowed actions.
-  - Sensitive data redaction in UI (e.g., inputs, prompts) where necessary.
+- Frameworks: React (with TypeScript), state management via Redux or React Context, and server-state syncing (e.g., SWR, React Query).
+- Architecture:
+  - Feature-based modules with isolated state and reducers for content, calendar, and editor.
+  - Reusable UI components following the design system (cards, panels, navigation, charts).
+- Components to build:
+  - Card: dark elevated container with gradient background and top icon.
+  - ListView: generic list with safe mapping and virtualization if necessary.
+  - DataTable: sortable, filterable, paginated list for Content Library.
+  - Calendar: drag-and-drop scheduler with conflict detection visuals.
+  - EditorPane: collaborative editor with version controls, diff view, and LLM controls.
+  - Modals/Dialogs: Approvals, Revisions, Publishing confirmations.
+  - LLM Controls: prompts, constraints, model selection, temperature, max tokens, safety toggles.
+  - Connectors UI: CMS, social platforms, email provider connectors status and actions.
+  - Activity/Audit Trail: logs with human-readable explanations and inter-agent trace references.
+- Safety and guards:
+  - All array operations guarded: (array ?? []).map(...), Array.isArray(array) ? array.map(...) : [].
+  - Use appropriate defaults for useState:
+    - const [items, setItems] = useState<any[]>([]);
+    - const [drafts, setDrafts] = useState<ContentDraft[]>([]);
+    - const [versions, setVersions] = useState<Version[]>([]);
+  - Null checks before any nested property access: data?.items ?? [].
+- Data validation:
+  - Propagate validation errors to UI with clear messaging.
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : [].
 
 ### Backend
-- APIs:
-  - Conflict Engine
-    - POST /conflicts/resolve
-      - Body: { conflicts: ConflictInput[], rules: RuleDraft[] }
-      - Returns: { resolutions: ResolutionRecord[], trace: ExplanationTrail, artifacts: ArtifactList }
-    - GET /conflicts/{id}
-    - POST /conflicts/{id}/override
-  - Run Details
-    - GET /runs/{runId}
-    - GET /runs/{runId}/trace
-    - GET /runs/{runId}/logs
-    - POST /runs/{runId}/revert
-  - Debugger
-    - GET /debug/runs/{runId}/trace
-    - GET /debug/runs/{runId}/memory
-    - POST /debug/runs/{runId}/step
-- Data Models (with strict validation and null safety):
-  - Conflict
-    - id: string
-    - agents: { id: string, role: string, priority: number }[]
-    - context: Record<string, any> | null
-    - status: 'open' | 'resolved' | 'overridden'
-  - Rule
-    - id: string
-    - name: string
-    - priority: number
-    - condition: string // DSL or AST
-    - actions: Array<{ type: string, payload?: any }>
-  - Resolution
-    - id: string
-    - conflictId: string
-    - outcome: string
-    - explanations: string[]
-    - appliedActions: Array<{ agentId: string, action: string, success: boolean }>
-    - overrides?: string
-    - timestamp: string
-  - Run
-    - id: string
-    - cronjobId: string
-    - inputs: Record<string, any>
-    - agentTrace: Array<any>
-    - logs: string[]
-    - artifacts: Array<{ name: string, uri: string, type: string }>
-    - outcome: string
-    - timing: { start: string, end?: string, duration?: number }
-  - Memory
-    - agentId: string
-    - memory: Record<string, any>
-  - Artifact
-    - id: string
-    - name: string
-    - uri: string
-    - type: string
-- DSL & Evaluation:
-  - DSL Parser/Compiler to an internal AST
-  - Evaluator that executes rules in priority order
-  - Reproducibility: seedable RNG if randomness exists; deterministic memory reads
-- Audit & Logging:
-  - Every resolution must be logged with justification, rule trace, time, and who invoked human override
-- Validation:
-  - Input schemas validated with runtime checks
-  - Outputs always shaped to expected types; null-safe.
+- APIs (REST or GraphQL) to support:
+  - Content idea, research notes, draft, edit, and publish workflows.
+  - Draft/SEO requests via Content LLM Adapter.
+  - Collaboration and versioning endpoints per asset.
+  - Publishing connectors: CMS, social, email; webhooks for publish events.
+  - Calendar events: slots, conflicts, scheduling actions.
+  - Approvals queue management.
+- Data Models (schemas):
+  - ContentAsset
+    - id, title, slug, status (idea/research/draft/review/scheduled/published/archived), authorId, createdAt, updatedAt
+    - version: number, versions: Version[]
+    - content: { idea, researchNotes, draft, editedDraft, seoMeta, summary }
+    - publishInfo: { scheduledAt, publishedAt, platformStatus, connectors } 
+    - seoScore, readability, wordCount, topics[]
+  - Version
+    - id, assetId, versionNumber, contentSnapshot, changedBy, changedAt, comments
+  - CalendarSlot
+    - id, publishDate, publishWindow, assetId, status
+  - Approval
+    - id, assetId, approverId, status, comments, createdAt, updatedAt
+  - Connector
+    - id, type (CMS, Social, Email), provider, config, status, lastSynced
+  - AuditLog
+    - id, assetId, action, actorId, timestamp, details
+- Functions/Services:
+  - LLMAdapterService: route requests to OpenAI API with constraint layer.
+  - ContentWorkflowService: orchestrates idea → research → draft → edit → schedule → publish steps; handles versioning and approvals.
+  - PublishingService: interface with CMS and other connectors; handles publish status and webhooks.
+  - CalendarService: manage slots, conflicts, and rescheduling.
+  - ValidationService: enforce schema validations, safety rails, and permission checks.
+- Data Safety:
+  - All inputs/outputs validated against schemas; use null checks, default values, and strict typing.
+  - Audit trail must capture all user actions, generated prompts, and agent messages.
 
 ### Integration
-- Data flow:
-  - Cronjob creates a Run with inputs and initial memory.
-  - The Conflict Engine processes conflicts for a run and emits a Resolution with explanations.
-  - Run Details page reads run, trace, and logs via safe API calls; supports revert.
-  - Debugger pulls trace/memory for the run and allows step-through execution.
-- State management:
-  - Centralized store for runs and conflicts with robust selectors and memoization.
-  - API clients with fallback defaults to [] for arrays; use of Array.isArray checks.
-- Observability:
-  - Structured logging for all steps; traces emitted as JSON with position, timestamp, and actor.
-  - Metrics: resolution latency, rule hit count per run, number of overrides, revert counts.
+- Communication Model:
+  - Central orchestrator (LifeOps) enabling agent-to-agent messages with traceability.
+  - Content LLM Adapter acts as a gateway for LLM-enabled actions.
+  - Connectors expose publish endpoints; webhooks propagate publish events back into the system.
+- Data Flow:
+  - Idea → Research: content prompts to LLM Adapter; store results in ContentAsset. 
+  - Draft → Edit: collaborative editor; each save creates a new Version.
+  - Schedule: updates to ContentCalendar; conflicts flagged; approvals may be required.
+  - Publish: invoke connectors; update asset status; push back to dashboard.
 - Security:
-  - All endpoints protected by authentication/authorization middleware.
-  - Data leakage prevention: redact sensitive fields in responses unless explicitly authorized.
-
----
+  - Authentication/Authorization for all endpoints (RBAC with roles like Editor, Approver, Publisher, Admin).
+  - Permissions checked before any state-changing operation (approve, publish, archive).
+  - Audit logs immutable or append-only; ensure traceability.
 
 ## User Experience Flow
-
-1) Access Master Dashboard
-- Open Conflict Resolution Engine panel; see quick overview: active conflicts, latest resolutions, and run history.
-- Create or edit a Rule DSL with a guided editor.
-
-2) Create/Inspect Conflicts
-- User defines or imports a set of conflicts with agents and goals.
-- CRE validates input data (guards against null/undefined; uses data ?? [] and Array.isArray checks).
-
-3) Run Conflict Resolution
-- Trigger POST /conflicts/resolve with conflicts + rules.
-- Engine processes in deterministic order, saving a Resolution and trace.
-- The Run includes: inputs, agent traces, logs, and outcome; create a Run record.
-
-4) Run Details Page (page_run_details_010)
-- Navigate to a specific run.
-- View:
-  - Inputs panel with redaction for sensitive data.
-  - Agent-to-Agent Trace graph with drill-down per message.
-  - Logs and Diffs showing state changes.
-  - Artifacts produced and their provenance.
-  - Timing chart and duration bars.
-  - Outcome summary with per-agent decisions and rationale.
-- Revert Actions:
-  - If allowed, click Revert to trigger a reversible delta, with a confirmation step.
-  - Audit log updated to reflect reversal.
-
-5) Agent Trace & Debugger (page_agent_trace_011)
-- Open debugger for a specific run.
-- Visual graph shows agents and message flow; filter by type or time.
-- Inspect per-agent memory and variable states.
-- Step through execution:
-  - Step, Resume, Pause, and Jump-to-step.
-  - See state changes in memory and variables in real time.
-- Save or export a snapshot of the trace for audits.
-
-6) Human-in-the-Loop Overrides
-- Approvals Queue: actions requiring human approval appear with context, rationale, and risk indicators.
-- Approve/Reject with notes; ensure changes are captured in the Resolution history.
-
-7) Reproducibility & Audit
-- All decisions are explainable and auditable with a full trace of rule hits, inputs, and actions.
-- Replays are possible using the same inputs and rule set to reproduce outcomes.
-
----
+1. Ideation
+   - User opens Content Dashboard → starts with an idea card or creates a new idea.
+   - Idea captures title, brief, objectives, required tone; optional topics.
+   - LLM Adapter suggests initial research questions and potential angles.
+2. Research
+   - User toggles to Research pane; prompts are sent to LLM Adapter for notes and sources.
+   - Sources are stored, annotated, and linked to the idea.
+3. Draft
+   - User initiates Draft via LLM-assisted drafting; auto-generated draft appears with suggested outline.
+   - Draft is saved as Version 1; user can accept/reject edits, request rewrites.
+4. Edit
+   - Editor collaborates in real-time; inline comments/claims are tracked.
+   - SEO assistant suggests keywords, readability improvements, and meta descriptions.
+5. Schedule
+   - User drags content to a calendar slot in Content Calendar; conflict detection triggers if slot already taken.
+   - If approval-required, item enters Approvals queue; otherwise auto-schedule.
+6. Publish
+   - User triggers Publish; content is pushed to configured CMS, social channels, and email providers.
+   - Publish results captured; status updated in Dashboard; success/failure logs surfaced.
+7. Post-publish
+   - Performance/SEO insights update; audit logs show the complete run; user can initiate re-run or revisions.
 
 ## Technical Specifications
 
-- Data Models (key schemas to implement)
-  - Conflict: { id: string, agents: { id: string, role: string, priority: number }[], context?: Record<string, any>, status: 'open'|'resolved'|'overridden' }
-  - Rule: { id: string, name: string, priority: number, condition: string, actions: Array<{ type: string, payload?: any }> }
-  - Resolution: { id: string, conflictId: string, outcome: string, explanations: string[], appliedActions: Array<{ agentId: string, action: string, success: boolean }>, overrides?: string, timestamp: string }
-  - Run: { id: string, cronjobId: string, inputs: Record<string, any>, agentTrace: any[], logs: string[], artifacts: { name: string, uri: string, type: string }[], outcome: string, timing: { start: string, end?: string, duration?: number } }
-  - Memory: { agentId: string, memory: Record<string, any> }
+### Data Models (Schemas)
+- ContentAsset
+  - id: string
+  - slug: string
+  - title: string
+  - status: 'idea' | 'research' | 'draft' | 'edit' | 'scheduled' | 'published' | 'archived'
+  - authorId: string
+  - createdAt: string (ISO)
+  - updatedAt: string
+  - publishInfo: {
+      scheduledAt?: string
+      publishedAt?: string
+      platformStatuses: Record<string, 'pending'|'success'|'failed'>
+    }
+  - content: {
+      idea: string
+      researchNotes: string[]
+      draft: string
+      editedDraft: string
+      seoMeta: {
+        keywords: string[]
+        metaDescription: string
+        readability: number
+      }
+      summary?: string
+    }
+  - versionHistory: Version[]
+  - topics: string[]
+  - metrics: {
+      wordCount: number
+      readTime: number
+      seoScore?: number
+    }
 
-- API Endpoints
-  - POST /conflicts/resolve
-  - GET /conflicts/{id}
-  - POST /conflicts/{id}/override
-  - GET /runs/{runId}
-  - GET /runs/{runId}/trace
-  - GET /runs/{runId}/logs
-  - POST /runs/{runId}/revert
-  - GET /debug/runs/{runId}/trace
-  - GET /debug/runs/{runId}/memory
-  - POST /debug/runs/{runId}/step
+- Version
+  - id: string
+  - assetId: string
+  - versionNumber: number
+  - contentSnapshot: string
+  - changedBy: string
+  - changedAt: string
+  - notes?: string
 
-- Security
-  - JWT/OAuth-based authentication; RBAC for actions (viewer, editor, approver, admin).
-  - Data access controls per run/conflict; sensitive fields redacted unless authorized.
+- CalendarSlot
+  - id: string
+  - assetId: string
+  - startAt: string
+  - endAt: string
+  - status: 'scheduled' | 'blocked' | 'released'
 
-- Validation
-  - Always ensure inputs are validated server-side; use runtime guards:
-    - const list = Array.isArray(response?.data) ? response.data : []
-    - const items = data ?? []
-    - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+- Approval
+  - id: string
+  - assetId: string
+  - approverId: string
+  - status: 'pending' | 'approved' | 'rejected'
+  - comments?: string
+  - createdAt: string
+  - updatedAt: string
 
-- Runtime Safety Rules (enforced across code)
-  - Supabase-like query results: use data ?? [] for arrays.
-  - Array methods guarded: (items ?? []).map(...), Array.isArray(items) ? items.map(...) : [].
-  - React useState defaults: useState<Type[]>([]) for arrays; useState<{...} | null>(null) only when needed.
-  - Optional chaining for nested API responses: obj?.property?.nested.
-  - Destructuring defaults: const { items = [], count = 0 } = response ?? {}
+- Connector
+  - id: string
+  - type: 'CMS' | 'Social' | 'Email'
+  - provider: string
+  - config: object
+  - status: 'connected' | 'disconnected' | 'error'
+  - lastSynced?: string
 
----
+- AuditLog
+  - id: string
+  - assetId: string
+  - action: string
+  - actorId: string
+  - timestamp: string
+  - details: string
 
-## Acceptance Criteria
+### API Endpoints
 
-- [ ] Deterministic resolution outcomes: Given identical inputs and rules, engine yields identical resolutions with identical explanations.
-- [ ] Full explainability: Each resolution includes a trace of matched rules, inputs, agent justifications, and per-action rationale.
-- [ ] Reversibility: Revert actions produce a reversible delta and an audit trail entry; UI supports safe confirm flows.
-- [ ] Safe UI rendering: All arrays and potential nulls guarded (e.g., (data ?? []).map(...), Array.isArray checks, etc.).
-- [ ] Human-in-the-loop: Approvals queue surfaces necessary context and allows producers/approvers to annotate decisions.
-- [ ] Performance: Graph rendering, trace navigation, and large logs are paginated or virtualized; responsive under 1–2 seconds for typical runs.
-- [ ] Accessibility: Keyboard nav, screen-reader friendly graphs and controls.
-- [ ] Security: All mutations authorized; sensitive data redacted; audit logs immutable or append-only.
+- Content LLM Adapter (module-local)
+  - POST /llm/draft
+    - body: { idea, constraints, context }
+    - returns: { draft, promptsUsed, debugInfo }
+  - POST /llm/edit
+    - body: { draftId, edits, constraints }
+    - returns: { editedDraft, changes }
+  - POST /llm/research
+    - body: { topic, depth, sources }
+    - returns: { notes, sources }
+  - POST /llm/seo
+    - body: { content, targetKeywords }
+    - returns: { seoMeta, recommendations }
+  - POST /llm/safety-check
+    - body: { content }
+    - returns: { allowed: boolean, rationale }
 
----
+- ContentAssets
+  - GET /assets
+    - query: { filter, sort, page, pageSize }
+    - returns: { data: ContentAsset[], total }
+  - GET /assets/{id}
+  - POST /assets
+    - body: { title, authorId, topics, ... }
+    - returns: Created ContentAsset
+  - PUT /assets/{id}
+  - DELETE /assets/{id}
 
-## UI/UX Guidelines (Applied Design System)
+- Versions
+  - GET /assets/{id}/versions
+  - GET /assets/{id}/versions/{versionId}
+  - POST /assets/{id}/versions
+    - body: { contentSnapshot, changedBy, notes }
 
-- Visual Style
-  - Colors and typography as specified in the Visual Style section.
-  - Dark, elevated cards with subtle borders and shadows.
-  - Consistent typography scales: headings 20–28px, card titles 14–16px, body 12–14px, microcopy 11–12px.
-- Layout
-  - 8px baseline grid; sidebars 220–260px; header 56–64px.
-  - Dense, information-rich panels suitable for power users.
-- Components
-  - Card components with top icon, bold title, metadata subtext.
-  - Graphs with minimal gridlines and clearly distinguishable data series.
-  - Tables/lists with compact density and quick actions.
-  - Modals for confirm actions (revert, approvals) with explicit warnings.
-- Interaction
-  - Hover lifts, focus rings, smooth transitions (120–200ms).
-  - Clear affordances for destructive/critical actions (red accent, confirmation steps).
-  - Tooltips for dense data—avoid clutter but provide clarifications on demand.
+- Calendar
+  - GET /calendar/slots
+  - POST /calendar/slots
+  - PUT /calendar/slots/{slotId}
+  - DELETE /calendar/slots/{slotId}
 
----
+- Approvals
+  - GET /approvals
+  - POST /approvals
+  - PUT /approvals/{id}
 
-## Mandatory Coding Standards — Runtime Safety
+- Connectors
+  - GET /connectors
+  - POST /connectors
+  - POST /connectors/{id}/test
+  - POST /connectors/{id}/publish
 
-CRITICAL: Follow these rules in ALL generated code to prevent runtime crashes.
+- Publish
+  - POST /publish/{assetId}
+  - POST /publish/{assetId}/retry
 
-1) Supabase query results: Always use nullish coalescing — const items = data ?? [].
-2) Array methods: Never call on a value that could be null/undefined or non-array. Guard:
-   - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
-3) React useState for arrays/objects: Always initialize with the correct type — useState<Type[]>([]) or useState<MemoryEntry[]>([]); never useState() or useState(null) for arrays.
-4) API response shapes: Always validate — const list = Array.isArray(response?.data) ? response.data : [].
-5) Optional chaining: Use obj?.property?.nested when accessing nested API responses.
-6) Destructuring with defaults: const { items = [], count = 0 } = response ?? {}.
+- Audit
+  - GET /assets/{id}/audit
 
----
+### Security
+- Authentication: OAuth2/OpenID Connect or JWT-based; all endpoints require valid authentication.
+- Authorization: Role-based access control (RBAC)
+  - Editor: create/edit drafts, request revisions, schedule
+  - Approver: approve/reject, manage approvals queue
+  - Publisher: publish assets, manage connectors
+  - Admin: manage connectors, system settings, audit logs
+- Data validation: Strict server-side validation for all inputs; sanitize content to prevent injection.
+- Logging: Audit trails for all user actions and system actions; traces for inter-agent communications.
+
+### Validation & Runtime Safety
+- Data Handling:
+  - Always guard arrays: (data?.items ?? []) and Array.isArray(data?.items) ? data.items.map(...) : [].
+  - Supabase-like expectations: use data ?? [] for results; default to empty arrays.
+  - API responses: const assets = Array.isArray(response?.data) ? response.data : [].
+  - Optional chaining and defaults for nested shapes: const seo = asset?.content?.seoMeta ?? {}.
+- React state:
+  - Initialize arrays: useState<ContentAsset[]>([]), useState<Version[]>([]), etc.
+  - Avoid null returns in components; render loading/empty states gracefully.
+- Destructuring with defaults:
+  - const { items = [], count = 0 } = response ?? {};
+
+### Acceptance Criteria
+- [ ] LLM Adapter correctly enforces content constraints and safety checks; all responses validated against defined schemas.
+- [ ] All frontend components guard array operations and use proper useState defaults; no runtime crashes due to undefined arrays.
+- [ ] Content Editor supports real-time collaboration with version history and non-destructive edits.
+- [ ] Content Calendar provides drag-and-drop scheduling with conflict detection and clear UX feedback.
+- [ ] Publishing connectors successfully publish to CMS/Social/Email and reflect statuses in the dashboard.
+- [ ] Approvals workflow enforces role-based access and maintains an auditable record.
+- [ ] All API endpoints validate inputs and return well-formed shapes; error responses are consistent and descriptive.
+- [ ] UI adheres to the specified design system, typography, color palette, and layout constraints.
+
+## UI/UX Guidelines
+
+Apply the project’s design system (dark UI, high-contrast typography, dense information architecture) with the following considerations:
+- Card Design: 8–12px radius, gradient background, subtle inner highlight, 1px border with rgba(255,255,255,0.03), soft shadow, hover lift.
+- Navigation: left-aligned vertical navigation with icons; active item shows left accent pill in #FF3B30 and a brighter icon.
+- Data Visualization: minimal charts with muted gridlines; series colors from teal #00C2A8, amber #FFB020, purple #8B5CF6.
+- Typography: Inter-like sans; section headings 20–28px, body 12–14px, microcopy 11–12px.
+- Spacing: 8px baseline, 16/24/32 multiples; generous gutters between sidebar and content.
+
+## Visual Style Summary (From the provided palette)
+- Background: #0B0B0C
+- Surfaces: #151718, #1F1F20
+- Text: #FFFFFF (primary), #9DA3A6 (secondary), #56595B (disabled)
+- Accent: #FF3B30
+- Highlights: #CFCFCF, #E6E7E8
+- Chart colors: teal #00C2A8, amber #FFB020, purple #8B5CF6
+- Borders: rgba(255,255,255,0.03)
+- Gradients: #111213 → #1A1A1B
 
 ## Deliverables
+- Fully wired frontend pages: Content Dashboard, Content List/Library, Content Calendar, Content Editor.
+- Backend services and REST/GraphQL endpoints with documented contracts.
+- Content LLM Adapter module with a clean API surface and safety gate.
+- Database schemas, migrations, and seed data to support initial use.
+- Comprehensive test plan (unit, integration, end-to-end) with example test cases for:
+  - LLM adapter safety checks
+  - Calendar conflict handling
+  - Versioning and diffs
+  - Approvals workflow
+  - Publishing connectors success/failure handling
+- Runbook for deployment, monitoring, and rollback procedures.
 
-- Fully implemented Conflict Resolution Engine with deterministic rule evaluation, explainability, and reversibility.
-- Run Details Page (page_run_details_010) with inputs, traces, logs, diffs, artifacts, timing, outcome, and revert capability.
-- Agent Trace & Debugger (page_agent_trace_011) with visual conversation graph, scoped memory, variable states, and step-through execution.
-- Type-safe API layer, thorough input validation, and runtime safeguards as described.
-- Complete tests:
-  - Unit tests for engine rule evaluation and explainability paths.
-  - Integration tests for run creation, trace generation, and revert flow.
-  - End-to-end tests for UI flows with mock data for the two pages.
-- Documentation:
-  - DSL spec and examples.
-  - Run details schema and trace format.
-  - Developer guide on how to extend rules, add manual overrides, and audit trails.
+If you need a ready-to-run starter repository, I can provide a seed project structure (monorepo) with:
+- Next.js or Remix frontend
+- Node/Express or Nest backend
+- PostgreSQL with Prisma or TypeORM
+- WebSocket/Socket.IO for real-time collaboration
+- OpenAI API client with a pluggable adapter
+- Example content assets and seed data
 
-If you need a concrete data model diagram, API contract definitions (OpenAPI-like), or starter code templates (TypeScript/React and Node.js), I can generate those next.
+Would you like me to generate a boilerplate project scaffolding (file tree, package.json scripts, and initial code for the core modules) to accelerate your workflow?
 
 ## Implementation Notes
 

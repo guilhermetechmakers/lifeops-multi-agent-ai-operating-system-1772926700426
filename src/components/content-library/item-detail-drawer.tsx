@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { PipelineConnectorPanel } from "./pipeline-connector-panel";
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content-library";
 
@@ -60,6 +60,7 @@ export function ItemDetailDrawer({
   const owner = item?.owner ?? "—";
   const summary = item?.summary ?? "";
   const runs = (pipelineState?.runs ?? []).slice(0, 5);
+  const versionHistory = (item?.versionHistory ?? []).slice(0, 8);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,6 +119,32 @@ export function ItemDetailDrawer({
                 <p className="text-sm">
                   Views: {item?.metrics?.views ?? 0} · Engagements: {item?.metrics?.engagements ?? 0}
                 </p>
+              </div>
+            )}
+            {(item?.seoScore != null || item?.version != null) && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">SEO & Version</h4>
+                <p className="text-sm">
+                  {item?.seoScore != null && `SEO Score: ${item.seoScore}`}
+                  {item?.seoScore != null && item?.version != null && " · "}
+                  {item?.version != null && `Version ${item.version}`}
+                </p>
+              </div>
+            )}
+            {versionHistory.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                  <History className="h-3.5 w-3.5" />
+                  Version history
+                </h4>
+                <ul className="space-y-1 text-sm">
+                  {versionHistory.map((v) => (
+                    <li key={v.id} className="flex justify-between text-muted-foreground">
+                      <span>v{v.versionNumber}</span>
+                      <span>{formatDate(v.changedAt)} · {v.changedBy ?? "—"}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             <PipelineConnectorPanel

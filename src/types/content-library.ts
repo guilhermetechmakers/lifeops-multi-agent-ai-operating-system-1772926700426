@@ -2,7 +2,14 @@
  * Content Library data models — aligned with API contracts and runtime safety.
  */
 
-export type ContentLibraryStatus = "draft" | "scheduled" | "published" | "archived";
+export type ContentLibraryStatus =
+  | "idea"
+  | "research"
+  | "draft"
+  | "edit"
+  | "scheduled"
+  | "published"
+  | "archived";
 
 export type PipelineState =
   | "ideation"
@@ -20,10 +27,14 @@ export interface ContentItem {
   author: string;
   publishDate?: string;
   createdAt?: string;
+  updatedAt?: string;
   tags?: string[];
   channel?: string;
   owner?: string;
   summary?: string;
+  seoScore?: number;
+  version?: number;
+  platform?: string;
   pipeline?: {
     state?: PipelineState;
     next?: string;
@@ -32,6 +43,13 @@ export interface ContentItem {
     views?: number;
     engagements?: number;
   };
+  versionHistory?: Array<{
+    id: string;
+    versionNumber: number;
+    changedBy?: string;
+    changedAt?: string;
+    notes?: string;
+  }>;
 }
 
 /** Alias for ContentItem used by Content Library components */
@@ -51,6 +69,8 @@ export interface ContentLibraryFilters {
   tags?: string[];
   channel?: string;
   owner?: string;
+  platform?: string;
+  seoScoreMin?: number;
   dateFrom?: string;
   dateTo?: string;
   scope?: "assets" | "published" | "all";
@@ -60,6 +80,7 @@ export interface ContentLibraryMetadata {
   owners: string[];
   channels: string[];
   tags: string[];
+  platforms?: string[];
 }
 
 export interface PipelineStateResponse {
@@ -68,7 +89,14 @@ export interface PipelineStateResponse {
   runs: RunArtifact[];
 }
 
-export type BulkActionType = "publish" | "unpublish" | "archive" | "export";
+export type BulkActionType =
+  | "publish"
+  | "unpublish"
+  | "archive"
+  | "export"
+  | "move-to-draft"
+  | "re-run-llm"
+  | "schedule-republish";
 
 export interface BulkActionPayload {
   ids: string[];

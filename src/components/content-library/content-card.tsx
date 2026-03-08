@@ -19,7 +19,10 @@ export interface ContentCardProps {
 }
 
 const statusVariant: Record<ContentLibraryStatus, "default" | "secondary" | "success" | "outline"> = {
+  idea: "secondary",
+  research: "secondary",
   draft: "secondary",
+  edit: "outline",
   scheduled: "outline",
   published: "success",
   archived: "outline",
@@ -103,6 +106,16 @@ export function ContentCard({
         <p className="text-xs text-muted-foreground">
           {author} · {formatDate(item?.publishDate ?? item?.createdAt)}
         </p>
+        {(item?.seoScore != null || item?.version != null) && (
+          <p className="text-[11px] text-muted-foreground/80 flex items-center gap-2">
+            {item?.seoScore != null && (
+              <span className="flex items-center gap-0.5">
+                SEO {item.seoScore}
+              </span>
+            )}
+            {item?.version != null && <span>v{item.version}</span>}
+          </p>
+        )}
         {(channel || owner) && (
           <p className="text-[11px] text-muted-foreground/80">
             {[channel, owner].filter(Boolean).join(" · ")}

@@ -1,14 +1,17 @@
 /**
  * PublishControlsPanel — channel selectors, scheduling UI, metadata (SEO, tags), publish vs test run.
+ * Integrates Content LLM Adapter for SEO suggestions.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Send, Calendar, Tag, Search } from "lucide-react";
+import { Send, Calendar, Tag, Search, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { seoSuggestions } from "@/lib/content-llm-adapter";
+import { toast } from "sonner";
 
 const CHANNELS = [
   { id: "blog", label: "Blog" },
@@ -18,6 +21,7 @@ const CHANNELS = [
 ];
 
 export interface PublishControlsPanelProps {
+  content?: string;
   onPublish: (payload: {
     channel: string;
     schedule?: string;
@@ -31,6 +35,7 @@ export interface PublishControlsPanelProps {
 }
 
 export function PublishControlsPanel({
+  content = "",
   onPublish,
   onTestRun,
   isPublishing = false,
@@ -41,6 +46,29 @@ export function PublishControlsPanel({
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [tags, setTags] = useState("");
+  const [isSeoLoading, setIsSeoLoading] = useState(false);
+
+  const handleSuggestSeo = useCallback(async () => {
+    const text = (content ?? "").trim();
+    if (!text) {
+      toast.error("Add content first to get SEO suggestions");
+      return;
+    }
+    setIsSeoLoading(true);
+    try {
+      const result = await seoSuggestions({ content: text });
+      const meta = result?.seoMeta ?? {};
+      if (meta.metaDescription) setSeoDescription(meta.metaDescription);
+      if (Array.isArray(meta.keywords) && meta.keywords.length > 0) {
+        setTags(meta.keywords.join(", "));
+      }
+      if (!seoTitle && text) setSeoTitle(text.slice(0, 60) + (text.length > 60 ? "..." : ""));
+    } catch {
+      toast.error("SEO suggestions failed");
+    } finally {
+      setIsSeoLoading(false);
+    }
+  }, [content, seoTitle]);
 
   const handlePublish = () => {
     onPublish({
@@ -97,10 +125,23 @@ export function PublishControlsPanel({
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground flex items-center gap-1">
-            <Search className="h-3.5 w-3.5" />
-            SEO Title
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1">
+              <Search className="h-3.5 w-3.5" />
+              SEO Title
+            </Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs text-amber"
+              onClick={handleSuggestSeo}
+              disabled={isSeoLoading || !content?.trim()}
+            >
+              <Sparkles className="h-3 w-3" />
+              Suggest SEO
+            </Button>
+          </div>
           <Input
             value={seoTitle}
             onChange={(e) => setSeoTitle(e.target.value)}
