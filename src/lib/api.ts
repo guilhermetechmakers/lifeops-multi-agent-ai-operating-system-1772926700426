@@ -68,7 +68,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit & { skipCont
   if (!response.ok) {
     if (response.status === 401) {
       localStorage.removeItem("auth_token");
-      window.location.href = "/login";
+      window.location.href = "/auth";
     }
     const normalized = normalizeApiError({
       response,
@@ -119,7 +119,7 @@ async function apiUpload<T>(
       }
       if (xhr.status === 401) {
         localStorage.removeItem("auth_token");
-        window.location.href = "/login";
+        window.location.href = "/auth";
       }
       const normalized = normalizeApiError({
         response: {

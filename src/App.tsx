@@ -2,12 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { CentralErrorProvider } from "@/contexts/error-context";
+import { AuthProvider } from "@/contexts/auth-context";
 import { ErrorBoundary } from "@/components/error";
+import { SessionGuard } from "@/components/auth/session-guard";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import Landing from "@/pages/landing";
-import Login from "@/pages/login";
-import Signup from "@/pages/signup";
-import PasswordReset from "@/pages/password-reset";
+import AuthPage from "@/pages/auth";
+import AuthCallbackPage from "@/pages/auth-callback";
+import AuthForgotPage from "@/pages/auth-forgot";
 import DashboardMaster from "@/pages/dashboard-master";
 import CronjobsDashboard from "@/pages/cronjobs-dashboard";
 import Approvals from "@/pages/approvals";
@@ -39,15 +41,19 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
         <CentralErrorProvider>
+        <AuthProvider>
         <BrowserRouter>
           <ErrorBoundary>
             <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/docs" element={<Docs />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/password-reset" element={<PasswordReset />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/auth/forgot" element={<AuthForgotPage />} />
+          <Route path="/login" element={<Navigate to="/auth" replace />} />
+          <Route path="/signup" element={<Navigate to="/auth" replace />} />
+          <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
+          <Route path="/dashboard" element={<SessionGuard><DashboardLayout /></SessionGuard>}>
             <Route index element={<DashboardMaster />} />
             <Route path="cronjobs" element={<CronjobsDashboard />} />
             <Route path="cronjobs/new" element={<CronjobEditor />} />
@@ -68,6 +74,7 @@ function App() {
             </Routes>
           </ErrorBoundary>
         </BrowserRouter>
+        </AuthProvider>
       </CentralErrorProvider>
       <Toaster
         position="bottom-right"

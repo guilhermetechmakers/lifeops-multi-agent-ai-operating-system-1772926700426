@@ -28,12 +28,12 @@ export function LandingNavbar({ className }: LandingNavbarProps) {
             Docs
           </Button>
         </Link>
-        <Link to="/login" data-tracking-id="nav-signin">
+        <Link to="/auth" data-tracking-id="nav-signin">
           <Button variant="ghost" className="text-foreground">
             Sign in
           </Button>
         </Link>
-        <Link to="/signup" data-tracking-id="nav-signup">
+        <Link to="/auth" data-tracking-id="nav-signup">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             Create account
           </Button>
