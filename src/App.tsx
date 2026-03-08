@@ -24,6 +24,7 @@ import ContentCalendarPage from "@/pages/content-calendar";
 import ArtifactsPage from "@/pages/artifacts";
 import { FinanceDashboardShell, FinanceOverview } from "@/components/finance-dashboard";
 import FinanceSubscriptionsPage from "@/pages/finance-subscriptions";
+import CheckoutPage from "@/pages/checkout";
 import FinanceTransactionsPage from "@/pages/finance-transactions";
 import ForecastingReportsPage from "@/pages/forecasting-reports";
 import { HealthDashboardShell, HealthDashboardOverview } from "@/components/health-dashboard";
@@ -136,6 +137,7 @@ function App() {
             <Route path="content/editor" element={<ContentEditorPage />} />
             <Route path="content/calendar" element={<ContentCalendarPage />} />
             <Route path="artifacts" element={<ArtifactsPage />} />
+            <Route path="checkout" element={<CheckoutPage />} />
             <Route path="finance" element={<FinanceDashboardShell />}>
               <Route index element={<FinanceOverview />} />
               <Route path="subscriptions" element={<FinanceSubscriptionsPage />} />

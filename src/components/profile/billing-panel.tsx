@@ -2,7 +2,8 @@
  * Billing panel: plan summary, seats, renewal, invoice history with download links.
  */
 
-import { CreditCard, Download, FileText } from "lucide-react";
+import { Link } from "react-router-dom";
+import { CreditCard, Download, FileText, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBilling } from "@/hooks/use-profile";
@@ -69,6 +70,12 @@ export function BillingPanel() {
               </p>
             </div>
           </div>
+          <Button variant="outline" size="sm" asChild className="mt-4">
+            <Link to="/dashboard/checkout" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Subscribe / Upgrade
+            </Link>
+          </Button>
         </CardContent>
       </Card>
 

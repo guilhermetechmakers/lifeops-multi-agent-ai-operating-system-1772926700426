@@ -4,8 +4,9 @@
  */
 
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import {
   SubscriptionsListPanel,
   SpendLimitsPanel,
@@ -193,11 +194,16 @@ export default function FinanceSubscriptionsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Subscriptions & Billing</h2>
-        <p className="text-sm text-muted-foreground">
-          Manage subscriptions, churn risk, spend limits, and billing processors
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Subscriptions & Billing</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage subscriptions, churn risk, spend limits, and billing processors
+          </p>
+        </div>
+        <Button asChild>
+          <Link to="/dashboard/checkout">Subscribe / Upgrade</Link>
+        </Button>
       </div>
 
       {/* Summary tiles */}
