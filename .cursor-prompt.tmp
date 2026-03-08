@@ -847,327 +847,327 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Content Dashboard Prompt
-
-You are an AI development tool tasked with delivering a production-ready, fully-documented implementation for the LifeOps Content Dashboard and its connected features. Follow the structure below exactly, and ensure all code and configuration strictly guard against null/undefined values before calling array methods. Use the runtime safety rules provided (Supabase null handling, Array guards, useState defaults, etc.). The deliverable includes frontend, backend, data models, integration patterns, UX flows, and acceptance criteria.
-
----
-
-## Content Dashboard
+ for bestpractices and # Content Editor
 
 ## Overview
-Build a comprehensive Content Dashboard for LifeOps that provides an at-a-glance overview of content pipelines. The page surfaces:
-- Content Calendar with drag-to-reschedule
-- Drafts in progress with status stages (idea, research, draft, edit, ready to publish)
-- Publishing status queue and per-post progress
-- Pending approvals queue
-- SEO/performance insights and optimization suggestions
-- Quick access to the connected Content Editor for end-to-end ideation through publish
-- Global and module-scoped search and filtering across projects, content, cronjobs, runs, and users
-All components must be themed to the provided dark UI design system, accessible, and performant at scale. Include robust audit/log artifacts for every action.
-
----
+Develop a complete Content Editor within LifeOps that enables end-to-end content workflows from idea to publish. The editor must support LLM-assisted writing, versioning, collaboration, and publishing integrations, while tying into a File Upload & Artifacts Storage system and a Content Pipeline Automation engine. The solution should provide a cohesive UX across the Content Editor page, a Content Dashboard, and a Content Calendar, with robust data integrity, audit trails, and security. All code and interfaces must be resilient to null/undefined values and follow runtime safety rules: use data ?? [] for Supabase results, guard all array methods, initialize useState with appropriate array/object types, validate API responses, and use optional chaining where appropriate.
 
 ## Page Description (Full Detail)
-
 What this page is:
-- The Content Dashboard is the central overview for content pipelines within LifeOps. It aggregates data from content ideas, research tasks, drafts, scheduled publications, and analytics to give operators a holistic view of content health, throughput, and ROI. It also serves as the launcher to the Content Editor and to automation tooling for ideation, drafting, editing, and publishing through LLM-assisted pipelines and publishing connectors.
+- The Content Editor page is the primary, end-to-end workspace for creating, refining, and publishing content. It supports ideation, research, drafting, editing, scheduling, and publishing in a single integrated interface, with optional LLM-assisted writing, live collaboration, version history, and publishing connectors to channels (CMS, social, email, etc.).
 
 Goals:
-- Provide a real-time (or near-real-time) overview of content lifecycle stages and bottlenecks.
-- Surface SEO and performance indicators with actionable recommendations.
-- Facilitate end-to-end content automation orchestration (via the Content Pipeline Automation feature).
-- Enable efficient search and filtering across multiple domains: projects, content items, cronjobs, runs, users.
-- Offer a safe, auditable environment with full run artifacts, reversion capabilities, and human-in-the-loop controls.
+- Provide a fluid, distraction-minimized editor that lets teams move content through the lifecycle: idea → research → draft → edit → schedule → publish.
+- Deliver real-time collaboration, autosave, and a robust LLM assistant pane for expansion, rewriting, tone adjustments, and structured prompts.
+- Integrate version control (diffs, snapshots, revert), artifact/file attachments with lifecycle/versioning, and secure access to assets.
+- Expose publish controls, metadata (SEO, tags), and channels with scheduling capabilities.
+- Surface a cohesive view of pipelines, current drafts, review status, and performance insights via connected dashboards and calendars.
 
-Connected features and UI guidance:
-- Content Calendar: Interactive calendar grid showing scheduled content, with drag-and-drop to reschedule. Dragging should update the underlying cron/job scheduling in a safe, auditable way and reflect in the per-run history.
-- Drafts Panel: Card- or list-based view showing items in stages (idea, research, draft, edit). Each item shows title, author, stage, ETA, assigned agents, and quick actions (move to next stage, escalate, request approvals).
-- Publishing Queue: A queue/list of posts scheduled for publishing with target channels (publish connectors). Show status, next publish time, retries, and outcome history.
-- Agent Recommendations: A panel suggesting topics, outlines, and promotional ideas based on research corpora and real-time trend signals.
-- SEO/Performance Widgets: Keyword suggestions, search volume estimates, traffic projections, ranking deltas, and on-page optimization hints.
-- Search & Filter: Global search box and module-scoped search fields. Filters across projects, content, cronjobs, runs, users. Use multi-select facets, date ranges, status pills, and tag filters.
-- Content Editor (Connected Page): A seamless entry point to the end-to-end editor with idea→research→draft→edit→schedule→publish flow, incorporating LLM-assisted writing, versioning, collaboration, and publishing integrations.
-- API integrations: The page should not rely on external APIs in this prompt, but be designed to connect to a backend that exposes the required endpoints and data models.
+Features connected:
+- File Upload & Artifacts Storage: Upload, store, and serve artifacts (run outputs, content attachments) with versioning and secure access. Ensure artifact metadata (version, creator, timestamp, access controls) is captured and auditable.
+- Content Pipeline Automation: Orchestrate ideation, research, drafting, editing, scheduling, and publishing with LLM assistance and publishing connectors. Include per-step state, approvals, and traceable agent-to-agent handoffs in the orchestration layer.
+- UI Panels:
+  - Editor pane (WYSIWYG + Markdown toggle, autosave, and inline comments)
+  - LLM Assistant Pane (suggestions, expansions, rewrite, tone controls)
+  - Research Pane (linked sources, citation manager)
+  - Versioning History (diff views, snapshots, revert)
+  - Publish Controls (channels, schedule, metadata, and status)
+- Connected Pages:
+  - Content Dashboard: Overview for content pipelines, content calendar, drafts in progress, publishing status, pending approvals, and SEO/performance insights.
+  - Content Calendar: Calendar-based scheduling UI for content items with publishing slots, drag-to-schedule, and conflict detection.
 
-UI/UX visual guidance (as per design specs):
-- Dark UI with the supplied color palette, typography, spacings, and card design rules.
-- Layout: Left navigation rail, top bar with global controls, and a responsive content area with a multi-column density-first layout that gracefully collapses on smaller viewports.
-- Data visualization: Lightweight, accessible charts (e.g., KPI spark lines, trend charts) using the palette teal, amber, and purple for series accents.
-- Interaction feedback: Subtle hover lifts, focus rings, and keyboard navigability. All actionable items must have clear affordances and reversible actions.
+UI guidance:
+- Follow the provided visual style: dark UI, high contrast for primary actions, restrained accents, and dense, information-rich panels optimized for power users.
+- Ensure consistent typography, spacing, and component states as described in the design system.
+- Provide keyboard accessibility, clear focus states, and responsive behavior for editor, panes, and dashboards.
 
----
+Note: The API endpoints themselves are not specified in this task; the prompt should define the expected API contracts, data shapes, and integration points to accommodate future wiring to your backend, including Supabase or other data layers.
 
 ## Components to Build
+1) Content Editor Page (Main Editor Surface)
+- Subcomponents:
+  - EditorWorkspace: canvas for content editing with WYSIWYG and Markdown toggle
+  - LiveCollaborationPanel: cursors, presence indicators, per-section comments
+  - AutosaveEngine: saves draft versions at configurable intervals; exposes save status
+  - VersionBadgeStrip: shows current version, last modified, authors
+  - LLMAssistantPanel: panel with prompts, tone controls, expansion, rewrite, summarize, and outline features
+  - ResearchPanel: linked sources, citation manager, export/import citations
+  - AttachmentsPanel: file upload area with drag-and-drop, artifact versioning, secure access tokens
+  - PublishControlsPanel: channel selectors, scheduling UI, metadata (SEO, tags), publish vs. test run
+  - DiffViewer: side-by-side or inline diffs between versions
+  - HistoryPanel: historical diffs, snapshots, revert actions
+- Data handling:
+  - Draft content, versions, authors, timestamps
+  - Attachments with versioning and access controls
+  - Collaboration presence and comments tied to content piece
+- Interactions:
+  - Real-time collaboration (presence, cursors)
+  - Tone/style controls; prompts to LLM; preview rendering
+  - Autosave state indicators; manual save button
+  - Validation for publish readiness (policy checks, approvals)
 
-- ContentDashboardShell
-  - Layout that composes Sidebar, TopNav, and a responsive Grid of panels.
-  - State management for global search, filters, and active tab/pane.
-- ContentCalendarPanel
-  - Calendar grid view with drag-and-drop support (drag-to-reschedule).
-  - Data shape: content items with id, title, status, scheduledAt, projectId, author, etc.
-- DraftsPanel
-  - Kanban-like or list view of drafts with stages: idea, research, draft, edit, ready to publish.
-  - Inline actions: advance stage, reassign, request approvals.
-- PublishingQueuePanel
-  - List/table of scheduled posts with status, nextRun, channels, retries, and outcome.
-- AgentRecommendationsPanel
-  - Suggested topics, outlines, and promotional ideas with confidence scores.
-- SEOPerformancePanel
-  - Keyword recommendations, traffic estimates, SERP metrics, and recommended actions.
-- GlobalSearchBar
-  - Search input with multi-field, facets, and per-module scopes.
-- ModuleFiltersBar
-  - Facets for projects, content types, status, date ranges, authors, tags.
-- ContentEditorShortcutHub
-  - Quick link to the Connected Content Editor with starter templates and recent edits.
-- DataVizDrawer
-  - Lightweight sparkline and KPI visualizations with accessible descriptions.
-- APIAdapterLayer (client-side)
-  - Unified data-fetch hooks with robust null-safety guards, data shaping, and error handling.
-- AuditTrailPanel (optional, collapsible)
-  - Per-item run artifacts, messages, and diffs for transparency.
+2) File Upload & Artifacts Storage Component
+- Features:
+  - Drag-and-drop and browse file picker
+  - Versioning support per artifact (semver-like or timestamped)
+  - Secure, revocable access tokens and per-user permission checks
+  - Metadata: filename, mime type, size, uploader, version, createdAt
+  - API surface: uploadArtifact(draftId, file, metadata) -> artifactId; fetchArtifact(artifactId) -> file blob/URL; listArtifacts(draftId) -> artifacts[]
+- Safety:
+  - Guard all results with data ?? [] when listing artifacts
+  - Validate file types and size; enforce allowedMimeTypes
+- UI/UX:
+  - Thumbs/thumbnails, file type icons, version chips, download/view actions
+  - Delete/replace/version bump with confirmation
+- Data integrity:
+  - Ensure artifact references are stored in a way that they survive draft version changes
+  - Audit trail for artifact uploads, views, and shares
 
-All components must follow the runtime safety rules:
-- Data fetched via Supabase or API should be coerced to arrays with data ?? [].
-- Guard array methods with (items ?? []).map(...) and Array.isArray checks where necessary.
-- Initialize state as useState<Type[]>([]) for arrays; use appropriate defaults for objects.
-- Validate API responses with Array.isArray(response?.data) ? response.data : [].
-- Use optional chaining for nested properties.
+3) Content Pipeline Automation Orchestrator (LLM-assisted automation)
+- Features:
+  - Orchestrator that sequences steps: ideation, research, drafting, editing, scheduling, publishing
+  - Agent-based handoffs with traceable messages
+  - Prompt templates for each stage; variables for scope, audience, channel rules
+  - Publishing connectors; ability to push to CMS, social, and email channels
+  - Approvals queue integration with conditional auto-execute or require approvals
+  - Constraints: max actions, spend limits, allowed tools, safety rails and required confirmations
+  - Run history, logs, inter-agent traces, diffs, artifacts created
+- API surface:
+  - startPipeline(contentId, plan, scope) -> pipelineRunId
+  - advancePipeline(runId, step, payload) -> updatedState
+  - getPipelineState(runId) -> state including step, status, logs
+  - requestApproval(runId, reviewerId) -> approvalId
+  - publishToChannel(runId, channel) -> publishResult
+- Data safety:
+  - Validate all inputs; ensure all array-like data is guarded
+  - Use Array.isArray checks and data ?? [] for lists
+- UI integration:
+  - Pipeline status widgets on Editor page and in Content Dashboard
+  - Controls to pause/resume, rerun steps, view per-step diffs and logs
 
----
+4) Content Dashboard Page
+- Features:
+  - Overview panels: content pipelines, drafts in progress, publishing status, pending approvals
+  - SEO/performance insights: basic metrics with sparklines or small charts
+  - Quick-create widgets to start ideation pipelines
+  - Filters: status, author, channel, publish window
+- Components:
+  - PipelineSummaryCard: shows progress, ETA, last action
+  - DraftListView: dense list with version, last updated, status
+  - ApprovalsQueuePanel: items requiring review with approve/reject actions
+  - SEOInsightsPanel: key metrics
+- Data handling:
+  - Lists of pipelines, drafts, approvals with null-safe mapping and guards
+  - Use data ?? [] and Array.isArray() guards for all lists
+
+5) Content Calendar Page
+- Features:
+  - Calendar UI with publishing slots
+  - Drag-to-schedule items; conflict detection and resolution prompts
+  - Views: month/week/day; thumbnails for each item
+  - Quick actions from calendar: reschedule, edit, publish
+- Components:
+  - CalendarGrid: rendering of days/weeks with slots
+  - ContentCardInCalendar: compact card with title, status, and tags
+  - DragDropScheduler: handles dragging items between slots with conflict checks
+  - ConflictDialog: informs user of conflicts and options
+- Data handling:
+  - Content items with publishDate, status, and channel metadata
+  - Use guarded lists: (items ?? []).map(...) and Array.isArray checks
 
 ## Implementation Requirements
 
 ### Frontend
-- Tech stack: React (with hooks), TypeScript, and a state management approach (React Context or lightweight Redux) as appropriate.
-- Routing: /content-dashboard as main route; /content-dashboard/editor for Content Editor integration.
-- Data fetching: Custom hooks for fetching panels’ data; ensure null checks and typed responses.
-- Components must be accessible (aria-labels, semantic HTML, keyboard navigation).
-- State safety: All arrays initialized to [] via useState([]).
-- Drag-and-drop: Implement using a robust library (e.g., React DnD or HTML5 Drag with proper guards).
-- Form controls: Inputs, selects, chips with focus states and accessible labels.
-- UI consistency: Use the provided design system tokens for colors, typography, spacing, borders, and shadows.
-- Performance: Lazy load heavy widgets (e.g., SEO charts) and memoize expensive subtrees.
-- Testing: Unit tests for critical hooks and UI logic; integration tests for drag-to-reschedule and end-to-end flows (where feasible).
+- Frameworks: React with TypeScript; state management via React hooks or a lightweight store
+- Components:
+  - EditorSurface with WYSIWYG and Markdown toggle
+  - LLMAssistantPanel with configurable prompts (tone, length, style)
+  - ResearchPanel with citation manager
+  - AttachmentsPanel for artifact uploads
+  - Versioning UI (diffs, snapshots)
+  - PublishControlsPanel for channels, scheduling, and metadata
+  - Dashboard widgets for Content Dashboard and Content Calendar
+- State & Data Modeling:
+  - useState<Type[]>([]) defaults for arrays; appropriate typing
+  - Guards for all API results: consistently use data ?? [] and Array.isArray() checks
+  - Persisted autosave keys per draft; reconcile on load
+  - Real-time collaboration presence signals
+- Accessibility:
+  - Keyboard navigable, screen-reader friendly labels
+  - Focus traps for modals; ensure visible focus states
+- Performance:
+  - Debounced autosave; virtualization for long lists; pagination where needed
+- Testing:
+  - Unit tests for data helpers (guards), integration tests for API contracts, E2E flows for typical editor lifecycle
 
 ### Backend
-- Data access layer should expose endpoints for:
-  - GET /content/items with pagination and filters
-  - GET /content/item/{id} for detail
-  - POST /content/item with creation payload
-  - PUT /content/item/{id} for updates (stage transitions, scheduling, etc.)
-  - GET /cronjobs, POST /cronjobs, PUT /cronjobs for content automation
-  - GET /analytics/seo, /analytics/performance for SEO data
-  - GET /audits/run/{id} for audit trails
-  - GET /agents/recommendations for topic suggestions
-- Data models (schemas) must reflect the project context:
-  - ContentItem: id, title, slug, projectId, status (idea/research/draft/edit/publish), authorId, assigneeIds, calendarItem, scheduledAt, publishedAt, seoKeywords, performanceMetrics, version, createdAt, updatedAt
-  - CronJob: id, name, enabled, scheduleCron, timezone, triggerType, targetAgentId, inputPayload, permissions, constraints, safetyRails, retryPolicy, outputs
-  - RunArtifact: id, cronJobId, status, startedAt, finishedAt, artifacts, logs, diffs
-  - SEOInsight: id, contentItemId, keyword, searchVolume, difficulty, suggestedTitle, metaDescription
-  - AgentRecommendation: id, topic, rationale, confidence
-- Safety and validation: All endpoints return data shaped as per response validators; guard against nulls; ensure id fields are validated.
+- Data Models (drafts, versions, artifacts, pipelines, approvals, logs)
+  - Draft: id, title, content, format (markdown/html), version, authorId, createdAt, updatedAt, isPublished
+  - Version: id, draftId, content, diff, createdAt, authorId
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status, steps, logs, startedAt, endedAt
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status, comments, requestedAt, decidedAt
+- Endpoints (examples; ensure runtime safety)
+  - POST /api/drafts with { title, content, format } -> Draft
+  - GET /api/drafts/{id} -> Draft with data?. The response data may be null; validate
+  - GET /api/drafts/{id}/versions -> Version[] | []
+  - POST /api/drafts/{id}/versions with { content, note } -> Version
+  - POST /api/drafts/{id}/artifacts with multipart/form-data -> Artifact
+  - GET /api/drafts/{id}/artifacts -> Artifact[]
+  - POST /api/pipelines with { draftId, plan, scope } -> PipelineRun
+  - GET /api/pipelines/{runId} -> PipelineRun
+  - POST /api/pipelines/{runId}/advance with { step, payload } -> PipelineRun
+  - POST /api/pipelines/{runId}/approvals/{approvalId}/decide with { status, comments } -> Approval
+  - POST /api/publish with { runId, channel, schedule } -> PublishResult
+- Security:
+  - JWT/OAuth authentication; authorization checks for write access to drafts, artifacts, pipelines
+  - Access controls on artifacts (per-user/per-role)
+  - Audit trails for all create/update/delete actions
+- Validation:
+  - Validate all inputs server-side; ensure arrays are validated via Array.isArray
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
+  - Use nullish coalescing for optional fields
 
 ### Integration
-- Data flow:
-  - ContentDashboard pulls data from:
-    - Content module (items, stages, scheduling)
-    - Cronjobs module (content automation runs)
-    - SEO/Performance analytics module
-    - Agent recommendations module
-  - Actions trigger:
-    - Stage transitions update content items and enqueue events to the automation layer
-    - Drag-and-drop on ContentCalendarPanel triggers scheduling updates via CronJobs
-    - Publishing actions invoke publishing connectors (via the Content Pipeline Automation features), scheduling jobs, and recording run artifacts
-- Consistency:
-  - All state mutations should be auditable; write actions should emit run artifacts and logs
-  - Use a single source of truth for content items; propagate updates to all panels
-- Error handling:
-  - Centralized error boundaries; show user-friendly error messages with retry options
-  - Maintain UI disabled states when critical data is loading or errors exist
-
----
+- Data Flow:
+  - Editor writes content -> autosave creates new DraftVersion; attach metadata
+  - Attach artifacts uploaded in AttachmentsPanel are versioned and linked to draft/version
+  - LLMAssistantPane executes prompts via an LLM service; results saved as Suggestions or Draft updates
+  - Content Pipeline Automator consumes a Draft to create a PipelineRun; steps progress with logs and artifacts
+  - PublishControlsPanel triggers publisher connectors; results saved to PipelineRun and PublishResult
+- Synchronization:
+  - Ensure consistent IDs across panels (draftId, versionId, runId)
+  - When a draft version is created, all panels reflect the latest version; provide diffs against previous versions
+- Reuse:
+  - Centralized helper utilities for null-safe array handling, API response normalization, and date handling
+  - Shared UI primitives: Button, Card, Tabs, Modal, Tooltip with styles aligned to the design system
 
 ## User Experience Flow
+1) Idea → Research:
+- User creates a new Draft with a title and initial idea summary.
+- Editor autosaves to Draft, creates Version 1.
+- LLM Assistant provides outline and expansion suggestions; user accepts/refines.
+- ResearchPane collects sources; user marks citations; citations are linked to the draft version.
 
-1. User opens Content Dashboard ("/content-dashboard").
-2. Overview tiles render:
-   - Content Calendar shows upcoming scheduled posts; drag a post to reschedule and confirm the new time; behind the scenes, a cronjob update is created and run history updated.
-   - Drafts Panel displays ideas to publish-ready drafts; user advances a piece to the next stage, assigns editors, or requests approvals.
-   - Publishing Queue shows imminent publishes with statuses and next steps; user can retry failed items or cancel upcoming publishes.
-   - Agent Recommendations provides topic/story ideas with rationale and confidence; user can push ideas into the Editor with one click.
-   - SEO/Performance Widgets present keyword suggestions and traffic projections; user can click to open the Editor with the item loaded.
-3. User uses Global Search to locate content, projects, cronjobs, runs, or users; filters refine the results.
-4. User clicks Content Editor shortcut to open the end-to-end editor for a selected item or a new idea; editor supports idea→research→draft→edit→schedule→publish with versioning and collaboration features.
-5. User reviews audit trails and run artifacts for actions taken, including reversion options if needed.
+2) Draft Writing:
+- User writes content in EditorSurface; Markdown toggle available; autosave continuously.
+- Real-time collaboration shows collaborators editing the same draft.
+- LLM Assistant suggests rewrites or tone adjustments; user applies changes.
 
----
+3) Editing & Review:
+- User triggers Edition pass; Versioned diffs are shown in DiffViewer.
+- Reviewer/Collaborator adds comments; approvals queue is populated if needed.
+- Version history stores snapshots; user can revert to prior version if necessary.
+
+4) Artifacts & Attachments:
+- User uploads artifacts (data runs, attachments) via AttachmentsPanel; artifacts are versioned and accessible via secure links.
+- Artifact metadata is visible in the artifact list and can be attached to the draft version.
+
+5) Scheduling & Publishing:
+- PublishControlsPanel allows scheduling publish date/time and selecting channels (CMS, social, email).
+- In Content Calendar, user drags a draft into a slot; conflict detection alerts if the slot is occupied.
+- PipelineAutomation runs, logging steps; on success, content is published via connectors and status is updated.
+
+6) Dashboard & Insights:
+- Content Dashboard shows pipeline progress, drafts in progress, approvals, and SEO/performance metrics.
+- Content Calendar provides a weekly/monthly view with color-coded statuses and quick actions.
+
+7) Audit & Revisions:
+- All actions produce an audit trail; users can view run logs, agent messages, and generated artifacts.
+- Reverts and diffs are easily accessible; permissions ensure only authorized users can revert/publish.
 
 ## Technical Specifications
 
-- Data Models (Schema Details)
-  - ContentItem
-    - id: string
-    - title: string
-    - slug?: string
-    - projectId: string
-    - status: "idea" | "research" | "draft" | "edit" | "ready-to-publish" | "published"
-    - authorId: string
-    - assigneeIds: string[]
-    - calendarItem?: { start: string; end?: string; allDay?: boolean }
-    - scheduledAt?: string
-    - publishedAt?: string
-    - version: number
-    - seoKeywords: string[]
-    - performanceMetrics?: { views?: number; ctr?: number; avgPosition?: number }
-    - createdAt: string
-    - updatedAt: string
-  - CronJob
-    - id: string
-    - name: string
-    - enabled: boolean
-    - scheduleCron?: string
-    - timezone: string
-    - triggerType: "time" | "event" | "conditional"
-    - targetAgentId?: string
-    - inputPayload: any
-    - permissions: "suggest-only" | "approval-required" | "conditional-auto" | "bounded-autopilot"
-    - constraints: { maxActions?: number; spendLimit?: number; allowedTools?: string[] }
-    - safetyRails: { confirmationsRequired?: boolean; approvalsNeeded?: string[] }
-    - retryPolicy: { maxRetries?: number; backoffMs?: number; deadLetterQueue?: string }
-    - outputs: { runHistory?: string[]; logs?: string[]; artifacts?: string[] }
-    - createdAt: string
-    - updatedAt: string
-  - RunArtifact
-    - id: string
-    - cronJobId: string
-    - status: "queued" | "running" | "success" | "failed" | "skipped"
-    - startedAt: string
-    - finishedAt?: string
-    - artifacts: any
-    - logs: string[]
-    - diffs?: string
-  - SEOInsight
-    - id: string
-    - contentItemId: string
-    - keyword: string
-    - searchVolume: number
-    - difficulty: number
-    - suggestedTitle: string
-    - metaDescription: string
-  - AgentRecommendation
-    - id: string
-    - topic: string
-    - rationale: string
-    - confidence: number
+- Data Models: Draft, Version, Artifact, PipelineRun, StepLog, Approval, PublishResult
+  - Draft: id, title, content, format ('markdown'|'html'), currentVersionId, authorId, createdAt, updatedAt, isPublished, seoMetadata
+  - Version: id, draftId, content, changeSummary, authorId, createdAt
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status ('pending'|'running'|'completed'|'failed'), startedAt, endedAt, summary
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status ('pending'|'approved'|'rejected'), comments, requestedAt, decidedAt
+  - PublishResult: id, runId, channel, success, details, publishedAt
 
-- API Endpoints (Routes and Methods)
-  - GET /api/content/items?filters&page&limit&search
-  - GET /api/content/item/{id}
-  - POST /api/content/item
-  - PUT /api/content/item/{id} (update fields like status, scheduledAt, assignees, etc.)
-  - GET /api/cronjobs
-  - POST /api/cronjobs
-  - PUT /api/cronjobs/{id}
-  - GET /api/analytics/seo?contentItemId=
-  - GET /api/analytics/performance?contentItemId=
-  - GET /api/audit/run/{runId}
-  - GET /api/agents/recommendations
-  - POST /api/editor/open (open Content Editor with starter data)
-  - POST /api/cronjobs/{id}/run (force/run now)
-  - PATCH /api/content/item/{id}/advance (move to next stage)
-  - PATCH /api/content/calendar/{id}/move (update scheduling)
+- API Endpoints (illustrative; implement as per your stack)
+  - Drafts
+    - POST /api/drafts
+    - GET /api/drafts/{draftId}
+    - GET /api/drafts/{draftId}/versions
+    - POST /api/drafts/{draftId}/versions
+  - Artifacts
+    - POST /api/drafts/{draftId}/artifacts
+    - GET /api/drafts/{draftId}/artifacts
+  - Pipelines
+    - POST /api/pipelines
+    - GET /api/pipelines/{runId}
+    - POST /api/pipelines/{runId}/advance
+  - Approvals
+    - POST /api/pipelines/{runId}/approvals
+    - POST /api/pipelines/{runId}/approvals/{approvalId}/decide
+  - Publish
+    - POST /api/publish
 
 - Security
-  - JWT/OIDC authentication; role-based access control:
-    - Admin, Editor, Approver, Viewer
-  - All endpoints validate authentication, authorization, input schemas, and rate limits
-  - Sensitive actions (approve, publish, schedule changes) require appropriate permissions and audits
-  - All actions emit a traceable audit record with userId, timestamp, action, and diffs
+  - JWT/OAuth 2.0; middleware enforcing authorization on drafts, artifacts, pipelines
+  - Per-resource permissions; audit logs for all mutations
+  - Access controls for artifact downloads
+  - Rate limiting for LLM prompts to avoid abuse
 
-- Validation
-  - Use runtime validation on all inputs (e.g., Zod or Yup) with defaults
-  - All fetch results pass through validators; default to [] when arrays are missing
-  - Date/time fields are ISO 8601 strings and timezone-aware where needed
-
-- Safety & Nullability Rules (enforced throughout)
-  - data ?? [] for array results
-  - (items ?? []).map(...) and Array.isArray(items) ? items.map(...) : []
-  - useState<Type[]>([]) initializations
-  - const list = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining for nested fields
-  - Destructure with defaults: const { items = [], count = 0 } = response ?? {}
-
----
+- Validation & Runtime Safety
+  - Always guard arrays: const items = data ?? []; items.map(...) guarded with Array.isArray
+  - API responses validated: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: obj?.property?.nested
+  - Destructuring defaults: const { items = [], count = 0 } = response ?? {}
+  - Use useState<Type[]>([]) for array state; useRef for mutable objects where needed
+  - Supabase results: const items = data ?? [] per requirement
 
 ## Acceptance Criteria
-
-- [ ] The Content Dashboard renders without runtime errors on initial load, with all panels displaying data from the APIs and safe guards in place for nulls.
-- [ ] All array operations guard against null/undefined values using the runtime safety patterns outlined.
-- [ ] Drag-and-drop on ContentCalendarPanel updates scheduling correctly, triggers a CronJob update, and logs an audit trail.
-- [ ] DraftsPanel supports stage advancement and approvals workflow; status transitions reflect in PublishingQueuePanel and audit logs.
-- [ ] PublishingQueuePanel shows accurate nextRun times, statuses, and outcomes; retry logic is visible and functional.
-- [ ] SEOPerformancePanel surfaces at least 3 keyword recommendations with measurable metrics and a CTA to open Editor with the item preloaded.
-- [ ] Global Search returns accurate results across projects, content, cronjobs, runs, and users; filters update as expected.
-- [ ] Content Editor shortcut opens with an end-to-end flow initialized for a given ContentItem or a new idea; versioning is tracked.
-- [ ] All API responses validate shapes; responses with missing fields are sanitized to safe defaults.
-- [ ] UI interactions are accessible (keyboard navigation, ARIA labels) and responsive.
-
----
+- [ ] End-to-end user flows from idea to publish operate without runtime errors; drafts persist across sessions; autosave and versioning are functional
+- [ ] LLM Assistant pane can generate, apply, and revert prompts; tone and style controls work; prompts honor content scope
+- [ ] Attachment upload supports versioning, secure access, and per-artifact metadata; artifacts are retrievable and auditable
+- [ ] Content Pipeline Automation can initialize a pipeline, progress through ideation, research, drafting, editing, scheduling, and publishing with proper logs and per-step statuses
+- [ ] Scheduling/Calendar supports drag-to-schedule, conflict detection, and per-slot publishing actions
+- [ ] Content Dashboard shows accurate counts, statuses, and SEO metrics; Approvals queue gates publish actions when required
+- [ ] All API responses validated; all lists guarded with null-safe patterns; no runtime crashes due to undefined/null arrays
 
 ## UI/UX Guidelines
 Apply the project's design system:
-- Dark UI with the specified color palette and typography
-- Card-based panels with elevation, rounded corners, 1px borders
-- Left navigation rail with active state accent pill (#FF3B30)
-- Data visualizations with subtle gridlines and the teal/amber/purple palette
-- Interactive elements with smooth micro-interactions (120–200ms transitions)
-- Form controls with focus rings in accent colors; disabled states visibly muted
-- Consistent spacing: 8px baseline grid; 16–20px card paddings; 220–260px sidebar
-- Dense, power-user oriented density in content trees and dashboards
-
----
+- Maintain the dark, dense, highly scannable UI with minimal accents
+- Use the specified color palette for depth, status, and highlights
+- Ensure typography hierarchy and spacing adhere to the 8px baseline grid and responsive rules
+- Use rounded 8–12px radii for cards; 1px borders with rgba(255,255,255,0.03)
+- Cards: elevated, gradient backgrounds, top icons, bold titles, metadata beneath
+- Navigation: left sidebar with collapse/expand sections; active states marked with accent pill (#FF3B30)
+- Data Visualization: subtle grids, consistent data colors from the accent palette
+- Interactive Elements: responsive hover states, accessible focus outlines, and clear affordances for actions
 
 ## Visual Style
 
-- Color Palette, Typography, Layout, and Design Elements are as provided in PROJECT CONTEXT.
-- Ensure all components respect the gradient fills, borders, shadows, and typography weights described.
+Color Palette and Typography are defined above; implement across components with a consistent theme:
+- Font: Inter or SF Pro Display, fallback to Roboto
+- Weights: headings 600–700, titles 500–600, body 400, microcopy 300–400
+- Spacing: 8px grid; card paddings 16–20px; gutters 8–24px
+- Layout: left sidebar width 220–260px; content area uses flexible grid
 
----
+Key Design Elements (summary):
+- Card Design: dark, rounded, gradient, subtle borders, hover lift
+- Navigation: compact left rail with active accent pill
+- Data Visualization: muted axes, colored lines/areas with restrained saturation
+- Interactive Elements: primary/secondary actions, hover/focus states, toggles, chips, badges
+- Transformations: smooth 120–200ms transitions, subtle shadows
 
 ## Mandatory Coding Standards — Runtime Safety
-
-CRITICAL: Apply these rules in ALL generated code.
-
-1) Supabase query results:
-   - const items = data ?? []
-2) Array methods:
-   - Use guards like (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
-3) React useState for arrays/objects:
-   - useState<Type[]>([])
-4) API response shapes:
-   - const list = Array.isArray(response?.data) ? response.data : []
-5) Optional chaining:
-   - Use ?. for nested API/database fields
-6) Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {}
+- Supabase query results: Always use nullish coalescing — const items = data ?? []
+- Array methods: Guard all calls
+  - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+- React useState for arrays/objects: Initialize with proper type, e.g., useState<Type[]>([])
+- API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining: use obj?.property?.nested
+- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
 ---
 
-## Deliverables
-
-- Complete frontend implementation plan with component API contracts, data shapes, and UI wiring details.
-- Type-safe TypeScript React components matching the design system; explicit guards for all arrays and optional fields.
-- Backend API surface definitions, schemas, and validation rules with example payloads and edge-case handling.
-- Data models and database schema suggestions (PostgreSQL) aligned to Supabase usage (or your chosen backend).
-- Clear testing strategy: unit tests for guards and type safety, integration tests for end-to-end flows (calendar drag, stage transitions), and acceptance tests per criterion.
-- Documentation:
-  - How to extend the Content Dashboard with new panels
-  - How to integrate additional data sources (e.g., new analytics)
-  - How the audit trail and run artifacts are stored and queried
-
-If you need any clarifications or prefer a specific tech stack variant (e.g., Next.js + tRPC + Prisma), specify, and I will tailor the deliverable accordingly while preserving the runtime safety guarantees. for style.
+If you need, I can convert this into a machine-readable prompt file (JSON/YAML) with explicit field mappings for an AI development tool, or tailor it to a specific tech stack (Next.js + Prisma, Remix + PostgreSQL, etc.). for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1189,327 +1189,327 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Content Dashboard Prompt
-
-You are an AI development tool tasked with delivering a production-ready, fully-documented implementation for the LifeOps Content Dashboard and its connected features. Follow the structure below exactly, and ensure all code and configuration strictly guard against null/undefined values before calling array methods. Use the runtime safety rules provided (Supabase null handling, Array guards, useState defaults, etc.). The deliverable includes frontend, backend, data models, integration patterns, UX flows, and acceptance criteria.
-
----
-
-## Content Dashboard
+# Content Editor
 
 ## Overview
-Build a comprehensive Content Dashboard for LifeOps that provides an at-a-glance overview of content pipelines. The page surfaces:
-- Content Calendar with drag-to-reschedule
-- Drafts in progress with status stages (idea, research, draft, edit, ready to publish)
-- Publishing status queue and per-post progress
-- Pending approvals queue
-- SEO/performance insights and optimization suggestions
-- Quick access to the connected Content Editor for end-to-end ideation through publish
-- Global and module-scoped search and filtering across projects, content, cronjobs, runs, and users
-All components must be themed to the provided dark UI design system, accessible, and performant at scale. Include robust audit/log artifacts for every action.
-
----
+Develop a complete Content Editor within LifeOps that enables end-to-end content workflows from idea to publish. The editor must support LLM-assisted writing, versioning, collaboration, and publishing integrations, while tying into a File Upload & Artifacts Storage system and a Content Pipeline Automation engine. The solution should provide a cohesive UX across the Content Editor page, a Content Dashboard, and a Content Calendar, with robust data integrity, audit trails, and security. All code and interfaces must be resilient to null/undefined values and follow runtime safety rules: use data ?? [] for Supabase results, guard all array methods, initialize useState with appropriate array/object types, validate API responses, and use optional chaining where appropriate.
 
 ## Page Description (Full Detail)
-
 What this page is:
-- The Content Dashboard is the central overview for content pipelines within LifeOps. It aggregates data from content ideas, research tasks, drafts, scheduled publications, and analytics to give operators a holistic view of content health, throughput, and ROI. It also serves as the launcher to the Content Editor and to automation tooling for ideation, drafting, editing, and publishing through LLM-assisted pipelines and publishing connectors.
+- The Content Editor page is the primary, end-to-end workspace for creating, refining, and publishing content. It supports ideation, research, drafting, editing, scheduling, and publishing in a single integrated interface, with optional LLM-assisted writing, live collaboration, version history, and publishing connectors to channels (CMS, social, email, etc.).
 
 Goals:
-- Provide a real-time (or near-real-time) overview of content lifecycle stages and bottlenecks.
-- Surface SEO and performance indicators with actionable recommendations.
-- Facilitate end-to-end content automation orchestration (via the Content Pipeline Automation feature).
-- Enable efficient search and filtering across multiple domains: projects, content items, cronjobs, runs, users.
-- Offer a safe, auditable environment with full run artifacts, reversion capabilities, and human-in-the-loop controls.
+- Provide a fluid, distraction-minimized editor that lets teams move content through the lifecycle: idea → research → draft → edit → schedule → publish.
+- Deliver real-time collaboration, autosave, and a robust LLM assistant pane for expansion, rewriting, tone adjustments, and structured prompts.
+- Integrate version control (diffs, snapshots, revert), artifact/file attachments with lifecycle/versioning, and secure access to assets.
+- Expose publish controls, metadata (SEO, tags), and channels with scheduling capabilities.
+- Surface a cohesive view of pipelines, current drafts, review status, and performance insights via connected dashboards and calendars.
 
-Connected features and UI guidance:
-- Content Calendar: Interactive calendar grid showing scheduled content, with drag-and-drop to reschedule. Dragging should update the underlying cron/job scheduling in a safe, auditable way and reflect in the per-run history.
-- Drafts Panel: Card- or list-based view showing items in stages (idea, research, draft, edit). Each item shows title, author, stage, ETA, assigned agents, and quick actions (move to next stage, escalate, request approvals).
-- Publishing Queue: A queue/list of posts scheduled for publishing with target channels (publish connectors). Show status, next publish time, retries, and outcome history.
-- Agent Recommendations: A panel suggesting topics, outlines, and promotional ideas based on research corpora and real-time trend signals.
-- SEO/Performance Widgets: Keyword suggestions, search volume estimates, traffic projections, ranking deltas, and on-page optimization hints.
-- Search & Filter: Global search box and module-scoped search fields. Filters across projects, content, cronjobs, runs, users. Use multi-select facets, date ranges, status pills, and tag filters.
-- Content Editor (Connected Page): A seamless entry point to the end-to-end editor with idea→research→draft→edit→schedule→publish flow, incorporating LLM-assisted writing, versioning, collaboration, and publishing integrations.
-- API integrations: The page should not rely on external APIs in this prompt, but be designed to connect to a backend that exposes the required endpoints and data models.
+Features connected:
+- File Upload & Artifacts Storage: Upload, store, and serve artifacts (run outputs, content attachments) with versioning and secure access. Ensure artifact metadata (version, creator, timestamp, access controls) is captured and auditable.
+- Content Pipeline Automation: Orchestrate ideation, research, drafting, editing, scheduling, and publishing with LLM assistance and publishing connectors. Include per-step state, approvals, and traceable agent-to-agent handoffs in the orchestration layer.
+- UI Panels:
+  - Editor pane (WYSIWYG + Markdown toggle, autosave, and inline comments)
+  - LLM Assistant Pane (suggestions, expansions, rewrite, tone controls)
+  - Research Pane (linked sources, citation manager)
+  - Versioning History (diff views, snapshots, revert)
+  - Publish Controls (channels, schedule, metadata, and status)
+- Connected Pages:
+  - Content Dashboard: Overview for content pipelines, content calendar, drafts in progress, publishing status, pending approvals, and SEO/performance insights.
+  - Content Calendar: Calendar-based scheduling UI for content items with publishing slots, drag-to-schedule, and conflict detection.
 
-UI/UX visual guidance (as per design specs):
-- Dark UI with the supplied color palette, typography, spacings, and card design rules.
-- Layout: Left navigation rail, top bar with global controls, and a responsive content area with a multi-column density-first layout that gracefully collapses on smaller viewports.
-- Data visualization: Lightweight, accessible charts (e.g., KPI spark lines, trend charts) using the palette teal, amber, and purple for series accents.
-- Interaction feedback: Subtle hover lifts, focus rings, and keyboard navigability. All actionable items must have clear affordances and reversible actions.
+UI guidance:
+- Follow the provided visual style: dark UI, high contrast for primary actions, restrained accents, and dense, information-rich panels optimized for power users.
+- Ensure consistent typography, spacing, and component states as described in the design system.
+- Provide keyboard accessibility, clear focus states, and responsive behavior for editor, panes, and dashboards.
 
----
+Note: The API endpoints themselves are not specified in this task; the prompt should define the expected API contracts, data shapes, and integration points to accommodate future wiring to your backend, including Supabase or other data layers.
 
 ## Components to Build
+1) Content Editor Page (Main Editor Surface)
+- Subcomponents:
+  - EditorWorkspace: canvas for content editing with WYSIWYG and Markdown toggle
+  - LiveCollaborationPanel: cursors, presence indicators, per-section comments
+  - AutosaveEngine: saves draft versions at configurable intervals; exposes save status
+  - VersionBadgeStrip: shows current version, last modified, authors
+  - LLMAssistantPanel: panel with prompts, tone controls, expansion, rewrite, summarize, and outline features
+  - ResearchPanel: linked sources, citation manager, export/import citations
+  - AttachmentsPanel: file upload area with drag-and-drop, artifact versioning, secure access tokens
+  - PublishControlsPanel: channel selectors, scheduling UI, metadata (SEO, tags), publish vs. test run
+  - DiffViewer: side-by-side or inline diffs between versions
+  - HistoryPanel: historical diffs, snapshots, revert actions
+- Data handling:
+  - Draft content, versions, authors, timestamps
+  - Attachments with versioning and access controls
+  - Collaboration presence and comments tied to content piece
+- Interactions:
+  - Real-time collaboration (presence, cursors)
+  - Tone/style controls; prompts to LLM; preview rendering
+  - Autosave state indicators; manual save button
+  - Validation for publish readiness (policy checks, approvals)
 
-- ContentDashboardShell
-  - Layout that composes Sidebar, TopNav, and a responsive Grid of panels.
-  - State management for global search, filters, and active tab/pane.
-- ContentCalendarPanel
-  - Calendar grid view with drag-and-drop support (drag-to-reschedule).
-  - Data shape: content items with id, title, status, scheduledAt, projectId, author, etc.
-- DraftsPanel
-  - Kanban-like or list view of drafts with stages: idea, research, draft, edit, ready to publish.
-  - Inline actions: advance stage, reassign, request approvals.
-- PublishingQueuePanel
-  - List/table of scheduled posts with status, nextRun, channels, retries, and outcome.
-- AgentRecommendationsPanel
-  - Suggested topics, outlines, and promotional ideas with confidence scores.
-- SEOPerformancePanel
-  - Keyword recommendations, traffic estimates, SERP metrics, and recommended actions.
-- GlobalSearchBar
-  - Search input with multi-field, facets, and per-module scopes.
-- ModuleFiltersBar
-  - Facets for projects, content types, status, date ranges, authors, tags.
-- ContentEditorShortcutHub
-  - Quick link to the Connected Content Editor with starter templates and recent edits.
-- DataVizDrawer
-  - Lightweight sparkline and KPI visualizations with accessible descriptions.
-- APIAdapterLayer (client-side)
-  - Unified data-fetch hooks with robust null-safety guards, data shaping, and error handling.
-- AuditTrailPanel (optional, collapsible)
-  - Per-item run artifacts, messages, and diffs for transparency.
+2) File Upload & Artifacts Storage Component
+- Features:
+  - Drag-and-drop and browse file picker
+  - Versioning support per artifact (semver-like or timestamped)
+  - Secure, revocable access tokens and per-user permission checks
+  - Metadata: filename, mime type, size, uploader, version, createdAt
+  - API surface: uploadArtifact(draftId, file, metadata) -> artifactId; fetchArtifact(artifactId) -> file blob/URL; listArtifacts(draftId) -> artifacts[]
+- Safety:
+  - Guard all results with data ?? [] when listing artifacts
+  - Validate file types and size; enforce allowedMimeTypes
+- UI/UX:
+  - Thumbs/thumbnails, file type icons, version chips, download/view actions
+  - Delete/replace/version bump with confirmation
+- Data integrity:
+  - Ensure artifact references are stored in a way that they survive draft version changes
+  - Audit trail for artifact uploads, views, and shares
 
-All components must follow the runtime safety rules:
-- Data fetched via Supabase or API should be coerced to arrays with data ?? [].
-- Guard array methods with (items ?? []).map(...) and Array.isArray checks where necessary.
-- Initialize state as useState<Type[]>([]) for arrays; use appropriate defaults for objects.
-- Validate API responses with Array.isArray(response?.data) ? response.data : [].
-- Use optional chaining for nested properties.
+3) Content Pipeline Automation Orchestrator (LLM-assisted automation)
+- Features:
+  - Orchestrator that sequences steps: ideation, research, drafting, editing, scheduling, publishing
+  - Agent-based handoffs with traceable messages
+  - Prompt templates for each stage; variables for scope, audience, channel rules
+  - Publishing connectors; ability to push to CMS, social, and email channels
+  - Approvals queue integration with conditional auto-execute or require approvals
+  - Constraints: max actions, spend limits, allowed tools, safety rails and required confirmations
+  - Run history, logs, inter-agent traces, diffs, artifacts created
+- API surface:
+  - startPipeline(contentId, plan, scope) -> pipelineRunId
+  - advancePipeline(runId, step, payload) -> updatedState
+  - getPipelineState(runId) -> state including step, status, logs
+  - requestApproval(runId, reviewerId) -> approvalId
+  - publishToChannel(runId, channel) -> publishResult
+- Data safety:
+  - Validate all inputs; ensure all array-like data is guarded
+  - Use Array.isArray checks and data ?? [] for lists
+- UI integration:
+  - Pipeline status widgets on Editor page and in Content Dashboard
+  - Controls to pause/resume, rerun steps, view per-step diffs and logs
 
----
+4) Content Dashboard Page
+- Features:
+  - Overview panels: content pipelines, drafts in progress, publishing status, pending approvals
+  - SEO/performance insights: basic metrics with sparklines or small charts
+  - Quick-create widgets to start ideation pipelines
+  - Filters: status, author, channel, publish window
+- Components:
+  - PipelineSummaryCard: shows progress, ETA, last action
+  - DraftListView: dense list with version, last updated, status
+  - ApprovalsQueuePanel: items requiring review with approve/reject actions
+  - SEOInsightsPanel: key metrics
+- Data handling:
+  - Lists of pipelines, drafts, approvals with null-safe mapping and guards
+  - Use data ?? [] and Array.isArray() guards for all lists
+
+5) Content Calendar Page
+- Features:
+  - Calendar UI with publishing slots
+  - Drag-to-schedule items; conflict detection and resolution prompts
+  - Views: month/week/day; thumbnails for each item
+  - Quick actions from calendar: reschedule, edit, publish
+- Components:
+  - CalendarGrid: rendering of days/weeks with slots
+  - ContentCardInCalendar: compact card with title, status, and tags
+  - DragDropScheduler: handles dragging items between slots with conflict checks
+  - ConflictDialog: informs user of conflicts and options
+- Data handling:
+  - Content items with publishDate, status, and channel metadata
+  - Use guarded lists: (items ?? []).map(...) and Array.isArray checks
 
 ## Implementation Requirements
 
 ### Frontend
-- Tech stack: React (with hooks), TypeScript, and a state management approach (React Context or lightweight Redux) as appropriate.
-- Routing: /content-dashboard as main route; /content-dashboard/editor for Content Editor integration.
-- Data fetching: Custom hooks for fetching panels’ data; ensure null checks and typed responses.
-- Components must be accessible (aria-labels, semantic HTML, keyboard navigation).
-- State safety: All arrays initialized to [] via useState([]).
-- Drag-and-drop: Implement using a robust library (e.g., React DnD or HTML5 Drag with proper guards).
-- Form controls: Inputs, selects, chips with focus states and accessible labels.
-- UI consistency: Use the provided design system tokens for colors, typography, spacing, borders, and shadows.
-- Performance: Lazy load heavy widgets (e.g., SEO charts) and memoize expensive subtrees.
-- Testing: Unit tests for critical hooks and UI logic; integration tests for drag-to-reschedule and end-to-end flows (where feasible).
+- Frameworks: React with TypeScript; state management via React hooks or a lightweight store
+- Components:
+  - EditorSurface with WYSIWYG and Markdown toggle
+  - LLMAssistantPanel with configurable prompts (tone, length, style)
+  - ResearchPanel with citation manager
+  - AttachmentsPanel for artifact uploads
+  - Versioning UI (diffs, snapshots)
+  - PublishControlsPanel for channels, scheduling, and metadata
+  - Dashboard widgets for Content Dashboard and Content Calendar
+- State & Data Modeling:
+  - useState<Type[]>([]) defaults for arrays; appropriate typing
+  - Guards for all API results: consistently use data ?? [] and Array.isArray() checks
+  - Persisted autosave keys per draft; reconcile on load
+  - Real-time collaboration presence signals
+- Accessibility:
+  - Keyboard navigable, screen-reader friendly labels
+  - Focus traps for modals; ensure visible focus states
+- Performance:
+  - Debounced autosave; virtualization for long lists; pagination where needed
+- Testing:
+  - Unit tests for data helpers (guards), integration tests for API contracts, E2E flows for typical editor lifecycle
 
 ### Backend
-- Data access layer should expose endpoints for:
-  - GET /content/items with pagination and filters
-  - GET /content/item/{id} for detail
-  - POST /content/item with creation payload
-  - PUT /content/item/{id} for updates (stage transitions, scheduling, etc.)
-  - GET /cronjobs, POST /cronjobs, PUT /cronjobs for content automation
-  - GET /analytics/seo, /analytics/performance for SEO data
-  - GET /audits/run/{id} for audit trails
-  - GET /agents/recommendations for topic suggestions
-- Data models (schemas) must reflect the project context:
-  - ContentItem: id, title, slug, projectId, status (idea/research/draft/edit/publish), authorId, assigneeIds, calendarItem, scheduledAt, publishedAt, seoKeywords, performanceMetrics, version, createdAt, updatedAt
-  - CronJob: id, name, enabled, scheduleCron, timezone, triggerType, targetAgentId, inputPayload, permissions, constraints, safetyRails, retryPolicy, outputs
-  - RunArtifact: id, cronJobId, status, startedAt, finishedAt, artifacts, logs, diffs
-  - SEOInsight: id, contentItemId, keyword, searchVolume, difficulty, suggestedTitle, metaDescription
-  - AgentRecommendation: id, topic, rationale, confidence
-- Safety and validation: All endpoints return data shaped as per response validators; guard against nulls; ensure id fields are validated.
+- Data Models (drafts, versions, artifacts, pipelines, approvals, logs)
+  - Draft: id, title, content, format (markdown/html), version, authorId, createdAt, updatedAt, isPublished
+  - Version: id, draftId, content, diff, createdAt, authorId
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status, steps, logs, startedAt, endedAt
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status, comments, requestedAt, decidedAt
+- Endpoints (examples; ensure runtime safety)
+  - POST /api/drafts with { title, content, format } -> Draft
+  - GET /api/drafts/{id} -> Draft with data?. The response data may be null; validate
+  - GET /api/drafts/{id}/versions -> Version[] | []
+  - POST /api/drafts/{id}/versions with { content, note } -> Version
+  - POST /api/drafts/{id}/artifacts with multipart/form-data -> Artifact
+  - GET /api/drafts/{id}/artifacts -> Artifact[]
+  - POST /api/pipelines with { draftId, plan, scope } -> PipelineRun
+  - GET /api/pipelines/{runId} -> PipelineRun
+  - POST /api/pipelines/{runId}/advance with { step, payload } -> PipelineRun
+  - POST /api/pipelines/{runId}/approvals/{approvalId}/decide with { status, comments } -> Approval
+  - POST /api/publish with { runId, channel, schedule } -> PublishResult
+- Security:
+  - JWT/OAuth authentication; authorization checks for write access to drafts, artifacts, pipelines
+  - Access controls on artifacts (per-user/per-role)
+  - Audit trails for all create/update/delete actions
+- Validation:
+  - Validate all inputs server-side; ensure arrays are validated via Array.isArray
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
+  - Use nullish coalescing for optional fields
 
 ### Integration
-- Data flow:
-  - ContentDashboard pulls data from:
-    - Content module (items, stages, scheduling)
-    - Cronjobs module (content automation runs)
-    - SEO/Performance analytics module
-    - Agent recommendations module
-  - Actions trigger:
-    - Stage transitions update content items and enqueue events to the automation layer
-    - Drag-and-drop on ContentCalendarPanel triggers scheduling updates via CronJobs
-    - Publishing actions invoke publishing connectors (via the Content Pipeline Automation features), scheduling jobs, and recording run artifacts
-- Consistency:
-  - All state mutations should be auditable; write actions should emit run artifacts and logs
-  - Use a single source of truth for content items; propagate updates to all panels
-- Error handling:
-  - Centralized error boundaries; show user-friendly error messages with retry options
-  - Maintain UI disabled states when critical data is loading or errors exist
-
----
+- Data Flow:
+  - Editor writes content -> autosave creates new DraftVersion; attach metadata
+  - Attach artifacts uploaded in AttachmentsPanel are versioned and linked to draft/version
+  - LLMAssistantPane executes prompts via an LLM service; results saved as Suggestions or Draft updates
+  - Content Pipeline Automator consumes a Draft to create a PipelineRun; steps progress with logs and artifacts
+  - PublishControlsPanel triggers publisher connectors; results saved to PipelineRun and PublishResult
+- Synchronization:
+  - Ensure consistent IDs across panels (draftId, versionId, runId)
+  - When a draft version is created, all panels reflect the latest version; provide diffs against previous versions
+- Reuse:
+  - Centralized helper utilities for null-safe array handling, API response normalization, and date handling
+  - Shared UI primitives: Button, Card, Tabs, Modal, Tooltip with styles aligned to the design system
 
 ## User Experience Flow
+1) Idea → Research:
+- User creates a new Draft with a title and initial idea summary.
+- Editor autosaves to Draft, creates Version 1.
+- LLM Assistant provides outline and expansion suggestions; user accepts/refines.
+- ResearchPane collects sources; user marks citations; citations are linked to the draft version.
 
-1. User opens Content Dashboard ("/content-dashboard").
-2. Overview tiles render:
-   - Content Calendar shows upcoming scheduled posts; drag a post to reschedule and confirm the new time; behind the scenes, a cronjob update is created and run history updated.
-   - Drafts Panel displays ideas to publish-ready drafts; user advances a piece to the next stage, assigns editors, or requests approvals.
-   - Publishing Queue shows imminent publishes with statuses and next steps; user can retry failed items or cancel upcoming publishes.
-   - Agent Recommendations provides topic/story ideas with rationale and confidence; user can push ideas into the Editor with one click.
-   - SEO/Performance Widgets present keyword suggestions and traffic projections; user can click to open the Editor with the item loaded.
-3. User uses Global Search to locate content, projects, cronjobs, runs, or users; filters refine the results.
-4. User clicks Content Editor shortcut to open the end-to-end editor for a selected item or a new idea; editor supports idea→research→draft→edit→schedule→publish with versioning and collaboration features.
-5. User reviews audit trails and run artifacts for actions taken, including reversion options if needed.
+2) Draft Writing:
+- User writes content in EditorSurface; Markdown toggle available; autosave continuously.
+- Real-time collaboration shows collaborators editing the same draft.
+- LLM Assistant suggests rewrites or tone adjustments; user applies changes.
 
----
+3) Editing & Review:
+- User triggers Edition pass; Versioned diffs are shown in DiffViewer.
+- Reviewer/Collaborator adds comments; approvals queue is populated if needed.
+- Version history stores snapshots; user can revert to prior version if necessary.
+
+4) Artifacts & Attachments:
+- User uploads artifacts (data runs, attachments) via AttachmentsPanel; artifacts are versioned and accessible via secure links.
+- Artifact metadata is visible in the artifact list and can be attached to the draft version.
+
+5) Scheduling & Publishing:
+- PublishControlsPanel allows scheduling publish date/time and selecting channels (CMS, social, email).
+- In Content Calendar, user drags a draft into a slot; conflict detection alerts if the slot is occupied.
+- PipelineAutomation runs, logging steps; on success, content is published via connectors and status is updated.
+
+6) Dashboard & Insights:
+- Content Dashboard shows pipeline progress, drafts in progress, approvals, and SEO/performance metrics.
+- Content Calendar provides a weekly/monthly view with color-coded statuses and quick actions.
+
+7) Audit & Revisions:
+- All actions produce an audit trail; users can view run logs, agent messages, and generated artifacts.
+- Reverts and diffs are easily accessible; permissions ensure only authorized users can revert/publish.
 
 ## Technical Specifications
 
-- Data Models (Schema Details)
-  - ContentItem
-    - id: string
-    - title: string
-    - slug?: string
-    - projectId: string
-    - status: "idea" | "research" | "draft" | "edit" | "ready-to-publish" | "published"
-    - authorId: string
-    - assigneeIds: string[]
-    - calendarItem?: { start: string; end?: string; allDay?: boolean }
-    - scheduledAt?: string
-    - publishedAt?: string
-    - version: number
-    - seoKeywords: string[]
-    - performanceMetrics?: { views?: number; ctr?: number; avgPosition?: number }
-    - createdAt: string
-    - updatedAt: string
-  - CronJob
-    - id: string
-    - name: string
-    - enabled: boolean
-    - scheduleCron?: string
-    - timezone: string
-    - triggerType: "time" | "event" | "conditional"
-    - targetAgentId?: string
-    - inputPayload: any
-    - permissions: "suggest-only" | "approval-required" | "conditional-auto" | "bounded-autopilot"
-    - constraints: { maxActions?: number; spendLimit?: number; allowedTools?: string[] }
-    - safetyRails: { confirmationsRequired?: boolean; approvalsNeeded?: string[] }
-    - retryPolicy: { maxRetries?: number; backoffMs?: number; deadLetterQueue?: string }
-    - outputs: { runHistory?: string[]; logs?: string[]; artifacts?: string[] }
-    - createdAt: string
-    - updatedAt: string
-  - RunArtifact
-    - id: string
-    - cronJobId: string
-    - status: "queued" | "running" | "success" | "failed" | "skipped"
-    - startedAt: string
-    - finishedAt?: string
-    - artifacts: any
-    - logs: string[]
-    - diffs?: string
-  - SEOInsight
-    - id: string
-    - contentItemId: string
-    - keyword: string
-    - searchVolume: number
-    - difficulty: number
-    - suggestedTitle: string
-    - metaDescription: string
-  - AgentRecommendation
-    - id: string
-    - topic: string
-    - rationale: string
-    - confidence: number
+- Data Models: Draft, Version, Artifact, PipelineRun, StepLog, Approval, PublishResult
+  - Draft: id, title, content, format ('markdown'|'html'), currentVersionId, authorId, createdAt, updatedAt, isPublished, seoMetadata
+  - Version: id, draftId, content, changeSummary, authorId, createdAt
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status ('pending'|'running'|'completed'|'failed'), startedAt, endedAt, summary
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status ('pending'|'approved'|'rejected'), comments, requestedAt, decidedAt
+  - PublishResult: id, runId, channel, success, details, publishedAt
 
-- API Endpoints (Routes and Methods)
-  - GET /api/content/items?filters&page&limit&search
-  - GET /api/content/item/{id}
-  - POST /api/content/item
-  - PUT /api/content/item/{id} (update fields like status, scheduledAt, assignees, etc.)
-  - GET /api/cronjobs
-  - POST /api/cronjobs
-  - PUT /api/cronjobs/{id}
-  - GET /api/analytics/seo?contentItemId=
-  - GET /api/analytics/performance?contentItemId=
-  - GET /api/audit/run/{runId}
-  - GET /api/agents/recommendations
-  - POST /api/editor/open (open Content Editor with starter data)
-  - POST /api/cronjobs/{id}/run (force/run now)
-  - PATCH /api/content/item/{id}/advance (move to next stage)
-  - PATCH /api/content/calendar/{id}/move (update scheduling)
+- API Endpoints (illustrative; implement as per your stack)
+  - Drafts
+    - POST /api/drafts
+    - GET /api/drafts/{draftId}
+    - GET /api/drafts/{draftId}/versions
+    - POST /api/drafts/{draftId}/versions
+  - Artifacts
+    - POST /api/drafts/{draftId}/artifacts
+    - GET /api/drafts/{draftId}/artifacts
+  - Pipelines
+    - POST /api/pipelines
+    - GET /api/pipelines/{runId}
+    - POST /api/pipelines/{runId}/advance
+  - Approvals
+    - POST /api/pipelines/{runId}/approvals
+    - POST /api/pipelines/{runId}/approvals/{approvalId}/decide
+  - Publish
+    - POST /api/publish
 
 - Security
-  - JWT/OIDC authentication; role-based access control:
-    - Admin, Editor, Approver, Viewer
-  - All endpoints validate authentication, authorization, input schemas, and rate limits
-  - Sensitive actions (approve, publish, schedule changes) require appropriate permissions and audits
-  - All actions emit a traceable audit record with userId, timestamp, action, and diffs
+  - JWT/OAuth 2.0; middleware enforcing authorization on drafts, artifacts, pipelines
+  - Per-resource permissions; audit logs for all mutations
+  - Access controls for artifact downloads
+  - Rate limiting for LLM prompts to avoid abuse
 
-- Validation
-  - Use runtime validation on all inputs (e.g., Zod or Yup) with defaults
-  - All fetch results pass through validators; default to [] when arrays are missing
-  - Date/time fields are ISO 8601 strings and timezone-aware where needed
-
-- Safety & Nullability Rules (enforced throughout)
-  - data ?? [] for array results
-  - (items ?? []).map(...) and Array.isArray(items) ? items.map(...) : []
-  - useState<Type[]>([]) initializations
-  - const list = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining for nested fields
-  - Destructure with defaults: const { items = [], count = 0 } = response ?? {}
-
----
+- Validation & Runtime Safety
+  - Always guard arrays: const items = data ?? []; items.map(...) guarded with Array.isArray
+  - API responses validated: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: obj?.property?.nested
+  - Destructuring defaults: const { items = [], count = 0 } = response ?? {}
+  - Use useState<Type[]>([]) for array state; useRef for mutable objects where needed
+  - Supabase results: const items = data ?? [] per requirement
 
 ## Acceptance Criteria
-
-- [ ] The Content Dashboard renders without runtime errors on initial load, with all panels displaying data from the APIs and safe guards in place for nulls.
-- [ ] All array operations guard against null/undefined values using the runtime safety patterns outlined.
-- [ ] Drag-and-drop on ContentCalendarPanel updates scheduling correctly, triggers a CronJob update, and logs an audit trail.
-- [ ] DraftsPanel supports stage advancement and approvals workflow; status transitions reflect in PublishingQueuePanel and audit logs.
-- [ ] PublishingQueuePanel shows accurate nextRun times, statuses, and outcomes; retry logic is visible and functional.
-- [ ] SEOPerformancePanel surfaces at least 3 keyword recommendations with measurable metrics and a CTA to open Editor with the item preloaded.
-- [ ] Global Search returns accurate results across projects, content, cronjobs, runs, and users; filters update as expected.
-- [ ] Content Editor shortcut opens with an end-to-end flow initialized for a given ContentItem or a new idea; versioning is tracked.
-- [ ] All API responses validate shapes; responses with missing fields are sanitized to safe defaults.
-- [ ] UI interactions are accessible (keyboard navigation, ARIA labels) and responsive.
-
----
+- [ ] End-to-end user flows from idea to publish operate without runtime errors; drafts persist across sessions; autosave and versioning are functional
+- [ ] LLM Assistant pane can generate, apply, and revert prompts; tone and style controls work; prompts honor content scope
+- [ ] Attachment upload supports versioning, secure access, and per-artifact metadata; artifacts are retrievable and auditable
+- [ ] Content Pipeline Automation can initialize a pipeline, progress through ideation, research, drafting, editing, scheduling, and publishing with proper logs and per-step statuses
+- [ ] Scheduling/Calendar supports drag-to-schedule, conflict detection, and per-slot publishing actions
+- [ ] Content Dashboard shows accurate counts, statuses, and SEO metrics; Approvals queue gates publish actions when required
+- [ ] All API responses validated; all lists guarded with null-safe patterns; no runtime crashes due to undefined/null arrays
 
 ## UI/UX Guidelines
 Apply the project's design system:
-- Dark UI with the specified color palette and typography
-- Card-based panels with elevation, rounded corners, 1px borders
-- Left navigation rail with active state accent pill (#FF3B30)
-- Data visualizations with subtle gridlines and the teal/amber/purple palette
-- Interactive elements with smooth micro-interactions (120–200ms transitions)
-- Form controls with focus rings in accent colors; disabled states visibly muted
-- Consistent spacing: 8px baseline grid; 16–20px card paddings; 220–260px sidebar
-- Dense, power-user oriented density in content trees and dashboards
-
----
+- Maintain the dark, dense, highly scannable UI with minimal accents
+- Use the specified color palette for depth, status, and highlights
+- Ensure typography hierarchy and spacing adhere to the 8px baseline grid and responsive rules
+- Use rounded 8–12px radii for cards; 1px borders with rgba(255,255,255,0.03)
+- Cards: elevated, gradient backgrounds, top icons, bold titles, metadata beneath
+- Navigation: left sidebar with collapse/expand sections; active states marked with accent pill (#FF3B30)
+- Data Visualization: subtle grids, consistent data colors from the accent palette
+- Interactive Elements: responsive hover states, accessible focus outlines, and clear affordances for actions
 
 ## Visual Style
 
-- Color Palette, Typography, Layout, and Design Elements are as provided in PROJECT CONTEXT.
-- Ensure all components respect the gradient fills, borders, shadows, and typography weights described.
+Color Palette and Typography are defined above; implement across components with a consistent theme:
+- Font: Inter or SF Pro Display, fallback to Roboto
+- Weights: headings 600–700, titles 500–600, body 400, microcopy 300–400
+- Spacing: 8px grid; card paddings 16–20px; gutters 8–24px
+- Layout: left sidebar width 220–260px; content area uses flexible grid
 
----
+Key Design Elements (summary):
+- Card Design: dark, rounded, gradient, subtle borders, hover lift
+- Navigation: compact left rail with active accent pill
+- Data Visualization: muted axes, colored lines/areas with restrained saturation
+- Interactive Elements: primary/secondary actions, hover/focus states, toggles, chips, badges
+- Transformations: smooth 120–200ms transitions, subtle shadows
 
 ## Mandatory Coding Standards — Runtime Safety
-
-CRITICAL: Apply these rules in ALL generated code.
-
-1) Supabase query results:
-   - const items = data ?? []
-2) Array methods:
-   - Use guards like (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
-3) React useState for arrays/objects:
-   - useState<Type[]>([])
-4) API response shapes:
-   - const list = Array.isArray(response?.data) ? response.data : []
-5) Optional chaining:
-   - Use ?. for nested API/database fields
-6) Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {}
+- Supabase query results: Always use nullish coalescing — const items = data ?? []
+- Array methods: Guard all calls
+  - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+- React useState for arrays/objects: Initialize with proper type, e.g., useState<Type[]>([])
+- API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining: use obj?.property?.nested
+- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
 ---
 
-## Deliverables
-
-- Complete frontend implementation plan with component API contracts, data shapes, and UI wiring details.
-- Type-safe TypeScript React components matching the design system; explicit guards for all arrays and optional fields.
-- Backend API surface definitions, schemas, and validation rules with example payloads and edge-case handling.
-- Data models and database schema suggestions (PostgreSQL) aligned to Supabase usage (or your chosen backend).
-- Clear testing strategy: unit tests for guards and type safety, integration tests for end-to-end flows (calendar drag, stage transitions), and acceptance tests per criterion.
-- Documentation:
-  - How to extend the Content Dashboard with new panels
-  - How to integrate additional data sources (e.g., new analytics)
-  - How the audit trail and run artifacts are stored and queried
-
-If you need any clarifications or prefer a specific tech stack variant (e.g., Next.js + tRPC + Prisma), specify, and I will tailor the deliverable accordingly while preserving the runtime safety guarantees.
+If you need, I can convert this into a machine-readable prompt file (JSON/YAML) with explicit field mappings for an AI development tool, or tailor it to a specific tech stack (Next.js + Prisma, Remix + PostgreSQL, etc.).
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist
