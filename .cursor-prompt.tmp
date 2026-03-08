@@ -1119,295 +1119,305 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Scoped Memory Store
+ for bestpractices and # Approvals Workflow
 
 ## Overview
-Develop a secure, reusable, and auditable Scoped Memory Store for LifeOps that provides per-run, per-agent, and global memory scopes with encryption at rest, lifecycle management, and strict schema validation. This system underpins agent-to-agent coordination, traceable conversations, and reversible actions. It powers two key pages: Run Details Page and Agent Trace & Debugger. All components must guard against null/undefined values before using array methods, initialize React state properly for arrays/objects, and validate API responses per the project’s runtime-safety standards.
-
----
+Build a robust Approvals Workflow within LifeOps that collects, presents, and manages approvals for scheduled or suggested agent actions. The system must support an audit trail, conditional approvals, diffs of payloads, agent rationale, and role-based routing with escalation rules. A dedicated Approvals Queue page surfaces queued cron/jobs requiring human review, displaying review details, diffs, rationale, and the ability to approve, reject, or grant conditional approvals with comments. All code must guard against null/undefined data, use safe defaults, and follow the runtime safety rules described below.
 
 ## Components to Build
 
-1) Scoped Memory Store Core
-- Purpose: Central storage for memories with scoping, encryption, auditing, and lifecycle policies.
-- Scopes:
-  - Per-run scope: memories tied to a specific cron/agent run.
-  - Per-agent scope: memories scoped to an individual agent.
-  - Global scope: memories shared across all agents/runs with access controls.
-- Data model:
-  - memoryId (string, UUID)
-  - scopeType: 'run' | 'agent' | 'global'
-  - scopeId: string (runId | agentId | 'global')
-  - key: string
-  - value: any (encrypted at rest; redactable per field)
-  - redactedFields?: string[]
-  - ttlMs?: number
-  - createdAt: ISO string
-  - updatedAt: ISO string
-  - encryptionMetadata?: { algorithm: string, keyId: string, encryptedAt: string }
-  - auditLog: Array<{ action: 'CREATE'|'UPDATE'|'DELETE'|'READ', actorId: string, timestamp: string, notes?: string }>
-- Encryption:
-  - Encrypt memory values at rest using envelope encryption with per-scope keys.
-  - Include keyId and algorithm metadata for auditing.
-- Validation:
-  - Enforce schema on write; reject if required fields missing or types invalid.
-- Lifecycle:
-  - TTL handling per-memory; explicit purge; retention policies with automatic background cleaner.
-- API surface (BACKEND):
-  - createMemory({ scopeType, scopeId, key, value, ttlMs, redactFields })
-  - readMemory({ memoryId } | { scopeType, scopeId, key })
-  - updateMemory({ memoryId, value, ttlMs, redactFields })
-  - deleteMemory({ memoryId })
-  - listMemories({ scopeType, scopeId, filters? })
-  - purgeExpiredMemories()
-- Auditing:
-  - All mutating operations must append to memory auditLog.
-
-2) Run Details Page (page_run_details_010)
-- Purpose: Present a comprehensive view of a single cron/agent run with all relevant data and control actions.
-- Data Sections:
-  - Inputs: trigger payload, variables, scope, constraints, and input prompts.
-  - Agent-to-Agent Message Trace: threaded conversation graph showing handoffs, negotiations, alerts, and approvals.
-  - Logs: chronological log stream with levels (info, warn, error) and timestamps.
-  - Diffs: side-by-side diffs of inputs vs outputs, prompts vs responses, and memory edits.
-  - Artifacts: generated artifacts, files, and artifacts metadata (type, size, hash).
-  - Timing: start/end timestamps, duration, latency metrics, and per-step timing.
-  - Outcome: status (success, failed, canceled), metrics, and human-readable summary.
-  - Revert Actions: UI affordance to revert specific actions within the run using a reversible action stack.
-- UI Components:
-  - RunHeaderCard: high-level run metadata (name, schedule, timezone, status, next run, last run).
-  - TimelinePanel: chronological events timeline with collapsible sections.
-  - MessageTraceGraph: node-link diagram of agent-to-agent messages; supports zoom/pan; supports filtering by agent or message type.
-  - MemoryDiffPanel: show per-memory diffs with redaction indicators and redact/unredact controls.
-  - LogsPanel: filterable log viewer with search, severity filter, and export.
-  - ArtifactsPanel: grid/list of artifacts with preview, hash, size, and download actions.
-  - TimingPanel: latency breakdown and per-step timing bars.
-  - RevertPanel: action stack viewer with confirm dialogs and rollback actions.
-- Interaction Flows:
-  - View details, filter by agent, search logs, inspect messages.
-  - Revoke/revert actions with audit trail updates.
-  - Redact sensitive fields with policy-enforced toggles.
-- Validation & Safety:
-  - Ensure all displayed data is sanitized; redactable fields display redaction tokens when needed.
-
-3) Agent Trace & Debugger (page_agent_trace_011)
-- Purpose: An interactive debugging console for agent behavior with a visual conversation graph and scoped memory access.
-- Features:
-  - Visual Conversation Graph: nodes for agents, messages, and actions; edges represent handoffs; interactive exploration with zoom/pan.
-  - Scoped Memory View: per-scope memory inspector (run/agent/global) with search, redact controls, and encryption-aware rendering (masked values by default; reveal on explicit user action with audit).
-  - Variable States: real-time or replayable snapshots of agent variables and state machines.
-  - Step-Through Execution: ability to step through agent reasoning steps, observe state transitions, and annotate rationale.
-  - Audit Trail: in-context log of actions, with ability to revert or annotate.
-- UI Components:
-  - TraceCanvas: canvas/SVG-based graph with draggable nodes, tooltips, and contextual menus.
-  - MemoryInspector: collapsible panels for each scope; redactable fields; export/import memory snapshots.
-  - StatePanel: shows key-value pairs of agent variables with type hints.
-  - Stepper: controls to advance, replay, pause; speed control.
-  - AnnotationPanel: add human-readable notes; attach to steps or messages.
+1) Approvals Queue Page (page_approvals_queue_009)
+- Purpose: Show a queue of scheduled actions/crons that require approval.
+- Data model: approval items with id, priority, sla, status, scheduledTime, payload, diffs, rationale, artifacts, requester, approvers, escalationRule, comments, approvalActions.
+- UI blocks:
+  - Queue list with dense rows (8–12px vertical spacing), each row showing: id, name, priority, sla, status badge, nextRun, requester, and actions summary.
+  - Detail panel/drawer for selected item showing:
+    - Diff rendering between proposed vs current payload (with side-by-side or unified diff)
+    - Agent rationale and artifacts
+    - Conditional fields: required confirmations, safety rails, escalation hints
+    - Approve / Reject / Conditional Approve actions
+    - Comment input for reviewer notes
+    - Conditional approval controls (e.g., if payload satisfies constraints, auto-approve under certain conditions)
+  - Filters and quick actions:
+    - Status filter (pending, approved, rejected, escalated)
+    - Priority, SLA expiry indicator
+    - Assigned approver or escalation group
+  - Audit timeline: compact, scrollable trail of decisions, timestamps, and comments
 - Interactions:
-  - Click node to view message payload, provenance, and memory context.
-  - Filter graph by agent, type, or time window.
-  - Toggle redaction, with an audit log entry for redaction events.
-- Validation & Safety:
-  - Guard against null memory values; always use (data ?? []) patterns when mapping arrays.
+  - Accept/Reject with optional comments
+  - Conditional approval toggles with required fields
+  - Real-time or near-real-time updates via WebSocket or polling
+  - Keyboard shortcuts for power users (A for Approve, R for Reject)
+- Data expectations:
+  - Results from backend should be guarded: const items = data ?? [].
+  - Any array rendering must use (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
+- Accessibility:
+  - Roles, aria-labels, and keyboard navigability for all buttons and controls.
+- Audit & logging:
+  - Each action must produce an audit record: who approved, when, comments, and the decision reason.
+- Validation:
+  - Ensure required fields exist before enabling action buttons.
+  - Validate payload diffs rendering with safety checks.
 
----
+2) Backend APIs and Data Layer
+- REST/GraphQL endpoints for approvals workflow:
+  - GET /approvals queue: fetch queued approvals with pagination, filters
+  - GET /approvals/{id}: fetch detailed item including payload, diffs, rationale, artifacts
+  - POST /approvals/{id}/approve: submit approval with optional comments and any conditional payload; enforce role-based routing
+  - POST /approvals/{id}/reject: submit rejection with comments
+  - POST /approvals/{id}/conditional-approve: submit conditional approval with conditions and required confirmations
+  - POST /approvals/{id}/escalate: escalate to next approver or escalation rule
+  - GET /audits?refId=:id: fetch audit trail for an approval item
+- Database schema (normalized and queryable):
+  - approvals: id, name, priority, slaMinutes, status ('pending'|'approved'|'rejected'|'escalated'), scheduledTime, targetAgentId, triggerType, inputPayload (JSON), currentPayload (JSON), rationale (JSON), artifacts (JSON), diffs (JSON), requestedByUserId, escalationRuleId, permissionsLevel, createdAt, updatedAt
+  - approval_comments: id, approvalId, userId, action ('approve'|'reject'|'conditional'), comment, conditions, createdAt
+  - audit_trail: id, approvalId, action, actorId, timestamp, details (JSON)
+  - approvers: approvalId, userId, role, order, status
+  - escalation_rules: id, name, condition, nextApproverGroup, notifyOnDecision
+  - run_history: id, approvalId, runAt, outcome ('success'|'failure'), logs
+- Data integrity practices:
+  - All API responses must validate shapes; use Array.isArray(response?.data) ? response.data : [] as applicable.
+  - Guard all array operations in code with (data ?? []).
+  - Normalize and sanitize input payloads; enforce schema validation on create/update.
+
+3) Frontend Components and Pages
+- Shared UI primitives:
+  - Dark elevated cards with 8–12px radius, gradient background, subtle borders
+  - Diff viewer component supporting side-by-side and inline diffs with toggle
+  - Tag/chip components for priority and status
+  - Form controls for comments and conditional approvals
+  - Audit timeline widget
+- Approvals Queue List (within page_approvals_queue_009)
+  - Leaderboard-like dense list with:
+    - Priority badge, SLA countdown, next run, status
+    - Quick actions: View, Jump to item, Escalate
+  - Selection detail drawer:
+    - Payload diffs, rationale, artifacts
+    - Approve/Reject/Conditional Approve with comments
+    - Conditional approval rules panel showing required confirmations
+  - Filters toolbar:
+    - Status, Priority, SLA urgency, Assigned approver, Time window
+  - Bulk actions (where applicable): bulk escalate or bulk approve/reject for admin roles
+- Detail view modal/drawer for an approval item
+  - Diff rendering with navigable hunks
+  - Rationale and artifacts: show in collapsible panels
+  - Action area with:
+    - Approve button
+    - Reject button with mandatory comment
+    - Conditional Approve: supports entering conditions and required confirmations
+  - Audit trail panel showing recent decisions
+- Diff rendering:
+  - Support a secure, read-only diff area with syntax highlighting for JSON payloads
+  - Visual cues for additions/removals/edit diffs
+  - Defensive rendering: if payloads are absent, show a safe empty state
+- Data handling:
+  - Initialize arrays with useState<Type[]>([]) and useEffect to fetch; enforce data ?? [] in processing
+  - Use Array.isArray checks before map/filter/reduce
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
+- State management:
+  - Local UI state for selected item, filters, and diff view mode
+  - Global or module-level state for approvals data with immutability
+  - Use useMemo and useCallback to optimize rendering and event handlers
+- Performance and safety:
+  - Debounced search/filter inputs
+  - Pagination or infinite loading on queues; guard against undefined pages
+  - SSR considerations if used; hydrate safely
 
 ## Implementation Requirements
 
 ### Frontend
-- Frameworks: React 18+, TypeScript, and a state management approach (React context or Zustand) for cross-page memory access.
-- Data Safety:
-  - All array-derived UI lists must guard against null/undefined: use Array.isArray(...) and (data ?? []) before .map/.filter/.reduce.
-  - Initialize all array state with proper defaults: useState<T[]>([]) for lists; useState<MemoType[]>([]) for memory arrays; avoid useState() without defaults.
-- Components & Pages:
-  - RunDetailsPage component with subcomponents: RunHeaderCard, InputsPanel, MessageTraceGraph, LogsPanel, DiffsPanel, ArtifactsPanel, TimingPanel, RevertActionsPanel.
-  - AgentTraceDebugger component with TraceCanvas, MemoryInspector, StatePanel, Stepper, AnnotationPanel.
-  - ScopedMemoryStoreProvider: React context to expose memory APIs to pages, with read/write methods and encryption context.
-- API Integrations:
-  - Use fetch/axios with null-safe handling: const result = await apiCall(...) ?? {}; const list = Array.isArray(result?.data) ? result.data : [].
-  - Ensure all API responses are validated before usage: default to empty arrays/objects if missing.
-- Security & UX:
-  - Redaction controls in memory inspector; store redacted state with auditability.
-  - Permission checks (read/write) enforced client-side for UI affordances; server enforces strictly.
-- Accessibility:
-  - Ensure keyboard navigability for graph and panels; ARIA labels for interactive elements.
+- UI components and pages:
+  - ApprovalsQueuePage component rendering page_approvals_queue_009
+  - ApprovalsQueueList component with per-item rendering and status badges
+  - ApprovalDetailDrawer component showing full item context, diffs, rationale, artifacts, and actions
+  - DiffViewer component with side-by-side and inline modes, with safe rendering for null payloads
+  - AuditTrail component listing actions with timestamps and comments
+  - ConditionalApprovalPanel component to configure conditional rules and required confirmations
+  - FiltersBar component for status, priority, SLA urgency, assignee, and time window
+  - API client utilities with guarded responses:
+    - const data = (await api.get('/approvals')).data ?? []
+    - Use (data ?? []) for subsequent map/filter
+  - State initialization:
+    - const [approvals, setApprovals] = useState<ApprovalType[]>([])
+    - const [selected, setSelected] = useState<ApprovalType | null>(null)
+  - Data validation:
+    - Ensure payloads parsed as objects; fallback to {} or [] where appropriate
+    - Validate nested fields with optional chaining: item?.payload?.field
+- Accessibility and UX:
+  - Keyboard accessible controls with focus management
+  - Clear affordances for approve/reject/conditional actions
+  - Snackbar/toast confirmations on actions
 
 ### Backend
-- Tech: Node.js/Express or NestJS with PostgreSQL or Supabase-compatible backend; encryption at rest via KMS or envelope encryption.
-- Data Models:
-  - Memory
-    - id, scopeType, scopeId, key, valueEncrypted (bytea/blob), redactedFields text[], ttlMs, createdAt, updatedAt, encryptionMetadata (jsonb), auditLog (jsonb)
-  - Run
-    - runId, cronJobId, status, startedAt, endedAt, inputs, outputs, trace (jsonb), artifacts (jsonb), logs (jsonb)
-  - Agent
-    - agentId, name, version, policies
-  - MessageTrace
-    - messageId, fromAgentId, toAgentId, payload, timestamp, type
-  - Artifact
-    - artifactId, runId, type, size, hash, location, metadata
-  - Audit
-    - auditId, subjectId, action, timestamp, details
-- Endpoints (rough outline):
-  - POST /memories - createMemory
-  - GET /memories?scopeType=&scopeId=&key= - list or readMemory
-  - GET /memories/:memoryId - readMemory
-  - PATCH /memories/:memoryId - updateMemory
-  - DELETE /memories/:memoryId - deleteMemory
-  - POST /runs - createRun
-  - GET /runs/:runId - getRunDetails
-  - GET /runs/:runId/logs - getRunLogs
-  - GET /runs/:runId/trace - getRunTrace
-  - POST /runs/:runId/revert - revertRunAction
-  - POST /trace/graph - generateAgentTraceGraph
-  - POST /artifacts - storeArtifact
+- Implement APIs as described under Backend APIs
+- Data validation:
+  - Validate required fields on create/update
+  - Guard against null payloads; default to {} or [] where necessary
+- Role-based routing:
+  - Implement RBAC to ensure only authorized roles can approve/reject/conditional approve
+  - Escalation logic to route to next approver or escalation group based on rules
+- Audit & logging:
+  - Persist audit trail records for every decision
+  - Attach decision context, comments, and conditions to each approval
 - Security:
-  - Enforce per-scope access controls (per-run, per-agent, global) with RBAC.
-  - Encrypt memory values at rest; decrypt only on authorized read with auditing.
-  - Validate all inputs; enforce schema validation with strict typing.
+  - Authentication via OAuth/JWT; authorization checks on each endpoint
+  - Input sanitization to prevent injection or leakage of sensitive data
 - Validation:
-  - Ensure responses have consistent shapes; guard against nulls like data?.items ?? [].
+  - Normalize all API responses: const list = Array.isArray(response?.data) ? response.data : []
+  - Use nullish coalescing for optional results: const items = data ?? []
 
 ### Integration
-- State Management:
-  - ScopedMemoryStoreProvider exposes:
-    - getMemory(scopeType, scopeId, key)
-    - setMemory(scopeType, scopeId, key, value, ttlMs, redactFields)
-    - listMemories(scopeType, scopeId, filter)
-    - purgeExpiredMemories()
-  - Hooks for components to subscribe to memory changes (optional).
-- Data Flow:
-  - Run Details page reads run inputs/trace/artifacts via API; uses memory store to redact or reveal fields per policy.
-  - Agent Trace & Debugger uses memory inspector to display scoped memory; changes propagate to backend with audit logs.
-- Encryption:
-  - Encrypt on the backend; frontend should request decryption only for authorized contexts and redact sensitive fields in UI unless user has explicit permission.
-
----
+- Data flow:
+  - Cronjobs or scheduled actions feed into approvals queue when user approval is required
+  - Upon approval, trigger the next step in the cron/job or agent workflow
+  - Post-action, publish audit trail and update run_history
+- State synchronization:
+  - Real-time updates via WebSockets or push to keep queue in sync across clients
+  - Consistent optimistic UI with fallback to server-confirmed state
+- Diff and payload rendering:
+  - When a cron requires adjustment, render diffs between proposedPayload and currentPayload
+  - Display agent rationale and artifacts used to justify the action
+- Error handling:
+  - Centralized error boundaries; show user-friendly messages
+  - Retry policies for transient API failures with exponential backoff
 
 ## User Experience Flow
 
-1) Master Dashboard loads Cronjobs and global memory overview.
-2) User selects a Cronjob run from the Run Details page (page_run_details_010).
-3) Run Details Page loads:
-   - View inputs, agent-to-agent trace, logs, memory diffs, artifacts, timing, outcome.
-   - Use Revert Actions to rollback specific steps; confirm with a modal; audit logs update accordingly.
-   - Toggle redaction for sensitive memory fields; redactions are tracked in memory audit logs.
-4) User navigates to Agent Trace & Debugger (page_agent_trace_011):
-   - Interact with the visual conversation graph to inspect messages between agents.
-   - Open Memory Inspector to view per-scope memories; redact/unredact with audit trail.
-   - Use Stepper to replay or step through agent execution; add annotations for future runs.
-5) All actions are auditable; any deletion/reversion flows are reversible within policy constraints; run history and diffs update accordingly.
-6) System background tasks purge expired memories in line with TTL and retention policies; dashboards reflect current state with indicators for purged data.
+1) User lands on Approvals Queue (page_approvals_queue_009)
+- Sees a dense, scannable list of queued approvals with priority, SLA status, and next run time
+- Uses filters to narrow to a subset (e.g., pending, high priority)
 
----
+2) User selects an item
+- The detail drawer opens showing:
+  - Overview: name, target agent, trigger type, scheduled time
+  - Payload diffs: side-by-side or unified diff with safe rendering
+  - Rationale: agent reasoning and supporting artifacts
+  - Comments and audit trail stub
+  - Conditional approvals panel (if applicable)
+
+3) Review actions
+- Approve: click Approve, optional comments; system records audit trail and executes next step
+- Reject: click Reject, require comments; system logs and notifies requester
+- Conditional Approve: define conditions and required confirmations; attach comments; if conditions satisfied later, action executes automatically
+- Escalate: escalate to next approver if needed
+
+4) After action
+- UI updates to reflect new status; audit trail shows the decision
+- If auto-execution path is enabled, system proceeds with the next workflow step
+- Notifications and dashboards refresh to reflect current state
+
+5) Ongoing governance
+- Admins can adjust escalation rules, SLA configurations, and approver roles
+- Audit dashboards present run histories, outcomes, and diffs for traceability
 
 ## Technical Specifications
 
-Data Models
-- Memory
-  - id: string (UUID)
-  - scopeType: 'run' | 'agent' | 'global'
-  - scopeId: string
-  - key: string
-  - valueEncrypted: string (base64 or binary blob)
-  - redactedFields?: string[]
-  - ttlMs?: number
-  - createdAt: string
-  - updatedAt: string
-  - encryptionMetadata?: { algorithm: string; keyId: string; encryptedAt: string }
-  - auditLog: Array<{ action: 'CREATE'|'UPDATE'|'DELETE'|'READ'; actorId: string; timestamp: string; notes?: string }>
-- Run
-  - runId: string
-  - cronJobId?: string
-  - status: 'scheduled'|'running'|'completed'|'failed'|'canceled'
-  - startedAt?: string
-  - endedAt?: string
-  - inputs: object
-  - trace: object
-  - artifacts: Artifact[]
-  - logs: LogEntry[]
-  - outcomes?: object
-- Agent
-  - agentId: string
-  - name: string
-  - version: string
-  - policies: object
-- MessageTrace
-  - messageId: string
-  - fromAgentId: string
-  - toAgentId: string
-  - payload: object
-  - timestamp: string
-  - type: string
-- Artifact
-  - artifactId: string
-  - runId: string
-  - type: string
-  - location: string
-  - size: number
-  - hash: string
-  - metadata?: object
-- Audit
-  - id: string
-  - subjectId: string
-  - action: string
-  - timestamp: string
-  - details?: string
+- Data Models
+  - approvals
+    - id: string
+    - name: string
+    - priority: 'low'|'medium'|'high'|'critical'
+    - slaMinutes: number
+    - status: 'pending'|'approved'|'rejected'|'escalated'
+    - scheduledTime: string (ISO)
+    - targetAgentId: string
+    - triggerType: 'time'|'event'|'conditional'
+    - inputPayload: any
+    - currentPayload: any
+    - rationale: any
+    - artifacts: any
+    - diffs: any
+    - requestedByUserId: string
+    - escalationRuleId: string | null
+    - permissionsLevel: 'suggest-only'|'approval-required'|'conditional-auto'
+    - constraints: any
+    - safetyRails: any
+    - retryPolicy: any
+    - outputs: any
+    - createdAt: string
+    - updatedAt: string
+  - approval_comments
+    - id: string
+    - approvalId: string
+    - userId: string
+    - action: 'approve'|'reject'|'conditional'
+    - comment: string
+    - conditions: any
+    - createdAt: string
+  - audit_trail
+    - id: string
+    - approvalId: string
+    - action: string
+    - actorId: string
+    - timestamp: string
+    - details: any
+  - approvers
+    - approvalId: string
+    - userId: string
+    - role: string
+    - order: number
+    - status: 'pending'|'approved'|'rejected'
+  - escalation_rules
+    - id: string
+    - name: string
+    - condition: string
+    - nextApproverGroup: string
+    - notifyOnDecision: boolean
+  - run_history
+    - id: string
+    - approvalId: string
+    - runAt: string
+    - outcome: 'success'|'failure'
+    - logs: string
 
-API Endpoints (high-level)
-- GET /memories?scopeType=...&scopeId=...&key=...
-- POST /memories
-- GET /memories/:memoryId
-- PATCH /memories/:memoryId
-- DELETE /memories/:memoryId
-- POST /runs
-- GET /runs/:runId
-- GET /runs/:runId/logs
-- GET /runs/:runId/trace
-- POST /runs/:runId/revert
-- POST /trace/graph
-- POST /artifacts
+- API Endpoints
+  - GET /approvals queue
+  - GET /approvals/{id}
+  - POST /approvals/{id}/approve
+  - POST /approvals/{id}/reject
+  - POST /approvals/{id}/conditional-approve
+  - POST /approvals/{id}/escalate
+  - GET /audits?refId={id}
 
-Security
-- Authentication: OAuth2/JWT per LifeOps conventions.
-- Authorization: RBAC with per-scope permissions; enforce restrictions for read/write/delete.
-- Data protection: encryption at rest with envelope keys; audit trails for all memory mutations; redact fields as policy dictates.
-- Input validation: strict schema validation for all API inputs; reject invalid types/fields.
+- Security
+  - Authenticate with JWT/OAuth
+  - Enforce RBAC: roles such as Approver, Admin, EscalationManager
+  - Validate and sanitize all inputs; guard against undefined/null
+  - Ensure sensitive data exposure is minimized in UI
 
-Validation
-- Always treat API responses with null-safety: const list = Array.isArray(response?.data) ? response.data : [].
-- For Supabase-like results: use data ?? [].
-- Guard array methods: (items ?? []).map(...), Array.isArray(items) ? items.map(...) : [].
-- React state defaults: useState<Type[]>([]) for arrays; useState<Record<string, any>>({}) for objects where applicable.
+- Validation
+  - Input validation on all endpoints
+  - Use safe defaults: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: obj?.property?.nested
+  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
-Acceptance Criteria
-- [ ] Memory operations respect per-scope ACLs and encryption metadata is stored with every memory.
-- [ ] All array usages in UI code guard against null/undefined; memory lists render without runtime errors.
-- [ ] Run Details Page shows complete inputs, trace, logs, diffs, artifacts, timing, and supports action revert with audit trail.
-- [ ] Agent Trace & Debugger provides interactive graph, scoped memory inspector, and step-through execution with proper redaction controls.
-- [ ] API responses validated; no undefined values used to drive UI; all list endpoints return [] when no data.
-- [ ] TTL and retention policies are enforced in background purge tasks with logs and audit entries.
-- [ ] End-to-end tests cover create/read/update/delete memories, run creation and detail views, and debugger interactions.
+## Acceptance Criteria
 
-UI/UX Guidelines
-- Apply the LifeOps design system meticulously.
-- Maintain the dark, dense, developer-oriented aesthetic.
-- Ensure consistent typography, spacing, and micro-interactions as described in the Style sections.
-- Visual cues for status, actions, and reversible steps must be clear and accessible.
+- [ ] Approvals Queue page renders a dense, accessible list with working filters for status, priority, and SLA urgency
+- [ ] Selecting an item opens a detail view showing payloads, diffs, rationale, artifacts, and audit trail
+- [ ] Approve/Reject/Conditional Approve actions persist to backend and update UI, with audit trail
+- [ ] Conditional approvals enforce required confirmations and cannot be submitted without them
+- [ ] Escalation rules route to the correct next approver and reflect in UI
+- [ ] All API responses are validated and guarded against null/undefined before array methods
+- [ ] useState and data handling defaults are correct for arrays/objects
+- [ ] Diff viewer handles null payloads gracefully and renders readable diffs
+- [ ] Security: endpoints protected by RBAC, with proper error handling and no data leakage
+- [ ] UI adheres to the Visual Style and Design Guidelines, including color palette, typography, and spacing
 
-Visual Style
-- Color Palette: as provided (deep near-black backgrounds, subtle surfaces, accent red for active or alerts, teal/amber/purple for data viz)
-- Typography: Inter (or SF Pro Display / Roboto fallback), with the specified weights and sizes
-- Layout: 8px baseline grid, left sidebar 220–260px, header 56–64px, card paddings 16–20px
-- Card Design: elevation, rounded corners, subtle borders/shadows; top icon/thumbnail, then title, then metadata
-- Navigation: left compact vertical nav with active states indicated by accent pill and background tint
-- Data Visualization: minimal axes, data lines with rounded edges, legends/tooltips with subtle shadows
-- Interactive Elements: primary/secondary buttons, inputs, toggles, chips with hover/focus behaviors
-- Micro-interactions: 120–200ms transitions, gentle lifts, and easing
+## UI/UX Guidelines
+Apply the project’s design system and ensure consistency with LifeOps visual language:
+- Dark, high-contrast UI with minimalistic chrome
+- Clear visual hierarchy for approvals, diffs, and audit artifacts
+- Consistent card, navigation, and data visualization styling
+- Subtle but informative micro-interactions on hover/focus
+- Accessible controls with keyboard navigation and screen-reader friendly labels
 
 ---
 
-If you need, I can adapt this prompt to a specific tech stack (e.g., Next.js + tRPC + PostgreSQL, or NestJS + Prisma + Supabase), or tailor acceptance criteria to particular test suites (unit/integration/e2e) and provide starter code scaffolds (types, API contracts, and React component skeletons) that strictly follow the runtime-safety rules outlined. for style.
+Connected Pages:
+- Approvals Queue: Queue of scheduled actions/crons requiring user approval. Review details, diffs, agent rationale, and accept/reject with comments and conditional approvals.
+
+This prompt provides a complete, actionable blueprint for AI development tooling to build a scalable, safe, and user-friendly Approvals Workflow with a dedicated Approvals Queue page and robust backend/frontend integration, all while enforcing the runtime safety rules specified. for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1429,295 +1439,305 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Scoped Memory Store
+# Approvals Workflow
 
 ## Overview
-Develop a secure, reusable, and auditable Scoped Memory Store for LifeOps that provides per-run, per-agent, and global memory scopes with encryption at rest, lifecycle management, and strict schema validation. This system underpins agent-to-agent coordination, traceable conversations, and reversible actions. It powers two key pages: Run Details Page and Agent Trace & Debugger. All components must guard against null/undefined values before using array methods, initialize React state properly for arrays/objects, and validate API responses per the project’s runtime-safety standards.
-
----
+Build a robust Approvals Workflow within LifeOps that collects, presents, and manages approvals for scheduled or suggested agent actions. The system must support an audit trail, conditional approvals, diffs of payloads, agent rationale, and role-based routing with escalation rules. A dedicated Approvals Queue page surfaces queued cron/jobs requiring human review, displaying review details, diffs, rationale, and the ability to approve, reject, or grant conditional approvals with comments. All code must guard against null/undefined data, use safe defaults, and follow the runtime safety rules described below.
 
 ## Components to Build
 
-1) Scoped Memory Store Core
-- Purpose: Central storage for memories with scoping, encryption, auditing, and lifecycle policies.
-- Scopes:
-  - Per-run scope: memories tied to a specific cron/agent run.
-  - Per-agent scope: memories scoped to an individual agent.
-  - Global scope: memories shared across all agents/runs with access controls.
-- Data model:
-  - memoryId (string, UUID)
-  - scopeType: 'run' | 'agent' | 'global'
-  - scopeId: string (runId | agentId | 'global')
-  - key: string
-  - value: any (encrypted at rest; redactable per field)
-  - redactedFields?: string[]
-  - ttlMs?: number
-  - createdAt: ISO string
-  - updatedAt: ISO string
-  - encryptionMetadata?: { algorithm: string, keyId: string, encryptedAt: string }
-  - auditLog: Array<{ action: 'CREATE'|'UPDATE'|'DELETE'|'READ', actorId: string, timestamp: string, notes?: string }>
-- Encryption:
-  - Encrypt memory values at rest using envelope encryption with per-scope keys.
-  - Include keyId and algorithm metadata for auditing.
-- Validation:
-  - Enforce schema on write; reject if required fields missing or types invalid.
-- Lifecycle:
-  - TTL handling per-memory; explicit purge; retention policies with automatic background cleaner.
-- API surface (BACKEND):
-  - createMemory({ scopeType, scopeId, key, value, ttlMs, redactFields })
-  - readMemory({ memoryId } | { scopeType, scopeId, key })
-  - updateMemory({ memoryId, value, ttlMs, redactFields })
-  - deleteMemory({ memoryId })
-  - listMemories({ scopeType, scopeId, filters? })
-  - purgeExpiredMemories()
-- Auditing:
-  - All mutating operations must append to memory auditLog.
-
-2) Run Details Page (page_run_details_010)
-- Purpose: Present a comprehensive view of a single cron/agent run with all relevant data and control actions.
-- Data Sections:
-  - Inputs: trigger payload, variables, scope, constraints, and input prompts.
-  - Agent-to-Agent Message Trace: threaded conversation graph showing handoffs, negotiations, alerts, and approvals.
-  - Logs: chronological log stream with levels (info, warn, error) and timestamps.
-  - Diffs: side-by-side diffs of inputs vs outputs, prompts vs responses, and memory edits.
-  - Artifacts: generated artifacts, files, and artifacts metadata (type, size, hash).
-  - Timing: start/end timestamps, duration, latency metrics, and per-step timing.
-  - Outcome: status (success, failed, canceled), metrics, and human-readable summary.
-  - Revert Actions: UI affordance to revert specific actions within the run using a reversible action stack.
-- UI Components:
-  - RunHeaderCard: high-level run metadata (name, schedule, timezone, status, next run, last run).
-  - TimelinePanel: chronological events timeline with collapsible sections.
-  - MessageTraceGraph: node-link diagram of agent-to-agent messages; supports zoom/pan; supports filtering by agent or message type.
-  - MemoryDiffPanel: show per-memory diffs with redaction indicators and redact/unredact controls.
-  - LogsPanel: filterable log viewer with search, severity filter, and export.
-  - ArtifactsPanel: grid/list of artifacts with preview, hash, size, and download actions.
-  - TimingPanel: latency breakdown and per-step timing bars.
-  - RevertPanel: action stack viewer with confirm dialogs and rollback actions.
-- Interaction Flows:
-  - View details, filter by agent, search logs, inspect messages.
-  - Revoke/revert actions with audit trail updates.
-  - Redact sensitive fields with policy-enforced toggles.
-- Validation & Safety:
-  - Ensure all displayed data is sanitized; redactable fields display redaction tokens when needed.
-
-3) Agent Trace & Debugger (page_agent_trace_011)
-- Purpose: An interactive debugging console for agent behavior with a visual conversation graph and scoped memory access.
-- Features:
-  - Visual Conversation Graph: nodes for agents, messages, and actions; edges represent handoffs; interactive exploration with zoom/pan.
-  - Scoped Memory View: per-scope memory inspector (run/agent/global) with search, redact controls, and encryption-aware rendering (masked values by default; reveal on explicit user action with audit).
-  - Variable States: real-time or replayable snapshots of agent variables and state machines.
-  - Step-Through Execution: ability to step through agent reasoning steps, observe state transitions, and annotate rationale.
-  - Audit Trail: in-context log of actions, with ability to revert or annotate.
-- UI Components:
-  - TraceCanvas: canvas/SVG-based graph with draggable nodes, tooltips, and contextual menus.
-  - MemoryInspector: collapsible panels for each scope; redactable fields; export/import memory snapshots.
-  - StatePanel: shows key-value pairs of agent variables with type hints.
-  - Stepper: controls to advance, replay, pause; speed control.
-  - AnnotationPanel: add human-readable notes; attach to steps or messages.
+1) Approvals Queue Page (page_approvals_queue_009)
+- Purpose: Show a queue of scheduled actions/crons that require approval.
+- Data model: approval items with id, priority, sla, status, scheduledTime, payload, diffs, rationale, artifacts, requester, approvers, escalationRule, comments, approvalActions.
+- UI blocks:
+  - Queue list with dense rows (8–12px vertical spacing), each row showing: id, name, priority, sla, status badge, nextRun, requester, and actions summary.
+  - Detail panel/drawer for selected item showing:
+    - Diff rendering between proposed vs current payload (with side-by-side or unified diff)
+    - Agent rationale and artifacts
+    - Conditional fields: required confirmations, safety rails, escalation hints
+    - Approve / Reject / Conditional Approve actions
+    - Comment input for reviewer notes
+    - Conditional approval controls (e.g., if payload satisfies constraints, auto-approve under certain conditions)
+  - Filters and quick actions:
+    - Status filter (pending, approved, rejected, escalated)
+    - Priority, SLA expiry indicator
+    - Assigned approver or escalation group
+  - Audit timeline: compact, scrollable trail of decisions, timestamps, and comments
 - Interactions:
-  - Click node to view message payload, provenance, and memory context.
-  - Filter graph by agent, type, or time window.
-  - Toggle redaction, with an audit log entry for redaction events.
-- Validation & Safety:
-  - Guard against null memory values; always use (data ?? []) patterns when mapping arrays.
+  - Accept/Reject with optional comments
+  - Conditional approval toggles with required fields
+  - Real-time or near-real-time updates via WebSocket or polling
+  - Keyboard shortcuts for power users (A for Approve, R for Reject)
+- Data expectations:
+  - Results from backend should be guarded: const items = data ?? [].
+  - Any array rendering must use (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
+- Accessibility:
+  - Roles, aria-labels, and keyboard navigability for all buttons and controls.
+- Audit & logging:
+  - Each action must produce an audit record: who approved, when, comments, and the decision reason.
+- Validation:
+  - Ensure required fields exist before enabling action buttons.
+  - Validate payload diffs rendering with safety checks.
 
----
+2) Backend APIs and Data Layer
+- REST/GraphQL endpoints for approvals workflow:
+  - GET /approvals queue: fetch queued approvals with pagination, filters
+  - GET /approvals/{id}: fetch detailed item including payload, diffs, rationale, artifacts
+  - POST /approvals/{id}/approve: submit approval with optional comments and any conditional payload; enforce role-based routing
+  - POST /approvals/{id}/reject: submit rejection with comments
+  - POST /approvals/{id}/conditional-approve: submit conditional approval with conditions and required confirmations
+  - POST /approvals/{id}/escalate: escalate to next approver or escalation rule
+  - GET /audits?refId=:id: fetch audit trail for an approval item
+- Database schema (normalized and queryable):
+  - approvals: id, name, priority, slaMinutes, status ('pending'|'approved'|'rejected'|'escalated'), scheduledTime, targetAgentId, triggerType, inputPayload (JSON), currentPayload (JSON), rationale (JSON), artifacts (JSON), diffs (JSON), requestedByUserId, escalationRuleId, permissionsLevel, createdAt, updatedAt
+  - approval_comments: id, approvalId, userId, action ('approve'|'reject'|'conditional'), comment, conditions, createdAt
+  - audit_trail: id, approvalId, action, actorId, timestamp, details (JSON)
+  - approvers: approvalId, userId, role, order, status
+  - escalation_rules: id, name, condition, nextApproverGroup, notifyOnDecision
+  - run_history: id, approvalId, runAt, outcome ('success'|'failure'), logs
+- Data integrity practices:
+  - All API responses must validate shapes; use Array.isArray(response?.data) ? response.data : [] as applicable.
+  - Guard all array operations in code with (data ?? []).
+  - Normalize and sanitize input payloads; enforce schema validation on create/update.
+
+3) Frontend Components and Pages
+- Shared UI primitives:
+  - Dark elevated cards with 8–12px radius, gradient background, subtle borders
+  - Diff viewer component supporting side-by-side and inline diffs with toggle
+  - Tag/chip components for priority and status
+  - Form controls for comments and conditional approvals
+  - Audit timeline widget
+- Approvals Queue List (within page_approvals_queue_009)
+  - Leaderboard-like dense list with:
+    - Priority badge, SLA countdown, next run, status
+    - Quick actions: View, Jump to item, Escalate
+  - Selection detail drawer:
+    - Payload diffs, rationale, artifacts
+    - Approve/Reject/Conditional Approve with comments
+    - Conditional approval rules panel showing required confirmations
+  - Filters toolbar:
+    - Status, Priority, SLA urgency, Assigned approver, Time window
+  - Bulk actions (where applicable): bulk escalate or bulk approve/reject for admin roles
+- Detail view modal/drawer for an approval item
+  - Diff rendering with navigable hunks
+  - Rationale and artifacts: show in collapsible panels
+  - Action area with:
+    - Approve button
+    - Reject button with mandatory comment
+    - Conditional Approve: supports entering conditions and required confirmations
+  - Audit trail panel showing recent decisions
+- Diff rendering:
+  - Support a secure, read-only diff area with syntax highlighting for JSON payloads
+  - Visual cues for additions/removals/edit diffs
+  - Defensive rendering: if payloads are absent, show a safe empty state
+- Data handling:
+  - Initialize arrays with useState<Type[]>([]) and useEffect to fetch; enforce data ?? [] in processing
+  - Use Array.isArray checks before map/filter/reduce
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
+- State management:
+  - Local UI state for selected item, filters, and diff view mode
+  - Global or module-level state for approvals data with immutability
+  - Use useMemo and useCallback to optimize rendering and event handlers
+- Performance and safety:
+  - Debounced search/filter inputs
+  - Pagination or infinite loading on queues; guard against undefined pages
+  - SSR considerations if used; hydrate safely
 
 ## Implementation Requirements
 
 ### Frontend
-- Frameworks: React 18+, TypeScript, and a state management approach (React context or Zustand) for cross-page memory access.
-- Data Safety:
-  - All array-derived UI lists must guard against null/undefined: use Array.isArray(...) and (data ?? []) before .map/.filter/.reduce.
-  - Initialize all array state with proper defaults: useState<T[]>([]) for lists; useState<MemoType[]>([]) for memory arrays; avoid useState() without defaults.
-- Components & Pages:
-  - RunDetailsPage component with subcomponents: RunHeaderCard, InputsPanel, MessageTraceGraph, LogsPanel, DiffsPanel, ArtifactsPanel, TimingPanel, RevertActionsPanel.
-  - AgentTraceDebugger component with TraceCanvas, MemoryInspector, StatePanel, Stepper, AnnotationPanel.
-  - ScopedMemoryStoreProvider: React context to expose memory APIs to pages, with read/write methods and encryption context.
-- API Integrations:
-  - Use fetch/axios with null-safe handling: const result = await apiCall(...) ?? {}; const list = Array.isArray(result?.data) ? result.data : [].
-  - Ensure all API responses are validated before usage: default to empty arrays/objects if missing.
-- Security & UX:
-  - Redaction controls in memory inspector; store redacted state with auditability.
-  - Permission checks (read/write) enforced client-side for UI affordances; server enforces strictly.
-- Accessibility:
-  - Ensure keyboard navigability for graph and panels; ARIA labels for interactive elements.
+- UI components and pages:
+  - ApprovalsQueuePage component rendering page_approvals_queue_009
+  - ApprovalsQueueList component with per-item rendering and status badges
+  - ApprovalDetailDrawer component showing full item context, diffs, rationale, artifacts, and actions
+  - DiffViewer component with side-by-side and inline modes, with safe rendering for null payloads
+  - AuditTrail component listing actions with timestamps and comments
+  - ConditionalApprovalPanel component to configure conditional rules and required confirmations
+  - FiltersBar component for status, priority, SLA urgency, assignee, and time window
+  - API client utilities with guarded responses:
+    - const data = (await api.get('/approvals')).data ?? []
+    - Use (data ?? []) for subsequent map/filter
+  - State initialization:
+    - const [approvals, setApprovals] = useState<ApprovalType[]>([])
+    - const [selected, setSelected] = useState<ApprovalType | null>(null)
+  - Data validation:
+    - Ensure payloads parsed as objects; fallback to {} or [] where appropriate
+    - Validate nested fields with optional chaining: item?.payload?.field
+- Accessibility and UX:
+  - Keyboard accessible controls with focus management
+  - Clear affordances for approve/reject/conditional actions
+  - Snackbar/toast confirmations on actions
 
 ### Backend
-- Tech: Node.js/Express or NestJS with PostgreSQL or Supabase-compatible backend; encryption at rest via KMS or envelope encryption.
-- Data Models:
-  - Memory
-    - id, scopeType, scopeId, key, valueEncrypted (bytea/blob), redactedFields text[], ttlMs, createdAt, updatedAt, encryptionMetadata (jsonb), auditLog (jsonb)
-  - Run
-    - runId, cronJobId, status, startedAt, endedAt, inputs, outputs, trace (jsonb), artifacts (jsonb), logs (jsonb)
-  - Agent
-    - agentId, name, version, policies
-  - MessageTrace
-    - messageId, fromAgentId, toAgentId, payload, timestamp, type
-  - Artifact
-    - artifactId, runId, type, size, hash, location, metadata
-  - Audit
-    - auditId, subjectId, action, timestamp, details
-- Endpoints (rough outline):
-  - POST /memories - createMemory
-  - GET /memories?scopeType=&scopeId=&key= - list or readMemory
-  - GET /memories/:memoryId - readMemory
-  - PATCH /memories/:memoryId - updateMemory
-  - DELETE /memories/:memoryId - deleteMemory
-  - POST /runs - createRun
-  - GET /runs/:runId - getRunDetails
-  - GET /runs/:runId/logs - getRunLogs
-  - GET /runs/:runId/trace - getRunTrace
-  - POST /runs/:runId/revert - revertRunAction
-  - POST /trace/graph - generateAgentTraceGraph
-  - POST /artifacts - storeArtifact
+- Implement APIs as described under Backend APIs
+- Data validation:
+  - Validate required fields on create/update
+  - Guard against null payloads; default to {} or [] where necessary
+- Role-based routing:
+  - Implement RBAC to ensure only authorized roles can approve/reject/conditional approve
+  - Escalation logic to route to next approver or escalation group based on rules
+- Audit & logging:
+  - Persist audit trail records for every decision
+  - Attach decision context, comments, and conditions to each approval
 - Security:
-  - Enforce per-scope access controls (per-run, per-agent, global) with RBAC.
-  - Encrypt memory values at rest; decrypt only on authorized read with auditing.
-  - Validate all inputs; enforce schema validation with strict typing.
+  - Authentication via OAuth/JWT; authorization checks on each endpoint
+  - Input sanitization to prevent injection or leakage of sensitive data
 - Validation:
-  - Ensure responses have consistent shapes; guard against nulls like data?.items ?? [].
+  - Normalize all API responses: const list = Array.isArray(response?.data) ? response.data : []
+  - Use nullish coalescing for optional results: const items = data ?? []
 
 ### Integration
-- State Management:
-  - ScopedMemoryStoreProvider exposes:
-    - getMemory(scopeType, scopeId, key)
-    - setMemory(scopeType, scopeId, key, value, ttlMs, redactFields)
-    - listMemories(scopeType, scopeId, filter)
-    - purgeExpiredMemories()
-  - Hooks for components to subscribe to memory changes (optional).
-- Data Flow:
-  - Run Details page reads run inputs/trace/artifacts via API; uses memory store to redact or reveal fields per policy.
-  - Agent Trace & Debugger uses memory inspector to display scoped memory; changes propagate to backend with audit logs.
-- Encryption:
-  - Encrypt on the backend; frontend should request decryption only for authorized contexts and redact sensitive fields in UI unless user has explicit permission.
-
----
+- Data flow:
+  - Cronjobs or scheduled actions feed into approvals queue when user approval is required
+  - Upon approval, trigger the next step in the cron/job or agent workflow
+  - Post-action, publish audit trail and update run_history
+- State synchronization:
+  - Real-time updates via WebSockets or push to keep queue in sync across clients
+  - Consistent optimistic UI with fallback to server-confirmed state
+- Diff and payload rendering:
+  - When a cron requires adjustment, render diffs between proposedPayload and currentPayload
+  - Display agent rationale and artifacts used to justify the action
+- Error handling:
+  - Centralized error boundaries; show user-friendly messages
+  - Retry policies for transient API failures with exponential backoff
 
 ## User Experience Flow
 
-1) Master Dashboard loads Cronjobs and global memory overview.
-2) User selects a Cronjob run from the Run Details page (page_run_details_010).
-3) Run Details Page loads:
-   - View inputs, agent-to-agent trace, logs, memory diffs, artifacts, timing, outcome.
-   - Use Revert Actions to rollback specific steps; confirm with a modal; audit logs update accordingly.
-   - Toggle redaction for sensitive memory fields; redactions are tracked in memory audit logs.
-4) User navigates to Agent Trace & Debugger (page_agent_trace_011):
-   - Interact with the visual conversation graph to inspect messages between agents.
-   - Open Memory Inspector to view per-scope memories; redact/unredact with audit trail.
-   - Use Stepper to replay or step through agent execution; add annotations for future runs.
-5) All actions are auditable; any deletion/reversion flows are reversible within policy constraints; run history and diffs update accordingly.
-6) System background tasks purge expired memories in line with TTL and retention policies; dashboards reflect current state with indicators for purged data.
+1) User lands on Approvals Queue (page_approvals_queue_009)
+- Sees a dense, scannable list of queued approvals with priority, SLA status, and next run time
+- Uses filters to narrow to a subset (e.g., pending, high priority)
 
----
+2) User selects an item
+- The detail drawer opens showing:
+  - Overview: name, target agent, trigger type, scheduled time
+  - Payload diffs: side-by-side or unified diff with safe rendering
+  - Rationale: agent reasoning and supporting artifacts
+  - Comments and audit trail stub
+  - Conditional approvals panel (if applicable)
+
+3) Review actions
+- Approve: click Approve, optional comments; system records audit trail and executes next step
+- Reject: click Reject, require comments; system logs and notifies requester
+- Conditional Approve: define conditions and required confirmations; attach comments; if conditions satisfied later, action executes automatically
+- Escalate: escalate to next approver if needed
+
+4) After action
+- UI updates to reflect new status; audit trail shows the decision
+- If auto-execution path is enabled, system proceeds with the next workflow step
+- Notifications and dashboards refresh to reflect current state
+
+5) Ongoing governance
+- Admins can adjust escalation rules, SLA configurations, and approver roles
+- Audit dashboards present run histories, outcomes, and diffs for traceability
 
 ## Technical Specifications
 
-Data Models
-- Memory
-  - id: string (UUID)
-  - scopeType: 'run' | 'agent' | 'global'
-  - scopeId: string
-  - key: string
-  - valueEncrypted: string (base64 or binary blob)
-  - redactedFields?: string[]
-  - ttlMs?: number
-  - createdAt: string
-  - updatedAt: string
-  - encryptionMetadata?: { algorithm: string; keyId: string; encryptedAt: string }
-  - auditLog: Array<{ action: 'CREATE'|'UPDATE'|'DELETE'|'READ'; actorId: string; timestamp: string; notes?: string }>
-- Run
-  - runId: string
-  - cronJobId?: string
-  - status: 'scheduled'|'running'|'completed'|'failed'|'canceled'
-  - startedAt?: string
-  - endedAt?: string
-  - inputs: object
-  - trace: object
-  - artifacts: Artifact[]
-  - logs: LogEntry[]
-  - outcomes?: object
-- Agent
-  - agentId: string
-  - name: string
-  - version: string
-  - policies: object
-- MessageTrace
-  - messageId: string
-  - fromAgentId: string
-  - toAgentId: string
-  - payload: object
-  - timestamp: string
-  - type: string
-- Artifact
-  - artifactId: string
-  - runId: string
-  - type: string
-  - location: string
-  - size: number
-  - hash: string
-  - metadata?: object
-- Audit
-  - id: string
-  - subjectId: string
-  - action: string
-  - timestamp: string
-  - details?: string
+- Data Models
+  - approvals
+    - id: string
+    - name: string
+    - priority: 'low'|'medium'|'high'|'critical'
+    - slaMinutes: number
+    - status: 'pending'|'approved'|'rejected'|'escalated'
+    - scheduledTime: string (ISO)
+    - targetAgentId: string
+    - triggerType: 'time'|'event'|'conditional'
+    - inputPayload: any
+    - currentPayload: any
+    - rationale: any
+    - artifacts: any
+    - diffs: any
+    - requestedByUserId: string
+    - escalationRuleId: string | null
+    - permissionsLevel: 'suggest-only'|'approval-required'|'conditional-auto'
+    - constraints: any
+    - safetyRails: any
+    - retryPolicy: any
+    - outputs: any
+    - createdAt: string
+    - updatedAt: string
+  - approval_comments
+    - id: string
+    - approvalId: string
+    - userId: string
+    - action: 'approve'|'reject'|'conditional'
+    - comment: string
+    - conditions: any
+    - createdAt: string
+  - audit_trail
+    - id: string
+    - approvalId: string
+    - action: string
+    - actorId: string
+    - timestamp: string
+    - details: any
+  - approvers
+    - approvalId: string
+    - userId: string
+    - role: string
+    - order: number
+    - status: 'pending'|'approved'|'rejected'
+  - escalation_rules
+    - id: string
+    - name: string
+    - condition: string
+    - nextApproverGroup: string
+    - notifyOnDecision: boolean
+  - run_history
+    - id: string
+    - approvalId: string
+    - runAt: string
+    - outcome: 'success'|'failure'
+    - logs: string
 
-API Endpoints (high-level)
-- GET /memories?scopeType=...&scopeId=...&key=...
-- POST /memories
-- GET /memories/:memoryId
-- PATCH /memories/:memoryId
-- DELETE /memories/:memoryId
-- POST /runs
-- GET /runs/:runId
-- GET /runs/:runId/logs
-- GET /runs/:runId/trace
-- POST /runs/:runId/revert
-- POST /trace/graph
-- POST /artifacts
+- API Endpoints
+  - GET /approvals queue
+  - GET /approvals/{id}
+  - POST /approvals/{id}/approve
+  - POST /approvals/{id}/reject
+  - POST /approvals/{id}/conditional-approve
+  - POST /approvals/{id}/escalate
+  - GET /audits?refId={id}
 
-Security
-- Authentication: OAuth2/JWT per LifeOps conventions.
-- Authorization: RBAC with per-scope permissions; enforce restrictions for read/write/delete.
-- Data protection: encryption at rest with envelope keys; audit trails for all memory mutations; redact fields as policy dictates.
-- Input validation: strict schema validation for all API inputs; reject invalid types/fields.
+- Security
+  - Authenticate with JWT/OAuth
+  - Enforce RBAC: roles such as Approver, Admin, EscalationManager
+  - Validate and sanitize all inputs; guard against undefined/null
+  - Ensure sensitive data exposure is minimized in UI
 
-Validation
-- Always treat API responses with null-safety: const list = Array.isArray(response?.data) ? response.data : [].
-- For Supabase-like results: use data ?? [].
-- Guard array methods: (items ?? []).map(...), Array.isArray(items) ? items.map(...) : [].
-- React state defaults: useState<Type[]>([]) for arrays; useState<Record<string, any>>({}) for objects where applicable.
+- Validation
+  - Input validation on all endpoints
+  - Use safe defaults: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: obj?.property?.nested
+  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
-Acceptance Criteria
-- [ ] Memory operations respect per-scope ACLs and encryption metadata is stored with every memory.
-- [ ] All array usages in UI code guard against null/undefined; memory lists render without runtime errors.
-- [ ] Run Details Page shows complete inputs, trace, logs, diffs, artifacts, timing, and supports action revert with audit trail.
-- [ ] Agent Trace & Debugger provides interactive graph, scoped memory inspector, and step-through execution with proper redaction controls.
-- [ ] API responses validated; no undefined values used to drive UI; all list endpoints return [] when no data.
-- [ ] TTL and retention policies are enforced in background purge tasks with logs and audit entries.
-- [ ] End-to-end tests cover create/read/update/delete memories, run creation and detail views, and debugger interactions.
+## Acceptance Criteria
 
-UI/UX Guidelines
-- Apply the LifeOps design system meticulously.
-- Maintain the dark, dense, developer-oriented aesthetic.
-- Ensure consistent typography, spacing, and micro-interactions as described in the Style sections.
-- Visual cues for status, actions, and reversible steps must be clear and accessible.
+- [ ] Approvals Queue page renders a dense, accessible list with working filters for status, priority, and SLA urgency
+- [ ] Selecting an item opens a detail view showing payloads, diffs, rationale, artifacts, and audit trail
+- [ ] Approve/Reject/Conditional Approve actions persist to backend and update UI, with audit trail
+- [ ] Conditional approvals enforce required confirmations and cannot be submitted without them
+- [ ] Escalation rules route to the correct next approver and reflect in UI
+- [ ] All API responses are validated and guarded against null/undefined before array methods
+- [ ] useState and data handling defaults are correct for arrays/objects
+- [ ] Diff viewer handles null payloads gracefully and renders readable diffs
+- [ ] Security: endpoints protected by RBAC, with proper error handling and no data leakage
+- [ ] UI adheres to the Visual Style and Design Guidelines, including color palette, typography, and spacing
 
-Visual Style
-- Color Palette: as provided (deep near-black backgrounds, subtle surfaces, accent red for active or alerts, teal/amber/purple for data viz)
-- Typography: Inter (or SF Pro Display / Roboto fallback), with the specified weights and sizes
-- Layout: 8px baseline grid, left sidebar 220–260px, header 56–64px, card paddings 16–20px
-- Card Design: elevation, rounded corners, subtle borders/shadows; top icon/thumbnail, then title, then metadata
-- Navigation: left compact vertical nav with active states indicated by accent pill and background tint
-- Data Visualization: minimal axes, data lines with rounded edges, legends/tooltips with subtle shadows
-- Interactive Elements: primary/secondary buttons, inputs, toggles, chips with hover/focus behaviors
-- Micro-interactions: 120–200ms transitions, gentle lifts, and easing
+## UI/UX Guidelines
+Apply the project’s design system and ensure consistency with LifeOps visual language:
+- Dark, high-contrast UI with minimalistic chrome
+- Clear visual hierarchy for approvals, diffs, and audit artifacts
+- Consistent card, navigation, and data visualization styling
+- Subtle but informative micro-interactions on hover/focus
+- Accessible controls with keyboard navigation and screen-reader friendly labels
 
 ---
 
-If you need, I can adapt this prompt to a specific tech stack (e.g., Next.js + tRPC + PostgreSQL, or NestJS + Prisma + Supabase), or tailor acceptance criteria to particular test suites (unit/integration/e2e) and provide starter code scaffolds (types, API contracts, and React component skeletons) that strictly follow the runtime-safety rules outlined.
+Connected Pages:
+- Approvals Queue: Queue of scheduled actions/crons requiring user approval. Review details, diffs, agent rationale, and accept/reject with comments and conditional approvals.
+
+This prompt provides a complete, actionable blueprint for AI development tooling to build a scalable, safe, and user-friendly Approvals Workflow with a dedicated Approvals Queue page and robust backend/frontend integration, all while enforcing the runtime safety rules specified.
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist
