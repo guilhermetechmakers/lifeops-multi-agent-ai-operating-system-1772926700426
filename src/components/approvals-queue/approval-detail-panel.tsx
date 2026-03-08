@@ -28,6 +28,7 @@ export interface ApprovalDetailPanelProps {
   onApproveWithConditions: (conditions: Record<string, unknown>, comment?: string) => void;
   onReject: (comment?: string) => void;
   onRequestChanges: (comment?: string, requiredChanges?: string[]) => void;
+  onEscalate?: (comment?: string) => void;
   onRevert?: (reason?: string) => void;
   onAddComment: (text: string) => void;
   isActionPending?: boolean;
@@ -53,6 +54,7 @@ export function ApprovalDetailPanel({
   onApproveWithConditions,
   onReject,
   onRequestChanges,
+  onEscalate,
   onRevert,
   onAddComment,
   isActionPending = false,
@@ -92,6 +94,11 @@ export function ApprovalDetailPanel({
 
   const handleRequestChanges = () => {
     onRequestChanges(commentForAction || undefined);
+    setCommentForAction("");
+  };
+
+  const handleEscalate = () => {
+    onEscalate?.(commentForAction || undefined);
     setCommentForAction("");
   };
 
@@ -144,6 +151,7 @@ export function ApprovalDetailPanel({
           onApproveWithConditions={() => setShowConditionalEditor(true)}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
+          onEscalate={onEscalate ? handleEscalate : undefined}
           onRevert={onRevert}
           isPending={isActionPending}
           canRevert
@@ -191,7 +199,13 @@ export function ApprovalDetailPanel({
               <PayloadViewer payload={item.payload as Record<string, unknown>} />
             </TabsContent>
             <TabsContent value="diffs" className="mt-0">
-              <DiffsViewer diffData={item.diffs} />
+              <DiffsViewer
+                diffData={item.diffs}
+                currentPayload={item.currentPayload ?? undefined}
+                proposedPayload={
+                  (item.inputPayload ?? item.payload) as Record<string, unknown> | undefined
+                }
+              />
             </TabsContent>
             <TabsContent value="artifacts" className="mt-0">
               <RunArtifactsPreview artifacts={item.artifacts} />

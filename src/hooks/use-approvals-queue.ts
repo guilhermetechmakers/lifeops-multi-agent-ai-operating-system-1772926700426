@@ -85,6 +85,12 @@ export function useApprovalsQueueFilters(): [
       else next.delete("severity");
       if (merged.status) next.set("status", merged.status);
       else next.delete("status");
+      if (merged.priority) next.set("priority", merged.priority);
+      else next.delete("priority");
+      if (merged.slaUrgency) next.set("slaUrgency", merged.slaUrgency);
+      else next.delete("slaUrgency");
+      if (merged.assignedApprover) next.set("assignedApprover", merged.assignedApprover);
+      else next.delete("assignedApprover");
       if (merged.search) next.set("search", merged.search);
       else next.delete("search");
       if (merged.dateFrom) next.set("dateFrom", merged.dateFrom);
@@ -246,6 +252,26 @@ export function useAddApprovalComment() {
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to add comment");
+    },
+  });
+}
+
+export function useEscalateApprovalItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: { id: string; payload?: EscalatePayload }) => {
+      if (USE_MOCK) return approvalsMockApi.escalate(id, payload ?? {});
+      return escalateItem(id, payload ?? {});
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: approvalsKeys.all });
+      toast.success("Escalated");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to escalate");
     },
   });
 }

@@ -1,9 +1,10 @@
 /**
  * Approvals Queue page: list of items requiring review with detail panel.
  * Filters in URL; two-pane layout (list | detail); responsive drawer on narrow.
+ * Keyboard shortcuts: A = Approve, R = Reject (when item selected).
  */
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,7 @@ import {
   useRejectApprovalItem,
   useRequestChangesApprovalItem,
   useRevertApprovalItem,
+  useEscalateApprovalItem,
   useAddApprovalComment,
 } from "@/hooks/use-approvals-queue";
 import { cn } from "@/lib/utils";
@@ -41,6 +43,7 @@ export default function Approvals() {
   const rejectMutation = useRejectApprovalItem();
   const requestChangesMutation = useRequestChangesApprovalItem();
   const revertMutation = useRevertApprovalItem();
+  const escalateMutation = useEscalateApprovalItem();
   const addCommentMutation = useAddApprovalComment();
 
   const selectedItem = useMemo(() => {
@@ -66,18 +69,27 @@ export default function Approvals() {
   };
 
   const hasFilters = Boolean(
-    filters.search ?? filters.severity ?? filters.status ?? filters.owner ?? filters.cronName ?? filters.module
+    filters.search ??
+      filters.severity ??
+      filters.status ??
+      filters.priority ??
+      filters.slaUrgency ??
+      filters.assignedApprover ??
+      filters.owner ??
+      filters.cronName ??
+      filters.module
   );
 
-  const handleApprove = (comment?: string) => {
-    if (!selectedId) return;
-    approveMutation.mutate(
-      { id: selectedId, payload: { comment } },
-      {
-        onSuccess: () => setSelectedId(null),
-      }
-    );
-  };
+  const handleApprove = useCallback(
+    (comment?: string) => {
+      if (!selectedId) return;
+      approveMutation.mutate(
+        { id: selectedId, payload: { comment } },
+        { onSuccess: () => setSelectedId(null) }
+      );
+    },
+    [selectedId, approveMutation]
+  );
 
   const handleApproveWithConditions = (
     conditions: Record<string, unknown>,
@@ -90,13 +102,16 @@ export default function Approvals() {
     );
   };
 
-  const handleReject = (comment?: string) => {
-    if (!selectedId) return;
-    rejectMutation.mutate(
-      { id: selectedId, payload: { comment } },
-      { onSuccess: () => setSelectedId(null) }
-    );
-  };
+  const handleReject = useCallback(
+    (comment?: string) => {
+      if (!selectedId) return;
+      rejectMutation.mutate(
+        { id: selectedId, payload: { comment } },
+        { onSuccess: () => setSelectedId(null) }
+      );
+    },
+    [selectedId, rejectMutation]
+  );
 
   const handleRequestChanges = (comment?: string, _requiredChanges?: string[]) => {
     if (!selectedId) return;
@@ -111,6 +126,14 @@ export default function Approvals() {
     revertMutation.mutate({ id: selectedId, payload: { reason } });
   };
 
+  const handleEscalate = (comment?: string) => {
+    if (!selectedId) return;
+    escalateMutation.mutate(
+      { id: selectedId, payload: { comment } },
+      { onSuccess: () => setSelectedId(null) }
+    );
+  };
+
   const handleAddComment = (text: string) => {
     if (!selectedId) return;
     addCommentMutation.mutate({ id: selectedId, payload: { text } });
@@ -121,7 +144,28 @@ export default function Approvals() {
     conditionalApproveMutation.isPending ||
     rejectMutation.isPending ||
     requestChangesMutation.isPending ||
-    revertMutation.isPending;
+    revertMutation.isPending ||
+    escalateMutation.isPending;
+
+  const canApproveOrReject =
+    selectedItem &&
+    (selectedItem.status === "queued" || selectedItem.status === "pending" || selectedItem.status === "conditional");
+
+  useEffect(() => {
+    if (!canApproveOrReject || isActionPending) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "a" || e.key === "A") {
+        e.preventDefault();
+        handleApprove();
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        handleReject();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [canApproveOrReject, isActionPending, handleApprove, handleReject]);
 
   return (
     <AnimatedPage className="space-y-6">
@@ -158,6 +202,9 @@ export default function Approvals() {
                     search: undefined,
                     severity: undefined,
                     status: undefined,
+                    priority: undefined,
+                    slaUrgency: undefined,
+                    assignedApprover: undefined,
                     owner: undefined,
                     cronName: undefined,
                     module: undefined,
@@ -167,7 +214,7 @@ export default function Approvals() {
                 className="mt-4"
               />
             ) : (
-              <div className="mt-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              <div className="mt-4 space-y-2 max-h-[70vh] overflow-y-auto">
                 {(items ?? []).map((item) => (
                   <ItemCardRow
                     key={item.id}
@@ -202,6 +249,7 @@ export default function Approvals() {
               onApproveWithConditions={handleApproveWithConditions}
               onReject={handleReject}
               onRequestChanges={handleRequestChanges}
+              onEscalate={handleEscalate}
               onRevert={handleRevert}
               onAddComment={handleAddComment}
               isActionPending={isActionPending}

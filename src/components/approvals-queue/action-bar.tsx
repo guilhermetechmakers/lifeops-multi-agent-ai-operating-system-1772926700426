@@ -1,8 +1,8 @@
 /**
- * Action bar: Approve, Approve with Conditions, Reject, Request Changes, Revert.
+ * Action bar: Approve, Approve with Conditions, Reject, Request Changes, Escalate, Revert.
  */
 
-import { Check, X, FileEdit, RotateCcw, CheckSquare } from "lucide-react";
+import { Check, X, FileEdit, RotateCcw, CheckSquare, ArrowUpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ export interface ActionBarProps {
   onApproveWithConditions: () => void;
   onReject: () => void;
   onRequestChanges: () => void;
+  onEscalate?: () => void;
   onRevert?: () => void;
   isPending?: boolean;
   canRevert?: boolean;
@@ -26,6 +27,7 @@ export function ActionBar({
   onApproveWithConditions,
   onReject,
   onRequestChanges,
+  onEscalate,
   onRevert,
   isPending = false,
   canRevert = false,
@@ -88,6 +90,18 @@ export function ActionBar({
             <FileEdit className="mr-1.5 h-4 w-4" />
             Request changes
           </Button>
+          {onEscalate && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onEscalate}
+              disabled={isPending}
+              aria-label="Escalate to next approver"
+            >
+              <ArrowUpCircle className="mr-1.5 h-4 w-4" />
+              Escalate
+            </Button>
+          )}
         </>
       )}
       {canRevert && onRevert && (status === "approved" || status === "conditional") && (

@@ -69,9 +69,11 @@ let queueItems: ApprovalQueueItem[] = [
     module: "finance",
     severity: "high",
     priority: 1,
-    eta: soon.toISOString(),
+    priorityLevel: "high",
     slaMinutes: 120,
     scheduledTime: soon.toISOString(),
+    nextRun: soon.toISOString(),
+    eta: soon.toISOString(),
     status: "pending",
     createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
     updatedAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
@@ -83,6 +85,15 @@ let queueItems: ApprovalQueueItem[] = [
       ],
       total: 12450,
     },
+    inputPayload: {
+      entries: [
+        { account: "Revenue", debit: 0, credit: 8500 },
+        { account: "Expenses", debit: 3200, credit: 0 },
+        { account: "Cash", debit: 5300, credit: 0 },
+      ],
+      total: 12450,
+    },
+    currentPayload: { total: 0 },
     rationale:
       "Reconciliation complete. 3 journal entries ready to post. Total: $12,450. No anomalies detected.",
     diffs: {
@@ -109,13 +120,16 @@ let queueItems: ApprovalQueueItem[] = [
     module: "content",
     severity: "medium",
     priority: 2,
-    eta: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
-    slaMinutes: 120,
+    priorityLevel: "medium",
+    slaMinutes: 240,
     scheduledTime: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+    nextRun: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+    eta: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
     status: "pending",
     createdAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
     payload: { draft_id: "d1", title: "Q1 Product Launch", status: "ready" },
+    currentPayload: { draft_id: "d1", title: "Q1 Product Launch", status: "draft" },
     rationale:
       "Draft 'Q1 Product Launch' is ready. SEO score: 92. No conflicts with scheduled content.",
     diffs: { draft_id: "d1", title: "Q1 Product Launch", status: "ready" },
@@ -147,17 +161,22 @@ function filterItems(
     );
   if (filters.module) out = out.filter((i) => i.module === filters.module);
   if (filters.severity) out = out.filter((i) => i.severity === filters.severity);
-  if (filters.priority) out = out.filter((i) => i.severity === filters.priority);
+  if (filters.priority)
+    out = out.filter(
+      (i) => i.priorityLevel === filters.priority || i.severity === filters.priority
+    );
   if (filters.status) out = out.filter((i) => i.status === filters.status);
   if (filters.assignedApprover)
     out = out.filter((i) => i.assignedApprover === filters.assignedApprover);
   if (filters.slaUrgency && filters.slaUrgency !== "all") {
     const now = Date.now();
     out = out.filter((i) => {
-      if (!i.slaMinutes || !i.createdAt) return filters.slaUrgency === "expired";
+      if (!i.slaMinutes || !i.createdAt)
+        return filters.slaUrgency === "overdue" || filters.slaUrgency === "expired";
       const expiry = new Date(i.createdAt).getTime() + i.slaMinutes * 60 * 1000;
-      if (filters.slaUrgency === "expired") return expiry < now;
+      if (filters.slaUrgency === "overdue" || filters.slaUrgency === "expired") return expiry < now;
       if (filters.slaUrgency === "expiring") return expiry > now && expiry < now + 60 * 60 * 1000;
+      if (filters.slaUrgency === "ok") return expiry > now + 60 * 60 * 1000;
       return true;
     });
   }

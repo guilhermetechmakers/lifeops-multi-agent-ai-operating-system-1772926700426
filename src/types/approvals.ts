@@ -97,7 +97,7 @@ export interface ApprovalQueueItem {
   agent?: string;
 }
 
-export type SlaUrgency = "all" | "expiring" | "overdue" | "ok";
+export type SlaUrgency = "all" | "expiring" | "overdue" | "ok" | "expired";
 
 export interface ApprovalQueueFilters {
   owner?: string;

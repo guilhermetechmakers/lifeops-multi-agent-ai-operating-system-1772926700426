@@ -14,7 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { ApprovalQueueFilters, ApprovalQueueStatus, ApprovalSeverity } from "@/types/approvals";
+import type {
+  ApprovalQueueFilters,
+  ApprovalQueueStatus,
+  ApprovalSeverity,
+  ApprovalPriority,
+} from "@/types/approvals";
 
 export interface FiltersBarProps {
   filters: ApprovalQueueFilters;
@@ -23,7 +28,21 @@ export interface FiltersBarProps {
 }
 
 const SEVERITIES: ApprovalSeverity[] = ["low", "medium", "high", "critical"];
-const STATUSES: ApprovalQueueStatus[] = ["queued", "pending", "approved", "rejected", "conditional"];
+const PRIORITIES: ApprovalPriority[] = ["low", "medium", "high", "critical"];
+const STATUSES: ApprovalQueueStatus[] = [
+  "queued",
+  "pending",
+  "approved",
+  "rejected",
+  "conditional",
+  "escalated",
+];
+const SLA_URGENCIES: Array<{ value: ApprovalQueueFilters["slaUrgency"]; label: string }> = [
+  { value: "all", label: "All SLA" },
+  { value: "overdue", label: "Overdue" },
+  { value: "expiring", label: "Expiring soon" },
+  { value: "ok", label: "OK" },
+];
 
 export function FiltersBar({ filters, onFiltersChange, className }: FiltersBarProps) {
   const searchId = useId();
@@ -91,7 +110,62 @@ export function FiltersBar({ filters, onFiltersChange, className }: FiltersBarPr
           ))}
         </SelectContent>
       </Select>
-      {(filters.search ?? filters.severity ?? filters.status) && (
+      <Select
+        value={filters.priority ? String(filters.priority) : "all"}
+        onValueChange={(v) =>
+          onFiltersChange({
+            priority: v === "all" ? undefined : (v as ApprovalPriority),
+            page: 1,
+          })
+        }
+      >
+        <SelectTrigger className="w-[130px] bg-secondary/50 border-white/[0.03]">
+          <SelectValue placeholder="Priority" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All priority</SelectItem>
+          {PRIORITIES.map((p) => (
+            <SelectItem key={p} value={p}>
+              {p}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={filters.slaUrgency ?? "all"}
+        onValueChange={(v) =>
+          onFiltersChange({
+            slaUrgency: v === "all" ? undefined : (v as ApprovalQueueFilters["slaUrgency"]),
+            page: 1,
+          })
+        }
+      >
+        <SelectTrigger className="w-[140px] bg-secondary/50 border-white/[0.03]">
+          <SelectValue placeholder="SLA urgency" />
+        </SelectTrigger>
+        <SelectContent>
+          {SLA_URGENCIES.map(({ value, label }) => (
+            <SelectItem key={value ?? "all"} value={value ?? "all"}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Input
+        placeholder="Assigned approver"
+        value={filters.assignedApprover ?? ""}
+        onChange={(e) =>
+          onFiltersChange({ assignedApprover: e.target.value || undefined, page: 1 })
+        }
+        className="w-[140px] bg-secondary/50 border-white/[0.03]"
+        aria-label="Filter by assigned approver"
+      />
+      {(filters.search ??
+        filters.severity ??
+        filters.status ??
+        filters.priority ??
+        filters.slaUrgency ??
+        filters.assignedApprover) && (
         <Button
           variant="ghost"
           size="sm"
@@ -100,6 +174,9 @@ export function FiltersBar({ filters, onFiltersChange, className }: FiltersBarPr
               search: undefined,
               severity: undefined,
               status: undefined,
+              priority: undefined,
+              slaUrgency: undefined,
+              assignedApprover: undefined,
               page: 1,
             })
           }
