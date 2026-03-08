@@ -88,4 +88,13 @@ export const masterDashboardApi = {
 
   getAlertTrends: () =>
     api.get<AlertTrends>(`${BASE}/alerts/trends`),
+
+  getWorkflowsRecent: () =>
+    api
+      .get<Array<{ id: string; name: string; lastUsed?: string; type?: string }>>(
+        `${BASE}/workflows/recent`
+      )
+      .then((r) =>
+        safeList<{ id: string; name: string; lastUsed?: string; type?: string }>(r ?? [])
+      ),
 };

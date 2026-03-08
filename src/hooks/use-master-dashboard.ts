@@ -32,6 +32,7 @@ const keys = {
   search: (q: string) => ["master-dashboard", "search", q] as const,
   cronjobMetrics: ["master-dashboard", "cronjobs", "metrics"] as const,
   alertTrends: ["master-dashboard", "alerts", "trends"] as const,
+  workflowsRecent: ["master-dashboard", "workflows", "recent"] as const,
 };
 
 export function useRunArtifact(runId: string | null) {
@@ -314,4 +315,15 @@ export function useAlertTrends() {
     },
     staleTime: 60 * 1000,
   });
+}
+
+export function useWorkflowsRecent() {
+  const query = useQuery({
+    queryKey: keys.workflowsRecent,
+    queryFn: () =>
+      USE_MOCK ? mock.mockGetWorkflowsRecent() : masterDashboardApi.getWorkflowsRecent(),
+    staleTime: 60 * 1000,
+  });
+  const items = safeArray(query.data);
+  return { ...query, items };
 }

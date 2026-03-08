@@ -458,3 +458,48 @@ export async function mockPreviewCronjob(
     nextRunPreview: valid ? new Date(Date.now() + 60 * 60 * 1000).toISOString() : undefined,
   };
 }
+
+export async function mockScheduleValidate(payload: {
+  expression?: string;
+  timezone?: string;
+  builder?: object;
+}): Promise<{ valid: boolean; errors?: string[]; nextRunPreview?: string }> {
+  const expr = (payload?.expression as string) ?? "";
+  const errors: string[] = [];
+  if (!expr?.trim()) errors.push("Schedule expression is required");
+  return {
+    valid: errors.length === 0,
+    errors: errors.length > 0 ? errors : undefined,
+    nextRunPreview:
+      errors.length === 0 ? new Date(Date.now() + 60 * 60 * 1000).toISOString() : undefined,
+  };
+}
+
+export async function mockGetCronjobTemplates(): Promise<
+  Array<{ id: string; name: string; module?: string }>
+> {
+  return (MODULES ?? []).map((m, i) => ({
+    id: `tpl-${m.toLowerCase()}-${i}`,
+    name: `${m} template`,
+    module: m,
+  }));
+}
+
+function findRunByRunId(runId: string): { cronjobId: string; run: CronjobRun } | null {
+  for (const [cronjobId, runs] of Object.entries(RUNS_BY_CRONJOB)) {
+    const run = (runs ?? []).find((r) => r.runId === runId);
+    if (run) return { cronjobId, run };
+  }
+  return null;
+}
+
+export async function mockGetCronjobRun(runId: string): Promise<CronjobRun> {
+  const found = findRunByRunId(runId);
+  if (!found) throw new Error("Run not found");
+  return {
+    ...found.run,
+    traceId: `trace-${runId}`,
+    summary: found.run.status === "success" ? "Completed successfully" : undefined,
+    logs: Array.isArray(found.run.logs) ? found.run.logs : ["No logs"],
+  };
+}

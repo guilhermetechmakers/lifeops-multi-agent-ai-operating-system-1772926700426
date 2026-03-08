@@ -67,6 +67,8 @@ export interface CronjobsListTableProps {
   onClone: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
+  /** Open detail drawer for run history, logs, traces */
+  onViewDetails?: (id: string) => void;
 }
 
 export function CronjobsListTable({
@@ -79,6 +81,7 @@ export function CronjobsListTable({
   onClone,
   onDelete,
   onToggleEnabled,
+  onViewDetails,
 }: CronjobsListTableProps) {
   const list = items ?? [];
   const allSelected = list.length > 0 && selectedIds.size === list.length;
@@ -225,6 +228,11 @@ export function CronjobsListTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
+                      {onViewDetails && (
+                        <DropdownMenuItem onClick={() => onViewDetails(job.id)}>
+                          View details
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => onToggleEnabled(job.id, !job.enabled)}>
                         {job.enabled ? "Pause" : "Enable"}
                       </DropdownMenuItem>

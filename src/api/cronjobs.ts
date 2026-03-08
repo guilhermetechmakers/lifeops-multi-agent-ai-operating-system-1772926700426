@@ -95,6 +95,22 @@ export const cronjobsApi = {
       .then((r) => safeList<CronjobRun>(r ?? []));
   },
 
+  getRun: (runId: string) =>
+    api.get<CronjobRun & { logs: string[]; trace?: unknown; artifacts?: unknown[] }>(
+      `${BASE}/runs/${runId}`
+    ),
+
+  scheduleValidate: (payload: { expression?: string; timezone?: string; builder?: object }) =>
+    api.post<{ valid: boolean; errors?: string[]; nextRunPreview?: string }>(
+      `${BASE}/schedule-validate`,
+      payload ?? {}
+    ),
+
+  getTemplates: () =>
+    api
+      .get<Array<{ id: string; name: string; module?: string }>>(`${BASE}/templates`)
+      .then((r) => safeList<{ id: string; name: string; module?: string }>(r ?? [])),
+
   getStats: () =>
     api.get<{ runsLast24h: number; totalCronjobs: number; enabledCount: number }>(
       `${BASE}/stats`

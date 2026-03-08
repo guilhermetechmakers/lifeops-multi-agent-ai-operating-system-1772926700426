@@ -96,6 +96,8 @@ export interface CronjobRun {
   artifacts: unknown[];
   logs: string[];
   trace: unknown;
+  traceId?: string;
+  summary?: string;
 }
 
 export interface CronjobListFilters {

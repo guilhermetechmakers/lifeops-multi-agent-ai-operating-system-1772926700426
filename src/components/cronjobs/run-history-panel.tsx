@@ -33,11 +33,14 @@ export interface RunHistoryPanelProps {
   cronjobId: string;
   cronjobName?: string;
   className?: string;
+  /** When set, clicking a run calls this instead of navigating (e.g. for detail drawer). */
+  onSelectRun?: (runId: string) => void;
 }
 
 export function RunHistoryPanel({
   cronjobId,
   className,
+  onSelectRun,
 }: RunHistoryPanelProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { items: runs, isLoading } = useCronjobRuns(cronjobId, {
@@ -82,6 +85,37 @@ export function RunHistoryPanel({
                 key={run.runId}
                 className="flex items-center justify-between rounded-md border border-white/[0.03] bg-secondary/50 px-3 py-2 transition-colors hover:bg-secondary/70"
               >
+                {onSelectRun ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectRun(run.runId)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
+                  <StatusIcon status={run.status} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-xs text-foreground">
+                      {run.runId}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(run.startedAt), { addSuffix: true })}
+                      {run.durationMs > 0 && ` · ${(run.durationMs / 1000).toFixed(1)}s`}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      run.status === "success"
+                        ? "success"
+                        : run.status === "failure"
+                          ? "destructive"
+                          : run.status === "skipped"
+                            ? "warning"
+                            : "secondary"
+                    }
+                  >
+                    {run.status}
+                  </Badge>
+                </button>
+                ) : (
                 <Link
                   to={`/dashboard/cronjobs/${cronjobId}/runs/${run.runId}`}
                   className="flex min-w-0 flex-1 items-center gap-3"
@@ -110,6 +144,7 @@ export function RunHistoryPanel({
                     {run.status}
                   </Badge>
                 </Link>
+                )}
               </li>
             ))}
           </ul>

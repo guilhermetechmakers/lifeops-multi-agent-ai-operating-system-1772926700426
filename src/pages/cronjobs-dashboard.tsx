@@ -17,7 +17,9 @@ import {
   CronjobsFilterBar,
   ScheduleBuilderPanel,
   PerformancePanel,
+  CronjobDetailDrawer,
 } from "@/components/cronjobs";
+import { ApprovalsQueueWidget } from "@/components/master-dashboard";
 import {
   useCronjobsList,
   useUpdateCronjob,
@@ -40,6 +42,8 @@ export default function CronjobsDashboard() {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showScheduleBuilder, setShowScheduleBuilder] = useState(false);
   const [page, setPage] = useState(1);
+  const [detailCronjobId, setDetailCronjobId] = useState<string | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
@@ -178,6 +182,11 @@ export default function CronjobsDashboard() {
     setSearch("");
   }, []);
 
+  const handleViewDetails = useCallback((id: string) => {
+    setDetailCronjobId(id);
+    setDetailDrawerOpen(true);
+  }, []);
+
   return (
     <AnimatedPage className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -313,6 +322,7 @@ export default function CronjobsDashboard() {
                   onClone={handleClone}
                   onDelete={handleDelete}
                   onToggleEnabled={handleToggleEnabled}
+                  onViewDetails={handleViewDetails}
                 />
               </div>
               <div className="md:hidden">
@@ -325,6 +335,7 @@ export default function CronjobsDashboard() {
                   onClone={handleClone}
                   onDelete={handleDelete}
                   onToggleEnabled={handleToggleEnabled}
+                  onViewDetails={handleViewDetails}
                 />
               </div>
 
@@ -359,11 +370,20 @@ export default function CronjobsDashboard() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="lg:col-span-3" />
-        <PerformancePanel />
+        <div className="lg:col-span-2 space-y-4">
+          <ApprovalsQueueWidget />
+        </div>
+        <div className="lg:col-span-2">
+          <PerformancePanel />
+        </div>
       </div>
 
       <QuickCreateModal open={showQuickCreate} onOpenChange={setShowQuickCreate} />
+      <CronjobDetailDrawer
+        cronjobId={detailCronjobId}
+        open={detailDrawerOpen}
+        onOpenChange={setDetailDrawerOpen}
+      />
     </AnimatedPage>
   );
 }

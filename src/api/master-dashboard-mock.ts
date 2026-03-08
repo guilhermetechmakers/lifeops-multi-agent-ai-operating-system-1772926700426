@@ -402,3 +402,15 @@ export async function mockGetAlertTrends(): Promise<AlertTrends> {
     ],
   };
 }
+
+export async function mockGetWorkflowsRecent(): Promise<
+  Array<{ id: string; name: string; lastUsed?: string; type?: string }>
+> {
+  const templates = MOCK_TEMPLATES ?? [];
+  return templates.slice(0, 5).map((t) => ({
+    id: t.id,
+    name: t.name,
+    lastUsed: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+    type: "template",
+  }));
+}

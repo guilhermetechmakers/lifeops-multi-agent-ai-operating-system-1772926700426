@@ -66,6 +66,7 @@ export interface CronjobsCardGridProps {
   onClone: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
+  onViewDetails?: (id: string) => void;
 }
 
 export function CronjobsCardGrid({
@@ -77,6 +78,7 @@ export function CronjobsCardGrid({
   onClone,
   onDelete,
   onToggleEnabled,
+  onViewDetails,
 }: CronjobsCardGridProps) {
   const list = items ?? [];
 
@@ -155,6 +157,11 @@ export function CronjobsCardGrid({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    {onViewDetails && (
+                      <DropdownMenuItem onClick={() => onViewDetails(job.id)}>
+                        View details
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => onToggleEnabled(job.id, !job.enabled)}>
                       {job.enabled ? "Pause" : "Enable"}
                     </DropdownMenuItem>

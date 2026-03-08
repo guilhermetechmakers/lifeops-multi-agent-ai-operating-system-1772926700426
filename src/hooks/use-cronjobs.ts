@@ -25,7 +25,9 @@ const keys = {
   detail: (id: string) => ["cronjobs", "detail", id] as const,
   runs: (id: string, runParams?: Record<string, string>) =>
     ["cronjobs", "runs", id, runParams] as const,
+  run: (runId: string) => ["cronjobs", "run", runId] as const,
   alerts: () => ["cronjobs", "alerts"] as const,
+  templates: () => ["cronjobs", "templates"] as const,
 };
 
 export function useCronjobsList(params: CronjobListParams = {}) {
@@ -237,5 +239,33 @@ export function useBulkCronjobs() {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Bulk action failed");
     },
+  });
+}
+
+export function useCronjobRun(runId: string | undefined | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.run(runId ?? ""),
+    queryFn: () =>
+      USE_MOCK ? mock.mockGetCronjobRun(runId!) : cronjobsApi.getRun(runId!),
+    enabled: Boolean(runId) && enabled,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useCronjobTemplates() {
+  const query = useQuery({
+    queryKey: keys.templates(),
+    queryFn: () =>
+      USE_MOCK ? mock.mockGetCronjobTemplates() : cronjobsApi.getTemplates(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const items = Array.isArray(query.data) ? query.data : [];
+  return { ...query, items };
+}
+
+export function useScheduleValidate() {
+  return useMutation({
+    mutationFn: (payload: { expression?: string; timezone?: string; builder?: object }) =>
+      USE_MOCK ? mock.mockScheduleValidate(payload) : cronjobsApi.scheduleValidate(payload),
   });
 }

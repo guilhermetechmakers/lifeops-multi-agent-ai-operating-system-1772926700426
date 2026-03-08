@@ -6,4 +6,5 @@ export { QuickCreateModal } from "./quick-create-modal";
 export { RunHistoryPanel } from "./run-history-panel";
 export { PerformancePanel } from "./performance-panel";
 export { CronjobsFilterBar } from "./cronjobs-filter-bar";
+export { CronjobDetailDrawer } from "./cronjob-detail-drawer";
 export * from "./cronjob-editor";
