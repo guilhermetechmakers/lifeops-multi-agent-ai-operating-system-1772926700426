@@ -1,46 +1,51 @@
 /**
- * Content Calendar hooks — calendar items, channels, conflicts, audit.
+ * Content Calendar hooks — data fetching with null-safety.
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import * as api from "@/api/content-calendar";
 import * as mock from "@/api/content-calendar-mock";
-import type { CalendarItemsQuery } from "@/types/content-calendar";
+import type { CalendarItemsQuery } from "@/api/content-calendar";
+import type {
+  ContentItem,
+  CreateCalendarItemPayload,
+  BulkReschedulePayload,
+} from "@/types/content-calendar";
 
 const USE_MOCK =
   !import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_USE_MOCK_CONTENT === "true";
 
 const QUERY_KEYS = {
-  calendarItems: (query: CalendarItemsQuery) =>
+  calendarItems: (query?: CalendarItemsQuery) =>
     ["content-calendar", "items", query] as const,
   channels: ["content-calendar", "channels"] as const,
   channelCapacity: ["content-calendar", "channel-capacity"] as const,
-  auditLogs: (params?: { targetItemId?: string }) =>
-    ["content-calendar", "audit", params] as const,
 };
 
-export function useCalendarItems(query: CalendarItemsQuery) {
+export function useCalendarItems(query?: CalendarItemsQuery) {
   const result = useQuery({
     queryKey: QUERY_KEYS.calendarItems(query),
     queryFn: () =>
       USE_MOCK ? mock.mockFetchCalendarItems(query) : api.fetchCalendarItems(query),
     placeholderData: { data: [], meta: { total: 0 } },
   });
+
   const data = result.data ?? { data: [], meta: { total: 0 } };
   const items = Array.isArray(data.data) ? data.data : [];
   const total = data.meta?.total ?? items.length;
+
   return { ...result, items, total };
 }
 
 export function useChannels() {
   const result = useQuery({
     queryKey: QUERY_KEYS.channels,
-    queryFn: () =>
-      USE_MOCK ? mock.mockFetchChannels() : api.fetchChannels(),
+    queryFn: () => (USE_MOCK ? mock.mockFetchChannels() : api.fetchChannels()),
     placeholderData: [],
   });
+
   const channels = Array.isArray(result.data) ? result.data : [];
   return { ...result, channels };
 }
@@ -52,14 +57,16 @@ export function useChannelCapacity() {
       USE_MOCK ? mock.mockFetchChannelCapacity() : api.fetchChannelCapacity(),
     placeholderData: {},
   });
+
   const capacity = result.data ?? {};
   return { ...result, capacity };
 }
 
 export function useCreateCalendarItem() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (payload: Parameters<typeof api.createCalendarItem>[0]) =>
+    mutationFn: (payload: CreateCalendarItemPayload) =>
       USE_MOCK ? mock.mockCreateCalendarItem(payload) : api.createCalendarItem(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
@@ -71,14 +78,9 @@ export function useCreateCalendarItem() {
 
 export function useUpdateCalendarItem() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string;
-      payload: Parameters<typeof api.updateCalendarItem>[1];
-    }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<ContentItem> }) =>
       USE_MOCK
         ? mock.mockUpdateCalendarItem(id, payload)
         : api.updateCalendarItem(id, payload),
@@ -92,8 +94,9 @@ export function useUpdateCalendarItem() {
 
 export function useBulkReschedule() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (payload: Parameters<typeof api.bulkReschedule>[0]) =>
+    mutationFn: (payload: BulkReschedulePayload) =>
       USE_MOCK ? mock.mockBulkReschedule(payload) : api.bulkReschedule(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
@@ -103,24 +106,34 @@ export function useBulkReschedule() {
   });
 }
 
+export function useAuditLogs(params?: {
+  targetItemId?: string;
+  limit?: number;
+}) {
+  const itemsQuery = useQuery({
+    queryKey: ["content-calendar", "audit", params],
+    queryFn: () =>
+      USE_MOCK
+        ? Promise.resolve(mock.mockGetAuditLogs())
+        : api.fetchAuditLogs(params),
+    placeholderData: [],
+  });
+  const logs = Array.isArray(itemsQuery.data) ? itemsQuery.data : [];
+  return { ...itemsQuery, logs, isLoading: itemsQuery.isLoading };
+}
+
 export function useLogAudit() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: Parameters<typeof api.logAudit>[0]) =>
+    mutationFn: (payload: {
+      action: string;
+      actorId: string;
+      targetItemId: string;
+      details: string;
+    }) =>
       USE_MOCK ? mock.mockLogAudit(payload) : api.logAudit(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-calendar", "audit"] });
     },
   });
-}
-
-export function useAuditLogs(params?: { targetItemId?: string; limit?: number }) {
-  const result = useQuery({
-    queryKey: QUERY_KEYS.auditLogs(params),
-    queryFn: () =>
-      USE_MOCK ? mock.mockFetchAuditLogs(params) : api.fetchAuditLogs(params),
-    placeholderData: [],
-  });
-  const logs = Array.isArray(result.data) ? result.data : [];
-  return { ...result, logs };
 }

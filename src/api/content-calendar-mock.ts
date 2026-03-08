@@ -3,29 +3,27 @@
  */
 
 import type {
-  CalendarContentItem,
+  ContentItem,
   Channel,
-  Conflict,
   AuditLog,
-  CalendarItemsQuery,
-  CalendarItemsResponse,
-  ChannelCapacityResponse,
+  CreateCalendarItemPayload,
+  BulkReschedulePayload,
+  ChannelCapacityMap,
 } from "@/types/content-calendar";
+import type { CalendarItemsQuery } from "./content-calendar";
 
 const MOCK_CHANNELS: Channel[] = [
-  { id: "ch-blog", name: "Blog", capacityPerSlot: 3, color: "#00C2A8" },
-  { id: "ch-newsletter", name: "Newsletter", capacityPerSlot: 2, color: "#8B5CF6" },
-  { id: "ch-social", name: "Social", capacityPerSlot: 5, color: "#FFB020" },
-  { id: "proj-1", name: "Project 1", capacityPerSlot: 4, color: "#00C2A8" },
-  { id: "proj-2", name: "Project 2", capacityPerSlot: 3, color: "#8B5CF6" },
+  { id: "ch-blog", name: "Blog", capacityPerSlot: 2, color: "#00C2A8" },
+  { id: "ch-newsletter", name: "Newsletter", capacityPerSlot: 1, color: "#8B5CF6" },
+  { id: "ch-social", name: "Social", capacityPerSlot: 3, color: "#FFB020" },
 ];
 
-const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
+const MOCK_ITEMS: ContentItem[] = [
   {
-    id: "ci-1",
+    id: "cc-1",
     title: "Getting Started with LifeOps",
     type: "draft",
-    channelId: "proj-1",
+    channelId: "ch-blog",
     publishAt: "2025-03-15T10:00:00Z",
     durationMinutes: 60,
     status: "in-progress",
@@ -36,13 +34,13 @@ const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
     updatedAt: "2025-03-07T14:00:00Z",
   },
   {
-    id: "ci-2",
+    id: "cc-2",
     title: "Content Pipeline Best Practices",
     type: "edit",
-    channelId: "proj-1",
+    channelId: "ch-blog",
     publishAt: "2025-03-18T14:00:00Z",
     durationMinutes: 45,
-    status: "in-progress",
+    status: "planned",
     assignees: ["u2", "u3"],
     version: 3,
     metadata: {},
@@ -50,12 +48,12 @@ const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
     updatedAt: "2025-03-06T09:00:00Z",
   },
   {
-    id: "ci-3",
+    id: "cc-3",
     title: "AI-Assisted Writing Workflow",
-    type: "idea",
-    channelId: "proj-1",
+    type: "ideation",
+    channelId: "ch-newsletter",
     publishAt: "2025-03-20T09:00:00Z",
-    durationMinutes: 90,
+    durationMinutes: 30,
     status: "planned",
     assignees: [],
     version: 1,
@@ -64,13 +62,13 @@ const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
     updatedAt: "2025-03-05T00:00:00Z",
   },
   {
-    id: "ci-4",
+    id: "cc-4",
     title: "SEO Optimization Guide",
-    type: "publish",
-    channelId: "proj-2",
+    type: "schedule",
+    channelId: "ch-blog",
     publishAt: "2025-03-10T09:00:00Z",
-    durationMinutes: 30,
-    status: "published",
+    durationMinutes: 60,
+    status: "planned",
     assignees: ["u3"],
     version: 4,
     metadata: {},
@@ -78,12 +76,12 @@ const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
     updatedAt: "2025-03-08T11:00:00Z",
   },
   {
-    id: "ci-5",
+    id: "cc-5",
     title: "Multi-Agent Orchestration",
     type: "research",
-    channelId: "proj-1",
+    channelId: "ch-newsletter",
     publishAt: "2025-03-22T11:00:00Z",
-    durationMinutes: 60,
+    durationMinutes: 45,
     status: "planned",
     assignees: ["u2"],
     version: 1,
@@ -92,10 +90,10 @@ const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
     updatedAt: "2025-03-07T16:00:00Z",
   },
   {
-    id: "ci-6",
+    id: "cc-6",
     title: "Release Notes Automation",
     type: "publish",
-    channelId: "ch-blog",
+    channelId: "ch-social",
     publishAt: "2025-03-01T12:00:00Z",
     durationMinutes: 15,
     status: "published",
@@ -106,18 +104,18 @@ const MOCK_CALENDAR_ITEMS: CalendarContentItem[] = [
     updatedAt: "2025-03-01T12:00:00Z",
   },
   {
-    id: "ci-7",
-    title: "Weekly Newsletter Q1",
-    type: "schedule",
+    id: "cc-7",
+    title: "Weekly Product Update",
+    type: "draft",
     channelId: "ch-newsletter",
-    publishAt: "2025-03-14T08:00:00Z",
-    durationMinutes: 120,
+    publishAt: "2025-03-10T09:00:00Z",
+    durationMinutes: 30,
     status: "planned",
-    assignees: ["u1", "u3"],
+    assignees: ["u1"],
     version: 1,
     metadata: {},
-    createdAt: "2025-03-01T00:00:00Z",
-    updatedAt: "2025-03-07T10:00:00Z",
+    createdAt: "2025-03-06T00:00:00Z",
+    updatedAt: "2025-03-06T00:00:00Z",
   },
 ];
 
@@ -126,7 +124,7 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
     id: "al-1",
     action: "reschedule",
     actorId: "u1",
-    targetItemId: "ci-1",
+    targetItemId: "cc-1",
     details: "Moved from 2025-03-14 to 2025-03-15",
     createdAt: "2025-03-07T14:00:00Z",
   },
@@ -134,111 +132,124 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
     id: "al-2",
     action: "create",
     actorId: "u2",
-    targetItemId: "ci-2",
-    details: "Created content item",
-    createdAt: "2025-02-20T00:00:00Z",
+    targetItemId: "cc-7",
+    details: "Created Weekly Product Update",
+    createdAt: "2025-03-06T00:00:00Z",
   },
 ];
 
-function filterItemsByRange(
-  items: CalendarContentItem[],
-  start: string,
-  end: string
-): CalendarContentItem[] {
-  const startMs = new Date(start).getTime();
-  const endMs = new Date(end).getTime();
+let itemsStore = [...MOCK_ITEMS];
+let auditStore = [...MOCK_AUDIT_LOGS];
+
+function filterByDateRange(
+  items: ContentItem[],
+  start?: string,
+  end?: string
+): ContentItem[] {
+  if (!start && !end) return items;
   return items.filter((i) => {
-    const ms = new Date(i.publishAt).getTime();
-    return ms >= startMs && ms <= endMs;
+    const d = new Date(i.publishAt).getTime();
+    if (start && d < new Date(start).getTime()) return false;
+    if (end && d > new Date(end).getTime()) return false;
+    return true;
   });
 }
 
 export async function mockFetchCalendarItems(
-  query: CalendarItemsQuery
-): Promise<CalendarItemsResponse> {
-  let items = filterItemsByRange(MOCK_CALENDAR_ITEMS, query.start, query.end);
-  if (query.channels?.length) {
-    const set = new Set(query.channels);
-    items = items.filter((i) => set.has(i.channelId));
+  query?: CalendarItemsQuery
+): Promise<{ data: ContentItem[]; meta: { total: number } }> {
+  let filtered = filterByDateRange(itemsStore, query?.start, query?.end);
+  if (query?.channels?.length) {
+    filtered = filtered.filter((i) => query.channels!.includes(i.channelId));
   }
-  return {
-    data: items,
-    meta: { total: items.length },
-  };
+  return { data: [...filtered], meta: { total: filtered.length } };
 }
 
-export async function mockCreateCalendarItem(payload: {
-  title: string;
-  type: string;
-  channelId: string;
-  publishAt: string;
-  durationMinutes: number;
-  assignees?: string[];
-  metadata?: Record<string, unknown>;
-}): Promise<CalendarContentItem> {
-  const item: CalendarContentItem = {
-    id: `ci-mock-${Date.now()}`,
+export async function mockCreateCalendarItem(
+  payload: CreateCalendarItemPayload
+): Promise<ContentItem> {
+  const now = new Date().toISOString();
+  const item: ContentItem = {
+    id: `cc-${Date.now()}`,
     title: payload.title,
-    type: payload.type as CalendarContentItem["type"],
+    type: payload.type,
     channelId: payload.channelId,
     publishAt: payload.publishAt,
-    durationMinutes: payload.durationMinutes ?? 60,
+    durationMinutes: payload.durationMinutes,
     status: "planned",
     assignees: payload.assignees ?? [],
     version: 1,
     metadata: payload.metadata ?? {},
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
-  MOCK_CALENDAR_ITEMS.push(item);
+  itemsStore = [...itemsStore, item];
+  auditStore = [
+    ...auditStore,
+    {
+      id: `al-${Date.now()}`,
+      action: "create",
+      actorId: "u1",
+      targetItemId: item.id,
+      details: `Created ${item.title}`,
+      createdAt: now,
+    },
+  ];
   return item;
 }
 
 export async function mockUpdateCalendarItem(
   id: string,
-  payload: Partial<Pick<CalendarContentItem, "publishAt" | "channelId" | "title" | "status" | "assignees">>
-): Promise<CalendarContentItem> {
-  const idx = MOCK_CALENDAR_ITEMS.findIndex((i) => i.id === id);
+  payload: Partial<ContentItem>
+): Promise<ContentItem> {
+  const idx = itemsStore.findIndex((i) => i.id === id);
   if (idx < 0) throw new Error("Item not found");
-  MOCK_CALENDAR_ITEMS[idx] = {
-    ...MOCK_CALENDAR_ITEMS[idx],
-    ...payload,
-    updatedAt: new Date().toISOString(),
-  };
-  return MOCK_CALENDAR_ITEMS[idx];
+  const updated = { ...itemsStore[idx], ...payload, updatedAt: new Date().toISOString() };
+  itemsStore = [...itemsStore.slice(0, idx), updated, ...itemsStore.slice(idx + 1)];
+  return updated;
 }
 
-export async function mockBulkReschedule(payload: {
-  itemIds: string[];
-  newPublishAt: string;
-  newChannelId?: string;
-}): Promise<{ updated: number }> {
-  let updated = 0;
-  for (const id of payload.itemIds ?? []) {
-    const idx = MOCK_CALENDAR_ITEMS.findIndex((i) => i.id === id);
+export async function mockBulkReschedule(
+  payload: BulkReschedulePayload
+): Promise<ContentItem[]> {
+  const updated: ContentItem[] = [];
+  for (const id of payload.itemIds) {
+    const idx = itemsStore.findIndex((i) => i.id === id);
     if (idx >= 0) {
-      MOCK_CALENDAR_ITEMS[idx] = {
-        ...MOCK_CALENDAR_ITEMS[idx],
+      const item = {
+        ...itemsStore[idx],
         publishAt: payload.newPublishAt,
-        ...(payload.newChannelId && { channelId: payload.newChannelId }),
+        channelId: payload.newChannelId ?? itemsStore[idx].channelId,
         updatedAt: new Date().toISOString(),
       };
-      updated++;
+      itemsStore = [...itemsStore.slice(0, idx), item, ...itemsStore.slice(idx + 1)];
+      updated.push(item);
     }
   }
-  return { updated };
+  auditStore = [
+    ...auditStore,
+    {
+      id: `al-${Date.now()}`,
+      action: "bulk-reschedule",
+      actorId: "u1",
+      targetItemId: payload.itemIds[0] ?? "",
+      details: `Rescheduled ${payload.itemIds.length} items to ${payload.newPublishAt}`,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  return updated;
 }
 
 export async function mockFetchChannels(): Promise<Channel[]> {
   return [...MOCK_CHANNELS];
 }
 
-export async function mockFetchChannelCapacity(): Promise<ChannelCapacityResponse> {
-  const cap: ChannelCapacityResponse = {};
-  for (const ch of MOCK_CHANNELS) {
-    cap[ch.id] = ch.capacityPerSlot;
-  }
-  return cap;
+export async function mockFetchChannelCapacity(): Promise<ChannelCapacityMap> {
+  return {
+    "ch-blog": 2,
+    "ch-newsletter": 1,
+    "ch-social": 3,
+  };
 }
 
 export async function mockLogAudit(payload: {
@@ -252,20 +263,10 @@ export async function mockLogAudit(payload: {
     ...payload,
     createdAt: new Date().toISOString(),
   };
-  MOCK_AUDIT_LOGS.unshift(log);
+  auditStore = [...auditStore, log];
   return log;
 }
 
-export async function mockFetchAuditLogs(params?: {
-  targetItemId?: string;
-  limit?: number;
-}): Promise<AuditLog[]> {
-  let logs = [...MOCK_AUDIT_LOGS];
-  if (params?.targetItemId) {
-    logs = logs.filter((l) => l.targetItemId === params.targetItemId);
-  }
-  if (params?.limit != null) {
-    logs = logs.slice(0, params.limit);
-  }
-  return logs;
+export function mockGetAuditLogs(): AuditLog[] {
+  return [...auditStore];
 }

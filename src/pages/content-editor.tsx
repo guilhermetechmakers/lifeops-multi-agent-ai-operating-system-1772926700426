@@ -200,7 +200,12 @@ export default function ContentEditorPage() {
     [updateDraft]
   );
 
-  const prevVersion = selectedVersionForDiff ?? versions[1] ?? null;
+  const versionsList = Array.isArray(versions) ? versions : [];
+  const sortedVersions = [...versionsList].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  const prevVersion =
+    selectedVersionForDiff ?? sortedVersions[1] ?? null;
 
   return (
     <AnimatedPage className="flex flex-col gap-6">
@@ -219,7 +224,7 @@ export default function ContentEditorPage() {
           />
           <div className="flex items-center gap-4 mt-1">
             <VersionBadgeStrip
-              versionNumber={versions.length || 1}
+              versionNumber={versionsList.length || 1}
               lastModified={draft?.updatedAt}
               authorName={draft?.authorName}
             />
@@ -268,7 +273,7 @@ export default function ContentEditorPage() {
             </TabsContent>
             <TabsContent value="history" className="mt-4">
               <HistoryPanel
-                versions={versions}
+                versions={versionsList}
                 currentVersionId={draft?.currentVersionId}
                 onRevert={handleRevert}
                 onSelectVersion={setSelectedVersionForDiff}

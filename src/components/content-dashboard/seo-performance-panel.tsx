@@ -1,14 +1,24 @@
 /**
  * SEOPerformancePanel — keyword recommendations, traffic estimates, SERP metrics.
+ * Key metrics summary and sparkline per design spec.
  */
 
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, ExternalLink } from "lucide-react";
+import { TrendingUp, ExternalLink, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSEOInsights } from "@/hooks/use-content-dashboard";
 import { useNavigate } from "react-router-dom";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export interface SEOPerformancePanelProps {
   contentItemId?: string;
@@ -24,8 +34,22 @@ export function SEOPerformancePanel({
   const { data: insights, isLoading } = useSEOInsights(contentItemId);
   const navigate = useNavigate();
 
-  const items = insights ?? [];
+  const items = Array.isArray(insights) ? insights : [];
   const topItems = items.slice(0, 5);
+
+  const { totalVolume, sparklineData } = useMemo(() => {
+    const total = (items ?? []).reduce(
+      (sum, i) => sum + (typeof i.searchVolume === "number" ? i.searchVolume : 0),
+      0
+    );
+    const data = (items ?? [])
+      .slice(0, 8)
+      .map((i, idx) => ({
+        name: i.keyword?.slice(0, 12) ?? `K${idx + 1}`,
+        volume: typeof i.searchVolume === "number" ? i.searchVolume : 0,
+      }));
+    return { totalVolume: total, sparklineData: data };
+  }, [items]);
 
   const handleOpenEditor = (item: { contentItemId: string }) => {
     if (onOpenEditor) {
@@ -71,6 +95,57 @@ export function SEOPerformancePanel({
           </div>
         ) : (
           <div className="space-y-3" role="list" aria-label="SEO keyword recommendations">
+            {/* Key metrics + sparkline */}
+            <div className="rounded-lg border border-white/[0.03] bg-secondary/20 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="h-4 w-4 text-teal" />
+                <span className="text-xs font-medium text-muted-foreground">
+                  Potential traffic (top keywords)
+                </span>
+              </div>
+              <p className="text-lg font-semibold text-foreground tabular-nums">
+                {totalVolume.toLocaleString()}
+                <span className="text-xs font-normal text-muted-foreground ml-1">
+                  searches/mo
+                </span>
+              </p>
+              {sparklineData.length > 0 && (
+                <div className="h-12 mt-2 w-full" aria-hidden>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={sparklineData}
+                      margin={{ top: 2, right: 2, left: 2, bottom: 2 }}
+                    >
+                      <defs>
+                        <linearGradient id="seoGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#00C2A8" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="#00C2A8" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" hide />
+                      <YAxis hide domain={["auto", "auto"]} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "rgb(21 23 24)",
+                          border: "1px solid rgba(255,255,255,0.03)",
+                          borderRadius: "8px",
+                          fontSize: "11px",
+                        }}
+                        formatter={(value: number) => [value.toLocaleString(), "Volume"]}
+                        labelFormatter={(label) => `Keyword: ${label}`}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="volume"
+                        stroke="#00C2A8"
+                        strokeWidth={1.5}
+                        fill="url(#seoGradient)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
             {(topItems ?? []).map((insight) => (
               <div
                 key={insight.id}

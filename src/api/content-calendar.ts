@@ -6,7 +6,6 @@ import { api, safeArray } from "@/lib/api";
 import type {
   ContentItem,
   Channel,
-  Conflict,
   AuditLog,
   CreateCalendarItemPayload,
   BulkReschedulePayload,
@@ -98,6 +97,20 @@ export async function fetchChannelCapacity(): Promise<ChannelCapacityMap> {
   const data =
     (raw as { data?: ChannelCapacityMap })?.data ?? (raw as ChannelCapacityMap);
   return data ?? {};
+}
+
+export async function fetchAuditLogs(params?: {
+  targetItemId?: string;
+  limit?: number;
+}): Promise<AuditLog[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.targetItemId) searchParams.set("targetItemId", params.targetItemId);
+  if (params?.limit != null) searchParams.set("limit", String(params.limit));
+  const qs = searchParams.toString();
+  const endpoint = qs ? `${AUDIT}?${qs}` : AUDIT;
+  const raw = await api.get<AuditLog[] | { data?: AuditLog[] }>(endpoint);
+  const arr = Array.isArray(raw) ? raw : (raw as { data?: AuditLog[] })?.data;
+  return safeArray<AuditLog>(arr ?? []);
 }
 
 export async function logAudit(payload: {

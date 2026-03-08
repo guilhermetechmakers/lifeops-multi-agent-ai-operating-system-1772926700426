@@ -3,6 +3,7 @@
  */
 
 export type ContentItemType =
+  | "idea"
   | "ideation"
   | "research"
   | "draft"
@@ -88,4 +89,10 @@ export interface BulkReschedulePayload {
   itemIds: string[];
   newPublishAt: string;
   newChannelId?: string;
+}
+
+export interface CalendarItemsQuery {
+  start: string;
+  end: string;
+  channels?: string[];
 }

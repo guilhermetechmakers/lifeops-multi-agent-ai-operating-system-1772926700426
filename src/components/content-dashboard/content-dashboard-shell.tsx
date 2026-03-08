@@ -8,6 +8,7 @@ import { AnimatedPage } from "@/components/animated-page";
 import { GlobalSearchBar, type SearchScope } from "./global-search-bar";
 import { ModuleFiltersBar, type ContentFiltersState } from "./module-filters-bar";
 import { ContentCalendarPanel } from "./content-calendar-panel";
+import { PipelineSummaryCard } from "./pipeline-summary-card";
 import { DraftsPanel } from "./drafts-panel";
 import { PublishingQueuePanel } from "./publishing-queue-panel";
 import { ApprovalsQueuePanel } from "./approvals-queue-panel";
@@ -87,8 +88,9 @@ export function ContentDashboardShell() {
 
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: Calendar + Drafts */}
+        {/* Left: Pipelines + Calendar + Drafts */}
         <div className="lg:col-span-2 space-y-6">
+          <PipelineSummaryCard />
           <ContentCalendarPanel
             filters={{
               statuses: filters.statuses,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Clock,
@@ -226,8 +226,54 @@ export function DashboardLayout() {
             </Button>
           </Link>
         </header>
-        <main className="flex-1 p-4 md:p-6">
-          <Outlet />
+        <main className="flex-1 flex flex-col min-w-0">
+          {location.pathname.startsWith("/dashboard/content") && (
+            <nav
+              className="flex gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-white/[0.03]"
+              aria-label="Content section"
+            >
+              <NavLink
+                to="/dashboard/content"
+                end
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/dashboard/content/calendar"
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Calendar
+              </NavLink>
+              <NavLink
+                to="/dashboard/content/editor"
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Editor
+              </NavLink>
+            </nav>
+          )}
+          <div className="flex-1 p-4 md:p-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
