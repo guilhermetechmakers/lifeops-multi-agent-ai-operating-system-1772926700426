@@ -8,5 +8,8 @@ export { RolesAccessPanel } from "./roles-access-panel";
 export { IntegrationsConnectorsPanel } from "./integrations-connectors-panel";
 export { ComplianceAuditExporter } from "./compliance-audit-exporter";
 export { BillingPaymentsOverview } from "./billing-payments-overview";
+export { EnterpriseSettingsPanel } from "./enterprise-settings-panel";
+export { IntegrationsList } from "./integrations-list";
+export { ComplianceReportsPanel } from "./compliance-reports-panel";
 export { CronjobsApprovalsPanel } from "./cronjobs-approvals-panel";
 export { AnalyticsReportsPanel } from "./analytics-reports-panel";

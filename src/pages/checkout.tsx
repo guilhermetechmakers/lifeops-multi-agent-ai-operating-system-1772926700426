@@ -218,10 +218,10 @@ export default function CheckoutPage() {
 
   if (isSuccess) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 animate-fade-in-up">
+        <div className="mx-auto max-w-2xl space-y-6 animate-fade-in-up">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Thank you</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-heading-lg text-foreground">Thank you</h1>
+          <p className="text-body text-muted-foreground mt-1">
             Your subscription is now active.
           </p>
         </div>
@@ -259,8 +259,8 @@ export default function CheckoutPage() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Checkout</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-heading-lg text-foreground">Checkout</h1>
+        <p className="text-body text-muted-foreground mt-1">
           Select a plan, enter payment details, and confirm your subscription
         </p>
       </div>
@@ -289,7 +289,7 @@ export default function CheckoutPage() {
           </section>
 
           <section aria-labelledby="billing-heading">
-            <h2 id="billing-heading" className="mb-4 text-lg font-semibold">
+            <h2 id="billing-heading" className="mb-4 text-heading-md font-semibold text-foreground">
               Billing details
             </h2>
             <BillingForm
