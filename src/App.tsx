@@ -16,6 +16,8 @@ import { PasswordResetPage } from "@/components/auth/password-reset";
 import VerifyEmailPage from "@/pages/verify-email";
 import DashboardMaster from "@/pages/dashboard-master";
 import CronjobsDashboard from "@/pages/cronjobs-dashboard";
+import TemplatesCatalogPage from "@/pages/templates-catalog";
+import PersonasLibraryPage from "@/pages/personas-library";
 import Approvals from "@/pages/approvals";
 import { ProjectsDashboardShell } from "@/components/projects-dashboard";
 import ProjectDetail from "@/pages/project-detail";
@@ -139,6 +141,8 @@ function App() {
           <Route path="/content-dashboard/editor" element={<Navigate to="/dashboard/content/editor" replace />} />
           <Route path="/dashboard" element={<SessionGuard><CommandPaletteProvider><DashboardLayout /></CommandPaletteProvider></SessionGuard>}>
             <Route index element={<DashboardMaster />} />
+            <Route path="templates" element={<TemplatesCatalogPage />} />
+            <Route path="personas" element={<PersonasLibraryPage />} />
             <Route path="cronjobs" element={<CronjobsDashboard />} />
             <Route path="cronjobs/new" element={<CronjobEditor />} />
             <Route path="cronjobs/:id" element={<CronjobDetail />} />

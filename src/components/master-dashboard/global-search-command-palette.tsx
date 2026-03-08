@@ -15,6 +15,8 @@ import {
   Paperclip,
   Trash2,
   ExternalLink,
+  Sparkles,
+  Users,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -189,10 +191,24 @@ function GlobalSearchCommandPaletteContent({
               </CommandItem>
               <CommandItem
                 value="templates"
-                onSelect={() => runCommand("/dashboard")}
+                onSelect={() => runCommand("/dashboard/templates")}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Open templates
+              </CommandItem>
+              <CommandItem
+                value="personas"
+                onSelect={() => runCommand("/dashboard/personas")}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Open personas
+              </CommandItem>
+              <CommandItem
+                value="create-template"
+                onSelect={() => runCommand("/dashboard/cronjobs/new")}
               >
                 <FileCode className="mr-2 h-4 w-4" />
-                Open templates
+                Create template
               </CommandItem>
               <CommandItem
                 value="cronjobs"

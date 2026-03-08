@@ -328,7 +328,7 @@ export async function mockSearch(q: string): Promise<GlobalSearchResult[]> {
         module: "templates",
         title: t.name,
         subtitle: t.domain,
-        url: `/dashboard?template=${t.id}`,
+        url: `/dashboard/templates`,
       });
   });
   (MOCK_ALERTS ?? []).forEach((a) => {

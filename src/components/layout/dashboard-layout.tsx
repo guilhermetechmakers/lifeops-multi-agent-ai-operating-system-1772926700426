@@ -20,6 +20,8 @@ import {
   HelpCircle,
   Shield,
   GitMerge,
+  Sparkles,
+  UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,6 +48,8 @@ function getInitialCollapsed(): boolean {
 
 const navItems = [
   { to: "/dashboard", label: "Master", icon: LayoutDashboard },
+  { to: "/dashboard/templates", label: "Templates", icon: Sparkles },
+  { to: "/dashboard/personas", label: "Personas", icon: UserCircle },
   { to: "/dashboard/analytics-reports", label: "Analytics & Reports", icon: BarChart3 },
   { to: "/dashboard/admin", label: "Admin", icon: Shield },
   { to: "/dashboard/cronjobs", label: "Cronjobs", icon: Clock },

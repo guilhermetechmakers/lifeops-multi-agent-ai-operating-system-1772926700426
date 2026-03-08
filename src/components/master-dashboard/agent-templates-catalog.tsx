@@ -40,9 +40,9 @@ export function AgentTemplatesCatalog() {
           <Sparkles className="h-4 w-4" />
           Agent templates
         </CardTitle>
-        <Link to="/dashboard/cronjobs/new">
+        <Link to="/dashboard/templates">
           <Button variant="ghost" size="sm" className="text-xs">
-            New from template
+            View all
           </Button>
         </Link>
       </CardHeader>
@@ -92,7 +92,7 @@ export function AgentTemplatesCatalog() {
                         >
                           {isPreview ? "Hide" : "Preview"}
                         </Button>
-                        <Link to={`/dashboard/cronjobs/new?template=${t.id}`}>
+                        <Link to={`/dashboard/cronjobs/new?template=${encodeURIComponent(t.id)}`}>
                           <Button variant="outline" size="sm" className="text-xs">
                             Use
                             <ChevronRight className="ml-1 h-3 w-3" />
