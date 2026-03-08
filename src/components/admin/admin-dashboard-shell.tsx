@@ -9,7 +9,7 @@ import { Outlet } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
 import { AdminNavPane } from "./admin-nav-pane";
 import { Button } from "@/components/ui/button";
-import { PanelLeftClose, PanelLeftOpen, UserPlus, Building2, FileText } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, UserPlus, Building2, FileText, FileDown, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +84,26 @@ export function AdminDashboardShell() {
               >
                 <FileText className="h-4 w-4" />
                 Generate report
+              </Button>
+            </Link>
+            <Link to="/dashboard/admin/compliance">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-white/[0.03] hover:bg-secondary"
+              >
+                <FileDown className="h-4 w-4" />
+                Audit export
+              </Button>
+            </Link>
+            <Link to="/dashboard/admin/compliance">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-white/[0.03] hover:bg-secondary"
+              >
+                <Shield className="h-4 w-4" />
+                Retention policy
               </Button>
             </Link>
           </div>

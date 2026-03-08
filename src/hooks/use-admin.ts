@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import * as adminApi from "@/api/admin";
 import type { PaginatedParams } from "@/api/admin";
-import type { AdminUser, Org, Role } from "@/types/admin";
+import type { AdminUser, Org, Role, PolicyRetention } from "@/types/admin";
 
 const keys = {
   kpis: () => ["admin", "kpis"] as const,
@@ -28,6 +28,8 @@ const keys = {
   auditExport: (taskId: string) => ["admin", "audit-exports", taskId] as const,
   orgPolicy: (orgId: string) => ["admin", "organizations", orgId, "policy"] as const,
   orgUsersCount: (orgId: string) => ["admin", "organizations", orgId, "users-count"] as const,
+  retentionPolicies: () => ["admin", "policies", "retention"] as const,
+  impersonationLogs: (p?: { limit?: number }) => ["admin", "impersonation", "logs", p] as const,
 };
 
 export function useAdminKpis() {
@@ -405,4 +407,74 @@ export function useOrgUsersCount(orgId: string | null) {
     staleTime: 60 * 1000,
   });
   return { ...query, count: typeof query.data === "number" ? query.data : 0 };
+}
+
+export function useRetentionPolicies() {
+  const query = useQuery({
+    queryKey: keys.retentionPolicies(),
+    queryFn: () => adminApi.fetchRetentionPolicies(),
+    staleTime: 60 * 1000,
+  });
+  const list = Array.isArray(query.data) ? query.data : [];
+  return { ...query, policies: list, data: list };
+}
+
+export function useCreateRetentionPolicy() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Omit<PolicyRetention, "id">) => adminApi.createRetentionPolicy(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.retentionPolicies() });
+      toast.success("Retention policy created");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to create policy"),
+  });
+}
+
+export function useUpdateRetentionPolicy() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<PolicyRetention> }) =>
+      adminApi.updateRetentionPolicy(id, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.retentionPolicies() });
+      toast.success("Retention policy updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update policy"),
+  });
+}
+
+export function useImpersonationLogs(params?: { limit?: number }) {
+  const query = useQuery({
+    queryKey: keys.impersonationLogs(params),
+    queryFn: () => adminApi.fetchImpersonationLogs(params),
+    staleTime: 30 * 1000,
+  });
+  const list = Array.isArray(query.data) ? query.data : [];
+  return { ...query, logs: list, data: list };
+}
+
+export function useCreateImpersonationRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { userId: string; targetUserId: string; reason: string }) =>
+      adminApi.createImpersonationRequest(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "impersonation"] });
+      toast.success("Impersonation request created");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Impersonation request failed"),
+  });
+}
+
+export function useRevokeImpersonation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => adminApi.revokeImpersonation(sessionId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "impersonation"] });
+      toast.success("Impersonation session revoked");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Revoke failed"),
+  });
 }

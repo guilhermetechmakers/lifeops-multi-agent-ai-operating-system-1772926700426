@@ -1,15 +1,16 @@
 /**
- * AdminOverview — KPIs, recent activity, policy status.
- * Dense, scannable layout with card hierarchy.
+ * AdminOverview — KPIs, users by role, active sessions, recent activity, policy status.
+ * Dense, scannable layout with card hierarchy per design spec.
  */
 
-import { Users, Building2, FileText, Clock, ShieldCheck } from "lucide-react";
+import { Users, Building2, FileText, Clock, ShieldCheck, Monitor } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "./kpi-card";
 import { AdminDashboardWidgets } from "./admin-dashboard-widgets";
 import { useAdminKpis, useComplianceAudits } from "@/hooks/use-admin";
 import { AnimatedPage } from "@/components/animated-page";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 export function AdminOverview() {
   const { data: kpis, isLoading } = useAdminKpis();
@@ -19,11 +20,14 @@ export function AdminOverview() {
   const activeOrgs = kpis?.activeOrgs ?? 0;
   const totalInvoices = kpis?.totalInvoices ?? 0;
   const upcomingCronjobs = kpis?.upcomingCronjobs ?? 0;
+  const activeSessionsCount = kpis?.activeSessionsCount ?? 0;
+  const usersByRole = (kpis?.usersByRole && typeof kpis.usersByRole === "object") ? kpis.usersByRole : {};
   const complianceStatus = (kpis?.complianceStatus === "ok" || kpis?.complianceStatus === "warn" || kpis?.complianceStatus === "error")
     ? kpis.complianceStatus
     : "ok";
 
   const recentAudits = Array.isArray(audits) ? audits.slice(0, 5) : [];
+  const roleEntries = Object.entries(usersByRole ?? {});
 
   if (isLoading) {
     return (
@@ -40,15 +44,12 @@ export function AdminOverview() {
   return (
     <AnimatedPage className="space-y-8">
       <AdminDashboardWidgets />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <KPICard title="Total users" value={totalUsers} icon={Users} />
         <KPICard title="Active orgs" value={activeOrgs} icon={Building2} />
+        <KPICard title="Active sessions" value={activeSessionsCount} icon={Monitor} />
         <KPICard title="Total invoices" value={totalInvoices} icon={FileText} />
-        <KPICard
-          title="Upcoming cronjobs"
-          value={upcomingCronjobs}
-          icon={Clock}
-        />
+        <KPICard title="Upcoming cronjobs" value={upcomingCronjobs} icon={Clock} />
         <KPICard
           title="Compliance"
           value={complianceStatus}
@@ -57,6 +58,31 @@ export function AdminOverview() {
           trendLabel={complianceStatus === "ok" ? "All clear" : complianceStatus === "error" ? "Action needed" : "Review"}
         />
       </div>
+
+      {roleEntries.length > 0 && (
+        <Card className="border-white/[0.03] bg-gradient-to-b from-[#111213] to-[#1A1A1B]">
+          <CardHeader>
+            <CardTitle>Users by role</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Role distribution across organizations
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {roleEntries.map(([roleName, count]) => (
+                <Link
+                  key={roleName}
+                  to={`/dashboard/admin/users?role=${encodeURIComponent(roleName)}`}
+                  className="rounded-lg border border-white/[0.03] bg-secondary/30 px-4 py-2 text-sm transition-colors duration-200 hover:bg-secondary/60 hover:border-white/[0.06]"
+                >
+                  <span className="font-medium text-foreground">{roleName}</span>
+                  <span className="ml-2 text-muted-foreground">{Number(count)}</span>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-white/[0.03] bg-gradient-to-b from-[#111213] to-[#1A1A1B]">

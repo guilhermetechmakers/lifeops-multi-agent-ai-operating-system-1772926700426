@@ -204,6 +204,33 @@ export interface AdminKpis {
   totalInvoices: number;
   upcomingCronjobs: number;
   complianceStatus: "ok" | "warn" | "error" | "pending";
+  /** User count per role name */
+  usersByRole?: Record<string, number>;
+  /** Total active sessions across all users */
+  activeSessionsCount?: number;
+}
+
+/** Impersonation log entry for audit trail */
+export interface ImpersonationLog {
+  id: string;
+  userId: string;
+  impersonatedUserId: string;
+  startedAt: string;
+  endedAt: string | null;
+  reason?: string;
+  status: "active" | "ended";
+}
+
+/** Retention policy (API shape) */
+export interface PolicyRetention {
+  id: string;
+  name: string;
+  scope: string[];
+  retentionPeriodDays: number;
+  purgingSchedule?: string;
+  orgId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** Alias for API compatibility */

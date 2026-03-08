@@ -3,7 +3,8 @@
  * Per-row: edit, suspend/activate, reset password, assign roles.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,21 +39,35 @@ import type { AdminUser } from "@/types/admin";
 import { UserCreateEditModal } from "./user-create-edit-modal";
 import { RoleAssignmentPanel } from "./role-assignment-panel";
 import { SessionListPanel } from "./session-list-panel";
+import { UserDetailDrawer } from "./user-detail-drawer";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
-export function UserManagementPanel() {
+export interface UserManagementPanelProps {
+  onExportAudit?: (userId: string) => void;
+}
+
+export function UserManagementPanel({ onExportAudit }: UserManagementPanelProps = {}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const roleFromUrl = searchParams.get("role") ?? "";
+
   const [search, setSearch] = useState("");
   const [orgId, setOrgId] = useState<string>("");
-  const [role, setRole] = useState<string>("");
+  const [role, setRole] = useState<string>(roleFromUrl);
+  const [status, setStatus] = useState<string>("");
   const [page, setPage] = useState(1);
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
+  const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [rolePanelUser, setRolePanelUser] = useState<AdminUser | null>(null);
   const [sessionPanelUser, setSessionPanelUser] = useState<AdminUser | null>(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<AdminUser | null>(null);
+
+  useEffect(() => {
+    setRole(roleFromUrl);
+  }, [roleFromUrl]);
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
@@ -60,6 +75,7 @@ export function UserManagementPanel() {
     search: debouncedSearch,
     orgId: orgId || undefined,
     role: role || undefined,
+    status: status || undefined,
     page,
     limit: PAGE_SIZE,
   });
@@ -108,6 +124,27 @@ export function UserManagementPanel() {
     setDeleteConfirmUser(null);
   }, [deleteConfirmUser, deleteUser]);
 
+  const selectedUsers = (userList ?? []).filter((u) => u?.id && selectedIds.has(u.id));
+  const handleBulkSuspend = useCallback(() => {
+    selectedUsers.forEach((u) => {
+      if (u?.status === "active") updateUser.mutate({ id: u.id ?? "", payload: { status: "suspended" } });
+    });
+    setSelectedIds(new Set());
+  }, [selectedUsers, updateUser]);
+  const handleBulkDeactivate = useCallback(() => {
+    selectedUsers.forEach((u) => {
+      updateUser.mutate({ id: u?.id ?? "", payload: { status: "disabled" } });
+    });
+    setSelectedIds(new Set());
+  }, [selectedUsers, updateUser]);
+  const handleBulkExportLogs = useCallback(() => {
+    const first = selectedUsers[0];
+    if (first?.id && onExportAudit) {
+      onExportAudit(first.id);
+      setSelectedIds(new Set());
+    }
+  }, [selectedUsers, onExportAudit]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -134,7 +171,18 @@ export function UserManagementPanel() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={role} onValueChange={setRole}>
+          <Select
+            value={role}
+            onValueChange={(v) => {
+              setRole(v);
+              setSearchParams((p) => {
+                const next = new URLSearchParams(p);
+                if (v) next.set("role", v);
+                else next.delete("role");
+                return next;
+              });
+            }}
+          >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="All roles" />
             </SelectTrigger>
@@ -147,12 +195,43 @@ export function UserManagementPanel() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+              <SelectItem value="disabled">Disabled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={() => setCreateOpen(true)}>
           <UserPlus className="h-4 w-4" />
           Create user
         </Button>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/[0.03] bg-secondary/30 px-4 py-3">
+          <span className="text-sm font-medium text-foreground">
+            {selectedIds.size} selected
+          </span>
+          <Button variant="outline" size="sm" className="border-white/[0.03]" onClick={handleBulkSuspend}>
+            Suspend
+          </Button>
+          <Button variant="outline" size="sm" className="border-white/[0.03]" onClick={handleBulkDeactivate}>
+            Deactivate
+          </Button>
+          <Button variant="outline" size="sm" className="border-white/[0.03]" onClick={handleBulkExportLogs}>
+            Export logs
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+            Clear
+          </Button>
+        </div>
+      )}
 
       <Card className="border-white/[0.03] bg-gradient-to-b from-[#111213] to-[#1A1A1B]">
         <CardHeader>
@@ -199,9 +278,10 @@ export function UserManagementPanel() {
                     {(userList ?? []).map((u) => (
                       <tr
                         key={u?.id ?? ""}
-                        className="border-b border-white/[0.03] transition-colors hover:bg-secondary/30"
+                        className="border-b border-white/[0.03] transition-colors hover:bg-secondary/30 cursor-pointer"
+                        onClick={() => setDetailUser(u ?? null)}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={selectedIds.has(u?.id ?? "")}
@@ -235,17 +315,21 @@ export function UserManagementPanel() {
                             ? new Date(u.lastActiveAt).toLocaleDateString()
                             : "—"}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem onClick={() => setDetailUser(u ?? null)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                View details
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setEditUser(u ?? null)}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                View / Edit
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleActivate(u ?? ({} as AdminUser))}>
                                 {u?.status === "active" ? (
@@ -343,6 +427,16 @@ export function UserManagementPanel() {
         onOpenChange={(open) => !open && setSessionPanelUser(null)}
         user={sessionPanelUser}
         onSuccess={() => setSessionPanelUser(null)}
+      />
+
+      <UserDetailDrawer
+        open={!!detailUser}
+        onOpenChange={(open) => !open && setDetailUser(null)}
+        user={detailUser}
+        onImpersonate={(_id) => { /* TODO: open impersonation flow */ }}
+        onExportAudit={(id) => { onExportAudit?.(id); setDetailUser(null); }}
+        onRevokeSessions={(u) => { setSessionPanelUser(u); setDetailUser(null); }}
+        onAssignRoles={(u) => { setRolePanelUser(u); setDetailUser(null); }}
       />
 
       <AlertDialog open={!!deleteConfirmUser} onOpenChange={(open) => !open && setDeleteConfirmUser(null)}>

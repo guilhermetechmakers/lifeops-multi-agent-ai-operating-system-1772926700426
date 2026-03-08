@@ -23,6 +23,8 @@ import type {
   AdminSession,
   AdminAuditExport,
   DataRetentionPolicy,
+  ImpersonationLog,
+  PolicyRetention,
 } from "@/types/admin";
 
 const BASE = "/admin";
@@ -30,6 +32,7 @@ const BASE = "/admin";
 export interface PaginatedParams {
   orgId?: string;
   role?: string;
+  status?: string;
   search?: string;
   page?: number;
   limit?: number;
@@ -105,6 +108,8 @@ export async function fetchAdminKpis(): Promise<AdminKpis> {
     totalInvoices: 156,
     upcomingCronjobs: 8,
     complianceStatus: "ok",
+    usersByRole: { admin: 12, member: 890, viewer: 345 },
+    activeSessionsCount: 156,
   };
 }
 
@@ -114,6 +119,7 @@ export async function fetchAdminUsers(params: PaginatedParams = {}): Promise<{ d
     const q = new URLSearchParams();
     if (params.orgId) q.set("orgId", params.orgId);
     if (params.role) q.set("role", params.role);
+    if (params.status) q.set("status", params.status);
     if (params.search) q.set("search", params.search);
     if (params.page != null) q.set("page", String(params.page));
     if (params.limit != null) q.set("limit", String(params.limit));
@@ -135,6 +141,7 @@ export async function fetchAdminUsers(params: PaginatedParams = {}): Promise<{ d
     if (search) mock = mock.filter((u) => u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
     if (params.orgId) mock = mock.filter((u) => u.orgId === params.orgId);
     if (params.role) mock = mock.filter((u) => (u.roles ?? []).includes(params.role!));
+    if (params.status) mock = mock.filter((u) => u.status === params.status);
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
     const start = (page - 1) * limit;
@@ -565,4 +572,71 @@ export async function generateAdminReport(payload: { type: string }): Promise<Ad
 /** Alias for report generation */
 export async function generateReport(payload: { type: string; format?: string }): Promise<AdminReport> {
   return generateAdminReport({ type: payload.type });
+}
+
+/** GET /api/admin/policies/retention */
+export async function fetchRetentionPolicies(): Promise<PolicyRetention[]> {
+  try {
+    const res = await api.get<{ data: PolicyRetention[] | null }>(`${BASE}/policies/retention`);
+    return asArray<PolicyRetention>(res?.data);
+  } catch {
+    return [
+      { id: "rp1", name: "Default", scope: ["audit_logs", "sessions"], retentionPeriodDays: 365, purgingSchedule: "0 2 * * 0", orgId: "o1" },
+    ];
+  }
+}
+
+/** POST /api/admin/policies/retention */
+export async function createRetentionPolicy(payload: Omit<PolicyRetention, "id">): Promise<PolicyRetention> {
+  try {
+    const data = await api.post<PolicyRetention>(`${BASE}/policies/retention`, payload);
+    if (data && typeof data === "object" && "id" in data) return data as PolicyRetention;
+  } catch {
+    /** */
+  }
+  return { ...payload, id: `rp-${Date.now()}` } as PolicyRetention;
+}
+
+/** PUT /api/admin/policies/retention/:id */
+export async function updateRetentionPolicy(id: string, payload: Partial<PolicyRetention>): Promise<PolicyRetention> {
+  try {
+    const data = await api.put<PolicyRetention>(`${BASE}/policies/retention/${id}`, payload);
+    if (data && typeof data === "object") return data as PolicyRetention;
+  } catch {
+    /** */
+  }
+  return { id, name: "", scope: [], retentionPeriodDays: 0, ...payload } as PolicyRetention;
+}
+
+/** GET /api/admin/impersonation/logs */
+export async function fetchImpersonationLogs(params?: { limit?: number }): Promise<ImpersonationLog[]> {
+  try {
+    const q = new URLSearchParams();
+    if (params?.limit != null) q.set("limit", String(params.limit));
+    const res = await api.get<ImpersonationLog[] | { data: ImpersonationLog[] | null }>(`${BASE}/impersonation/logs?${q.toString()}`);
+    const raw = Array.isArray(res) ? res : (res as { data?: ImpersonationLog[] })?.data;
+    return asArray<ImpersonationLog>(raw);
+  } catch {
+    return [];
+  }
+}
+
+/** POST /api/admin/impersonate */
+export async function createImpersonationRequest(payload: { userId: string; targetUserId: string; reason: string }): Promise<{ id: string; token?: string }> {
+  try {
+    const data = await api.post<{ id: string; token?: string }>(`${BASE}/impersonate`, payload);
+    if (data && typeof data === "object" && "id" in data) return data as { id: string; token?: string };
+  } catch {
+    /** */
+  }
+  return { id: `imp-${Date.now()}` };
+}
+
+/** POST /api/admin/impersonation/revoke */
+export async function revokeImpersonation(sessionId: string): Promise<void> {
+  try {
+    await api.post(`${BASE}/impersonation/revoke`, { sessionId });
+  } catch {
+    /** */
+  }
 }

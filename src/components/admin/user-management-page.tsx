@@ -77,7 +77,7 @@ export function UserManagementPage() {
         </TabsList>
 
         <TabsContent value="users" className="mt-0">
-          <UserManagementPanel />
+          <UserManagementPanel onExportAudit={handleExportAudit} />
         </TabsContent>
 
         <TabsContent value="roles" className="mt-0">

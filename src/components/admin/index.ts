@@ -18,3 +18,4 @@ export { BillingPanel } from "./billing-panel";
 export { AdminCronjobsPanel } from "./admin-cronjobs-panel";
 export { ReportsPanel } from "./reports-panel";
 export { KPICard } from "./kpi-card";
+export { UserDetailDrawer } from "./user-detail-drawer";
