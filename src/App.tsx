@@ -80,6 +80,7 @@ function App() {
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
           {/* Content Dashboard canonical URLs (redirect to dashboard nested routes) */}
           <Route path="/content-dashboard" element={<Navigate to="/dashboard/content" replace />} />
+          <Route path="/habits-tracker" element={<Navigate to="/dashboard/health/habits" replace />} />
           <Route path="/content-dashboard/editor" element={<Navigate to="/dashboard/content/editor" replace />} />
           <Route path="/dashboard" element={<SessionGuard><CommandPaletteProvider><DashboardLayout /></CommandPaletteProvider></SessionGuard>}>
             <Route index element={<DashboardMaster />} />

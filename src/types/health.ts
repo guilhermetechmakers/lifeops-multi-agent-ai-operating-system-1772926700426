@@ -11,6 +11,56 @@ export interface Habit {
   streak: number;
   nextReminder: string;
   coachInterventions?: string[];
+  /** Habits Tracker extended fields */
+  category?: string;
+  color?: string;
+  icon?: string;
+  schedule?: HabitSchedule;
+  reminders?: HabitReminder[];
+  timezone?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastCheckInDate?: string;
+}
+
+export interface HabitSchedule {
+  type: "daily" | "weekly" | "custom";
+  days?: number[]; // 0-6 for weekly
+  customRule?: string;
+}
+
+export interface HabitReminder {
+  id?: string;
+  time: string; // HH:mm
+  recurrenceRule?: string;
+  nextTrigger?: string;
+}
+
+export interface Checkin {
+  id: string;
+  habitId: string;
+  date: string;
+  completed: boolean;
+  notes?: string;
+}
+
+export interface CoachingAction {
+  id: string;
+  habitId: string;
+  type: "nudge" | "micro-action" | "adaptive-schedule";
+  status: "pending" | "approved" | "dismissed";
+  message?: string;
+  createdAt: string;
+  approvedAt?: string;
+}
+
+export interface CoachingContext {
+  habitId?: string;
+  calendarEvents?: Array<{ date: string; title: string }>;
+  healthSignals?: { recoveryScore?: number; workloadLevel?: string };
+  nudges?: CoachingAction[];
+  microActions?: CoachingAction[];
+  adaptiveSuggestions?: Array<{ description: string; actionId: string }>;
 }
 
 export interface TrainingSession {

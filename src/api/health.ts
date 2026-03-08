@@ -6,6 +6,11 @@
 import { api, safeArray } from "@/lib/api";
 import type {
   Habit,
+  HabitSchedule,
+  HabitReminder,
+  Checkin,
+  CoachingAction,
+  CoachingContext,
   TrainingPlan,
   MealPlan,
   RecoveryMetric,
@@ -30,6 +35,7 @@ const MOCK_HABITS: Habit[] = [
     streak: 12,
     nextReminder: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     coachInterventions: ["Great consistency! Consider adding 2 min for deeper focus."],
+    lastCheckInDate: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
   },
   {
     id: "h2",
@@ -38,6 +44,7 @@ const MOCK_HABITS: Habit[] = [
     frequency: "daily",
     streak: 5,
     nextReminder: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
+    lastCheckInDate: new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10),
   },
   {
     id: "h3",
@@ -46,6 +53,7 @@ const MOCK_HABITS: Habit[] = [
     frequency: "weekly",
     streak: 3,
     nextReminder: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    lastCheckInDate: new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10),
   },
 ];
 
@@ -237,5 +245,166 @@ export async function fetchAuditLogs(): Promise<AuditLog[]> {
   } catch {
     await delay(MOCK_DELAY);
     return [];
+  }
+}
+
+/** Habits Tracker: create habit */
+export interface CreateHabitPayload {
+  name: string;
+  category?: string;
+  color?: string;
+  icon?: string;
+  schedule?: HabitSchedule;
+  reminders?: HabitReminder[];
+  timezone?: string;
+}
+
+export async function createHabit(payload: CreateHabitPayload): Promise<Habit> {
+  try {
+    const data = await api.post<Habit | { data?: Habit }>("/habits", payload);
+    const raw = (data as { data?: Habit })?.data ?? data;
+    if (raw && typeof raw === "object" && "id" in raw) return raw as Habit;
+  } catch {
+    /**/
+  }
+  await delay(MOCK_DELAY);
+  const id = `h${Date.now()}`;
+  return {
+    id,
+    userId: "u1",
+    name: payload.name ?? "New habit",
+    frequency: payload.schedule?.type ?? "daily",
+    streak: 0,
+    nextReminder: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    category: payload.category,
+    color: payload.color,
+    icon: payload.icon,
+    schedule: payload.schedule,
+    reminders: payload.reminders ?? [],
+    timezone: payload.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** Habits Tracker: update habit */
+export async function updateHabit(id: string, payload: Partial<CreateHabitPayload>): Promise<Habit> {
+  try {
+    const data = await api.put<Habit | { data?: Habit }>(`/habits/${id}`, payload);
+    const raw = (data as { data?: Habit })?.data ?? data;
+    if (raw && typeof raw === "object" && "id" in raw) return raw as Habit;
+  } catch {
+    /**/
+  }
+  await delay(MOCK_DELAY);
+  const existing = MOCK_HABITS.find((h) => h.id === id) ?? MOCK_HABITS[0];
+  return { ...existing, ...payload, id, updatedAt: new Date().toISOString() };
+}
+
+/** Habits Tracker: delete habit */
+export async function deleteHabit(id: string): Promise<{ success: boolean }> {
+  try {
+    await api.delete(`/habits/${id}`);
+    return { success: true };
+  } catch {
+    await delay(MOCK_DELAY);
+    return { success: true };
+  }
+}
+
+/** Habits Tracker: record check-in */
+export async function recordCheckin(
+  habitId: string,
+  payload: { date: string; completed: boolean; notes?: string }
+): Promise<Checkin> {
+  try {
+    const data = await api.post<Checkin | { data?: Checkin }>(`/habits/${habitId}/checkin`, payload);
+    const raw = (data as { data?: Checkin })?.data ?? data;
+    if (raw && typeof raw === "object" && "id" in raw) return raw as Checkin;
+  } catch {
+    /**/
+  }
+  await delay(MOCK_DELAY);
+  return {
+    id: `c${Date.now()}`,
+    habitId,
+    date: payload.date,
+    completed: payload.completed,
+    notes: payload.notes,
+  };
+}
+
+/** Habits Tracker: fetch coaching context */
+export async function fetchCoachingContext(habitId?: string): Promise<CoachingContext> {
+  try {
+    const q = habitId ? `?habitId=${habitId}` : "";
+    const data = await api.get<CoachingContext | { data?: CoachingContext }>(`/coaching/context${q}`);
+    const raw = (data as { data?: CoachingContext })?.data ?? data;
+    if (raw && typeof raw === "object") return raw as CoachingContext;
+  } catch {
+    /**/
+  }
+  await delay(MOCK_DELAY);
+  return {
+    habitId,
+    calendarEvents: [],
+    healthSignals: { recoveryScore: 82, workloadLevel: "moderate" },
+    nudges: [
+      {
+        id: "n1",
+        habitId: habitId ?? "h1",
+        type: "nudge",
+        status: "pending",
+        message: "Great consistency! Consider adding 2 min for deeper focus.",
+        createdAt: new Date().toISOString(),
+      },
+    ],
+    microActions: [],
+    adaptiveSuggestions: [],
+  };
+}
+
+/** Habits Tracker: record coaching action (approve/dismiss) */
+export async function recordCoachingAction(
+  payload: { actionId: string; approved: boolean }
+): Promise<CoachingAction> {
+  try {
+    const data = await api.post<CoachingAction | { data?: CoachingAction }>("/coaching/actions", payload);
+    const raw = (data as { data?: CoachingAction })?.data ?? data;
+    if (raw && typeof raw === "object" && "id" in raw) return raw as CoachingAction;
+  } catch {
+    /**/
+  }
+  await delay(MOCK_DELAY);
+  return {
+    id: payload.actionId,
+    habitId: "h1",
+    type: "nudge",
+    status: payload.approved ? "approved" : "dismissed",
+    createdAt: new Date().toISOString(),
+    approvedAt: new Date().toISOString(),
+  };
+}
+
+/** Habits Tracker: fetch habit history (checkins for streak/calendar) */
+export async function fetchHabitHistory(
+  habitId: string,
+  range: { from: string; to: string }
+): Promise<Array<{ date: string; completed: boolean; notes?: string }>> {
+  try {
+    const data = await api.get<Array<{ date: string; completed: boolean; notes?: string }>>(
+      `/habits/${habitId}/history?from=${range.from}&to=${range.to}`
+    );
+    const raw = Array.isArray(data) ? data : (data as { data?: unknown[] })?.data ?? [];
+    return safeArray<{ date: string; completed: boolean; notes?: string }>(raw);
+  } catch {
+    await delay(MOCK_DELAY);
+    const days = 30;
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (days - 1 - i));
+      const date = d.toISOString().slice(0, 10);
+      return { date, completed: Math.random() > 0.3 };
+    });
   }
 }
