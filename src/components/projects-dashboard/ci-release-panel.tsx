@@ -1,20 +1,23 @@
 /**
- * CIReleasePanel — pipeline run cards with status and quick actions.
+ * CIReleasePanel — pipeline run cards with status, duration, and quick actions (re-run, view logs).
  */
 
-import { Play, CheckCircle, XCircle, Clock } from "lucide-react";
+import type { ComponentType } from "react";
+import { Link } from "react-router-dom";
+import { Play, CheckCircle, XCircle, Clock, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProjectCI, useProjectReleases } from "@/hooks/use-projects";
 import { cn } from "@/lib/utils";
+import type { CIJob } from "@/types/projects";
 
 export interface CIReleasePanelProps {
   projectId: string;
   className?: string;
 }
 
-const STATUS_ICONS = {
+const STATUS_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   success: CheckCircle,
   failure: XCircle,
   running: Play,
@@ -24,8 +27,8 @@ const STATUS_ICONS = {
 export function CIReleasePanel({ projectId, className }: CIReleasePanelProps) {
   const { items: ciJobs, isLoading } = useProjectCI(projectId);
   const { items: releases } = useProjectReleases(projectId);
-  const jobList = ciJobs ?? [];
-  const releaseList = releases ?? [];
+  const jobList = Array.isArray(ciJobs) ? ciJobs : [];
+  const releaseList = Array.isArray(releases) ? releases : [];
 
   if (isLoading) {
     return (
@@ -56,30 +59,41 @@ export function CIReleasePanel({ projectId, className }: CIReleasePanelProps) {
             {jobList.length === 0 ? (
               <p className="text-xs text-muted-foreground">No recent runs</p>
             ) : (
-              jobList.map((job: { id: string; name: string; status: string }) => {
-                const Icon = STATUS_ICONS[job.status as keyof typeof STATUS_ICONS] ?? Clock;
+              (jobList as CIJob[]).map((job) => {
+                const Icon = STATUS_ICONS[job.status] ?? Clock;
                 const isSuccess = job.status === "success";
                 const isFailure = job.status === "failure";
                 return (
                   <div
                     key={job.id}
-                    className="flex items-center justify-between rounded-md border border-white/[0.03] bg-secondary/30 px-3 py-2"
+                    className="flex items-center justify-between gap-2 rounded-md border border-white/[0.03] bg-secondary/30 px-3 py-2"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <Icon
                         className={cn(
-                          "h-4 w-4",
+                          "h-4 w-4 shrink-0",
                           isSuccess && "text-teal",
                           isFailure && "text-destructive"
                         )}
+                        aria-hidden
                       />
-                      <span className="text-sm text-foreground">{job.name}</span>
+                      <span className="text-sm text-foreground truncate">{job.name}</span>
                     </div>
-                    {isFailure && (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs">
-                        Re-run
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {job.runId && (
+                        <Link to={`/dashboard/runs/${job.runId}`}>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" aria-label={`View logs for ${job.name}`}>
+                            <FileText className="h-3 w-3" />
+                            Logs
+                          </Button>
+                        </Link>
+                      )}
+                      {isFailure && (
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive">
+                          Re-run
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })
@@ -90,7 +104,7 @@ export function CIReleasePanel({ projectId, className }: CIReleasePanelProps) {
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-2">Releases</p>
             <div className="space-y-1">
-              {releaseList.slice(0, 3).map((r: { id: string; version: string; status: string }) => (
+              {releaseList.slice(0, 3).map((r) => (
                 <div
                   key={r.id}
                   className="flex items-center justify-between text-sm py-1"

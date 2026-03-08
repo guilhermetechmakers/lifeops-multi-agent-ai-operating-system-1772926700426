@@ -18,7 +18,7 @@ export interface CronjobOverviewProps {
 
 export function CronjobOverview({ projectId, className }: CronjobOverviewProps) {
   const { items: cronjobs, isLoading } = useProjectCronjobs(projectId);
-  const list = (cronjobs ?? []) as ProjectCronjobOverview[];
+  const list = Array.isArray(cronjobs) ? (cronjobs as ProjectCronjobOverview[]) : [];
 
   if (isLoading) {
     return (

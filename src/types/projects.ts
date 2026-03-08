@@ -3,14 +3,49 @@
  * Use (data ?? []) and Array.isArray when consuming API responses.
  */
 
+export type ProjectStatus = "active" | "paused" | "archived";
+
 export interface Project {
   id: string;
   name: string;
   description?: string;
   owner?: string;
+  owners?: string[];
   team?: string;
+  status?: ProjectStatus;
+  integrations?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type BacklogStatus = "New" | "In Progress" | "Blocked" | "Done";
+export type BacklogPriority = "Low" | "Medium" | "High";
+
+export interface BacklogItem {
+  id: string;
+  projectId: string;
+  title: string;
+  description?: string;
+  status: BacklogStatus;
+  priority: BacklogPriority;
+  assigneeId?: string;
+  assigneeName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type RoadmapItemStatus = "Planned" | "In Progress" | "Completed";
+
+export interface RoadmapItem {
+  id: string;
+  projectId: string;
+  title: string;
+  status: RoadmapItemStatus;
+  ownerId?: string;
+  ownerName?: string;
+  dueDate?: string;
+  progress: number;
+  roadmapId?: string;
 }
 
 export interface Epic {
@@ -101,6 +136,7 @@ export interface CIJob {
   startedAt?: string;
   finishedAt?: string;
   duration?: number;
+  runId?: string;
   logs?: string[];
   artifacts?: unknown[];
 }
@@ -123,6 +159,21 @@ export interface RunArtifact {
   type: string;
   payload: unknown;
   timestamp: string;
+}
+
+export type AgentRunType = "triage" | "summarizePR" | "generateReleaseNotes" | "ciTrigger";
+export type AgentRunStatus = "pending" | "running" | "succeeded" | "failed";
+
+export interface AgentRun {
+  id: string;
+  projectId: string;
+  agentName: string;
+  type: AgentRunType;
+  status: AgentRunStatus;
+  startedAt: string;
+  endedAt?: string;
+  logsUrl?: string;
+  artifactsUrl?: string;
 }
 
 export interface ProjectApproval {

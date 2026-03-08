@@ -6,8 +6,9 @@ import { GitPullRequest, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProjectPRs } from "@/hooks/use-projects";
+import { useProjectPRs, useReviewPR } from "@/hooks/use-projects";
 import { cn } from "@/lib/utils";
+import type { PR } from "@/types/projects";
 
 export interface PRSummariesPanelProps {
   projectId: string;
@@ -16,7 +17,9 @@ export interface PRSummariesPanelProps {
 
 export function PRSummariesPanel({ projectId, className }: PRSummariesPanelProps) {
   const { items: prs, isLoading } = useProjectPRs(projectId);
-  const prList = prs ?? [];
+  const reviewPR = useReviewPR(projectId);
+  const prList = Array.isArray(prs) ? prs : [];
+  const openPRs = prList.filter((p: PR) => p.status === "open");
 
   if (isLoading) {
     return (
@@ -44,13 +47,13 @@ export function PRSummariesPanel({ projectId, className }: PRSummariesPanelProps
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {prList.length === 0 ? (
+        {openPRs.length === 0 ? (
           <div className="py-6 text-center text-sm text-muted-foreground">
             No open PRs
           </div>
         ) : (
           <div className="space-y-3">
-            {prList.filter((p: { status: string }) => p.status === "open").map((pr: { id: string; title: string; summary?: string; authorName?: string }) => (
+            {openPRs.map((pr) => (
               <div
                 key={pr.id}
                 className="rounded-lg border border-white/[0.03] bg-secondary/30 p-3 transition-colors hover:bg-secondary/50"
@@ -61,15 +64,39 @@ export function PRSummariesPanel({ projectId, className }: PRSummariesPanelProps
                 )}
                 <div className="flex items-center justify-between mt-2">
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <User className="h-3 w-3" />
+                    <User className="h-3 w-3" aria-hidden />
                     {pr.authorName ?? "—"}
                   </span>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-7 text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => reviewPR.mutate({ prId: pr.id, action: "approve" })}
+                      disabled={reviewPR.isPending}
+                      aria-label={`Approve PR: ${pr.title}`}
+                    >
                       Approve
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => reviewPR.mutate({ prId: pr.id, action: "comment" })}
+                      disabled={reviewPR.isPending}
+                      aria-label={`Review PR: ${pr.title}`}
+                    >
                       Review
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive hover:text-destructive"
+                      onClick={() => reviewPR.mutate({ prId: pr.id, action: "request_changes" })}
+                      disabled={reviewPR.isPending}
+                      aria-label={`Request changes: ${pr.title}`}
+                    >
+                      Request changes
                     </Button>
                   </div>
                 </div>

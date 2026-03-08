@@ -17,7 +17,7 @@ export interface ApprovalsQueueProps {
 
 export function ApprovalsQueue({ projectId, className }: ApprovalsQueueProps) {
   const { items: approvals, isLoading } = useProjectApprovals(projectId);
-  const list = approvals ?? [];
+  const list = Array.isArray(approvals) ? approvals : [];
 
   if (isLoading) {
     return (
@@ -54,8 +54,8 @@ export function ApprovalsQueue({ projectId, className }: ApprovalsQueueProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {list.slice(0, 3).map((a: { id: string }) => (
-              <Link key={a.id} to="/dashboard/approvals">
+            {list.slice(0, 3).map((a) => (
+              <Link key={a.id} to="/dashboard/approvals" aria-label={`View approval ${a.id}`}>
                 <div className="flex items-center justify-between rounded-md border border-white/[0.03] bg-secondary/30 px-3 py-2 hover:bg-secondary/50 transition-colors">
                   <span className="text-sm text-foreground">Action pending</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />

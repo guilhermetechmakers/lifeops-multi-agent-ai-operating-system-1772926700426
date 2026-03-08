@@ -17,9 +17,9 @@ export interface RoadmapTimelineCardProps {
 
 export function RoadmapTimelineCard({ projectId, className }: RoadmapTimelineCardProps) {
   const { items: roadmaps, isLoading } = useProjectRoadmaps(projectId);
-  const roadmapList = roadmaps ?? [];
+  const roadmapList = Array.isArray(roadmaps) ? roadmaps : [];
   const roadmap = roadmapList[0];
-  const milestones = (roadmap?.milestones ?? []) as Milestone[];
+  const milestones = Array.isArray(roadmap?.milestones) ? (roadmap.milestones as Milestone[]) : [];
 
   if (isLoading) {
     return (
@@ -76,6 +76,7 @@ export function RoadmapTimelineCard({ projectId, className }: RoadmapTimelineCar
                       <Badge
                         variant={m.status === "done" ? "success" : m.status === "in_progress" ? "default" : "secondary"}
                         className="text-[10px]"
+                        aria-label={`Milestone status: ${m.status}`}
                       >
                         {m.status}
                       </Badge>

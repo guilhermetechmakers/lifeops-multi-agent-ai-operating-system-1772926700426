@@ -1,12 +1,22 @@
 /**
  * Projects Dashboard Shell — layout with left project rail, header, content grid.
+ * Collapsible sidebar; mobile drawer for project list; breadcrumbs for context.
  */
 
 import { Link, useParams } from "react-router-dom";
-import { FolderKanban, GitBranch, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { FolderKanban, GitBranch, ChevronRight, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useProjectsList } from "@/hooks/use-projects";
 import { RoadmapTimelineCard } from "./roadmap-timeline-card";
 import { TicketKanbanBoard } from "./ticket-kanban-board";
@@ -25,9 +35,11 @@ const SIDEBAR_WIDTH = 260;
 export function ProjectsDashboardShell() {
   const { projectId } = useParams<{ projectId: string }>();
   const activeId = projectId ?? null;
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   const { items: projects, isLoading } = useProjectsList();
-  const projectList = projects ?? [];
+  const projectList = Array.isArray(projects) ? projects : [];
+  const activeProject = projectList.find((p: { id: string }) => p.id === activeId);
 
   return (
     <AnimatedPage className="flex h-full gap-0 -m-4 md:-m-6">
@@ -89,6 +101,57 @@ export function ProjectsDashboardShell() {
       <div className="flex-1 min-w-0 overflow-auto">
         {activeId ? (
           <div className="p-4 md:p-6 space-y-6">
+            {/* Breadcrumbs + mobile project picker */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
+                <Link
+                  to="/dashboard/projects"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Projects
+                </Link>
+                <span className="text-muted-foreground">/</span>
+                <span className="text-foreground font-medium truncate max-w-[180px] md:max-w-none">
+                  {activeProject?.name ?? "Project"}
+                </span>
+              </nav>
+              <div className="md:hidden">
+                <Dialog open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <Menu className="h-4 w-4" />
+                      Change project
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-xs p-0 gap-0" showClose={true}>
+                    <DialogHeader className="p-4 pb-2">
+                      <DialogTitle>Select project</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[60vh] px-2 pb-4">
+                      <nav className="grid gap-1">
+                        {projectList.map((p: { id: string; name: string }) => (
+                          <Link
+                            key={p.id}
+                            to={`/dashboard/projects/${p.id}`}
+                            onClick={() => setMobileSheetOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                              activeId === p.id
+                                ? "bg-primary/15 text-primary"
+                                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            )}
+                          >
+                            <FolderKanban className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{p.name}</span>
+                            <ChevronRight className="h-4 w-4 shrink-0 ml-auto" />
+                          </Link>
+                        ))}
+                      </nav>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
             <ProjectDetailLinkCard projectId={activeId} />
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2 space-y-6">
@@ -108,11 +171,44 @@ export function ProjectsDashboardShell() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
-            <FolderKanban className="h-12 w-12 text-muted-foreground mb-4" />
+            <FolderKanban className="h-12 w-12 text-muted-foreground mb-4" aria-hidden />
             <h3 className="text-lg font-semibold text-foreground">Select a project</h3>
             <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-              Choose a project from the left rail to view roadmaps, tickets, PRs, CI status, and agent suggestions.
+              Choose a project to view roadmaps, tickets, PRs, CI status, and agent suggestions.
             </p>
+            {projectList.length > 0 && (
+              <div className="mt-4 md:hidden">
+                <Dialog open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <Menu className="h-4 w-4" />
+                      Pick project
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-xs p-0 gap-0" showClose={true}>
+                    <DialogHeader className="p-4 pb-2">
+                      <DialogTitle>Select project</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[60vh] px-2 pb-4">
+                      <nav className="grid gap-1">
+                        {projectList.map((p: { id: string; name: string }) => (
+                          <Link
+                            key={p.id}
+                            to={`/dashboard/projects/${p.id}`}
+                            onClick={() => setMobileSheetOpen(false)}
+                            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          >
+                            <FolderKanban className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{p.name}</span>
+                            <ChevronRight className="h-4 w-4 shrink-0 ml-auto" />
+                          </Link>
+                        ))}
+                      </nav>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
           </div>
         )}
       </div>

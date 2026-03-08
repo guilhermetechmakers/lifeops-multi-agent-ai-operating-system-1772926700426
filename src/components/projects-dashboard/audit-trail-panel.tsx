@@ -16,7 +16,7 @@ export interface AuditTrailPanelProps {
 
 export function AuditTrailPanel({ projectId, className }: AuditTrailPanelProps) {
   const { items: runs, isLoading } = useProjectRuns(projectId);
-  const list = (runs ?? []) as { id: string; runId: string; type?: string }[];
+  const list = Array.isArray(runs) ? runs : [];
 
   if (isLoading) {
     return (
@@ -47,7 +47,7 @@ export function AuditTrailPanel({ projectId, className }: AuditTrailPanelProps) 
         ) : (
           <div className="space-y-2">
             {list.slice(0, 3).map((r) => (
-              <Link key={r.id} to={`/dashboard/runs/${r.runId}`}>
+              <Link key={r.id} to={`/dashboard/runs/${r.runId}`} aria-label={`View run ${r.runId}`}>
                 <div className="flex items-center justify-between rounded-md border border-white/[0.03] bg-secondary/30 px-3 py-2 hover:bg-secondary/50 transition-colors">
                   <span className="text-sm text-foreground">{r.type ?? "artifact"}</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />

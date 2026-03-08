@@ -10,6 +10,7 @@ import * as mock from "@/api/projects-mock";
 import { safeArray } from "@/lib/api";
 import type {
   Roadmap,
+  RoadmapItem,
   Ticket,
   TicketStatus,
   PR,
@@ -19,6 +20,8 @@ import type {
   ProjectApproval,
   ProjectCronjobOverview,
   RunArtifact,
+  BacklogItem,
+  AgentRun,
 } from "@/types/projects";
 
 const USE_MOCK =
@@ -28,6 +31,8 @@ const USE_MOCK =
 const keys = {
   list: () => ["projects", "list"] as const,
   detail: (id: string) => ["projects", "detail", id] as const,
+  backlog: (id: string) => ["projects", "backlog", id] as const,
+  roadmapItems: (id: string) => ["projects", "roadmapItems", id] as const,
   roadmaps: (id: string) => ["projects", "roadmaps", id] as const,
   tickets: (id: string) => ["projects", "tickets", id] as const,
   prs: (id: string) => ["projects", "prs", id] as const,
@@ -37,6 +42,7 @@ const keys = {
   approvals: (id?: string) => ["projects", "approvals", id ?? "all"] as const,
   cronjobs: (id?: string) => ["projects", "cronjobs", id ?? "all"] as const,
   runs: (id: string) => ["projects", "runs", id] as const,
+  history: (id: string) => ["projects", "history", id] as const,
 };
 
 export function useProjectsList() {
@@ -58,6 +64,48 @@ export function useProject(id: string | undefined | null, enabled = true) {
     enabled: Boolean(id) && enabled,
     staleTime: 60 * 1000,
   });
+}
+
+export function useProjectBacklog(projectId: string | undefined | null) {
+  const query = useQuery({
+    queryKey: keys.backlog(projectId ?? ""),
+    queryFn: () =>
+      USE_MOCK
+        ? mock.mockGetBacklog(projectId!)
+        : projectsApi.getBacklog(projectId!),
+    enabled: Boolean(projectId),
+    staleTime: 30 * 1000,
+  });
+  const items = safeArray<BacklogItem>(query.data);
+  return { ...query, items };
+}
+
+export function useProjectRoadmapItems(projectId: string | undefined | null) {
+  const query = useQuery({
+    queryKey: keys.roadmapItems(projectId ?? ""),
+    queryFn: () =>
+      USE_MOCK
+        ? mock.mockGetRoadmapItems(projectId!)
+        : projectsApi.getRoadmapItems(projectId!),
+    enabled: Boolean(projectId),
+    staleTime: 60 * 1000,
+  });
+  const items = safeArray<RoadmapItem>(query.data);
+  return { ...query, items };
+}
+
+export function useProjectHistory(projectId: string | undefined | null) {
+  const query = useQuery({
+    queryKey: keys.history(projectId ?? ""),
+    queryFn: () =>
+      USE_MOCK
+        ? mock.mockGetHistory(projectId!)
+        : projectsApi.getHistory(projectId!),
+    enabled: Boolean(projectId),
+    staleTime: 15 * 1000,
+  });
+  const items = safeArray<AgentRun>(query.data);
+  return { ...query, items };
 }
 
 export function useProjectRoadmaps(projectId: string | undefined | null) {
@@ -227,6 +275,135 @@ export function useDismissSuggestion(projectId: string) {
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to dismiss");
+    },
+  });
+}
+
+export function useReviewPR(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      prId,
+      action,
+      body,
+    }: {
+      prId: string;
+      action: "approve" | "request_changes" | "comment";
+      body?: string;
+    }) =>
+      USE_MOCK
+        ? Promise.resolve({ ok: true })
+        : projectsApi.reviewPR(prId, action, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.prs(projectId) });
+      toast.success("Review submitted");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to submit review");
+    },
+  });
+}
+
+export function useCreateBacklogItem(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; description?: string; priority?: string }) =>
+      USE_MOCK
+        ? mock.mockCreateBacklogItem(projectId, data)
+        : projectsApi.createBacklogItem(projectId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.backlog(projectId) });
+      toast.success("Backlog item added");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to add backlog item");
+    },
+  });
+}
+
+export function useCreateTicket(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; description?: string; priority?: string }) =>
+      USE_MOCK
+        ? mock.mockCreateTicket(projectId, data)
+        : projectsApi.createTicket(projectId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.tickets(projectId) });
+      toast.success("Ticket created");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to create ticket");
+    },
+  });
+}
+
+export function useRunAgent(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (type: string) =>
+      USE_MOCK
+        ? mock.mockRunAgent(projectId, type)
+        : projectsApi.runAgent(projectId, type),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.history(projectId) });
+      toast.loading("Agent run started...", { id: "agent-run" });
+      setTimeout(() => toast.success("Agent run completed", { id: "agent-run" }), 2000);
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to start agent");
+    },
+  });
+}
+
+export function useTriggerCronjob(projectId?: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cronjobId: string) =>
+      USE_MOCK
+        ? mock.mockTriggerCronjob(cronjobId)
+        : projectsApi.triggerCronjob(cronjobId),
+    onSuccess: () => {
+      if (projectId) qc.invalidateQueries({ queryKey: keys.history(projectId) });
+      qc.invalidateQueries({ queryKey: keys.cronjobs(projectId ?? undefined) });
+      toast.success("Cronjob triggered");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to trigger cronjob");
+    },
+  });
+}
+
+export function useBulkUpdateBacklog(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, updates }: { ids: string[]; updates: { status?: string } }) =>
+      USE_MOCK
+        ? mock.mockBulkUpdateBacklog(projectId, ids, updates)
+        : projectsApi.bulkUpdateBacklog(projectId, ids, updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.backlog(projectId) });
+      toast.success("Backlog updated");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to update backlog");
+    },
+  });
+}
+
+export function useBulkUpdateTickets(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, updates }: { ids: string[]; updates: { status?: string; assigneeId?: string } }) =>
+      USE_MOCK
+        ? mock.mockBulkUpdateTickets(projectId, ids, updates)
+        : projectsApi.bulkUpdateTickets(projectId, ids, updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.tickets(projectId) });
+      toast.success("Tickets updated");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to update tickets");
     },
   });
 }

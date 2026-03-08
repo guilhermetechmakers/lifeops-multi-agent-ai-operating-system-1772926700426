@@ -7,6 +7,7 @@ import { safeArray } from "@/lib/api";
 import type {
   Project,
   Roadmap,
+  RoadmapItem,
   Ticket,
   PR,
   Release,
@@ -15,6 +16,8 @@ import type {
   ProjectApproval,
   ProjectCronjobOverview,
   RunArtifact,
+  BacklogItem,
+  AgentRun,
 } from "@/types/projects";
 
 const BASE = "projects";
@@ -34,6 +37,12 @@ export const projectsApi = {
     }),
 
   get: (id: string) => api.get<Project>(`${BASE}/${id}`),
+
+  getBacklog: (projectId: string) =>
+    api.get<BacklogItem[]>(`${BASE}/${projectId}/backlog`).then((r) => safeArray<BacklogItem>(r ?? [])),
+
+  getRoadmapItems: (projectId: string) =>
+    api.get<RoadmapItem[]>(`${BASE}/${projectId}/roadmap-items`).then((r) => safeArray<RoadmapItem>(r ?? [])),
 
   getRoadmaps: (projectId: string) =>
     api.get<Roadmap[]>(`${BASE}/${projectId}/roadmaps`).then((r) => safeArray<Roadmap>(r ?? [])),
@@ -57,6 +66,30 @@ export const projectsApi = {
 
   getRuns: (projectId: string) =>
     api.get<RunArtifact[]>(`${BASE}/${projectId}/runs`).then((r) => safeArray<RunArtifact>(r ?? [])),
+
+  getHistory: (projectId: string) =>
+    api.get<AgentRun[]>(`${BASE}/${projectId}/history`).then((r) => safeArray<AgentRun>(r ?? [])),
+
+  createBacklogItem: (projectId: string, data: { title: string; description?: string; priority?: string }) =>
+    api.post<BacklogItem>(`${BASE}/${projectId}/backlog`, data),
+
+  createTicket: (projectId: string, data: { title: string; description?: string; priority?: string }) =>
+    api.post<Ticket>(`${BASE}/${projectId}/tickets`, data),
+
+  runAgent: (projectId: string, type: string) =>
+    api.post<AgentRun>("agents/run", { projectId, type }),
+
+  triggerCronjob: (cronjobId: string) =>
+    api.post<{ ok: boolean }>("cronjobs/trigger", { cronjobId }),
+
+  bulkUpdateBacklog: (projectId: string, ids: string[], updates: { status?: string }) =>
+    api.post<{ ok: boolean }>(`${BASE}/${projectId}/backlog/bulk`, { ids, updates }),
+
+  bulkUpdateTickets: (projectId: string, ids: string[], updates: { status?: string; assigneeId?: string }) =>
+    api.post<{ ok: boolean }>(`${BASE}/${projectId}/tickets/bulk`, { ids, updates }),
+
+  updateProjectStatus: (projectId: string, status: string) =>
+    api.put<Project>(`${BASE}/${projectId}/status`, { status }),
 
   getApprovals: (projectId?: string) => {
     const q = projectId ? `?projectId=${projectId}` : "";
@@ -82,4 +115,10 @@ export const projectsApi = {
 
   dismissSuggestion: (suggestionId: string) =>
     api.post<{ ok: boolean }>(`agentsuggestions/${suggestionId}/dismiss`, {}),
+
+  updateBacklogItem: (projectId: string, itemId: string, payload: Partial<BacklogItem>) =>
+    api.patch<BacklogItem>(`${BASE}/${projectId}/backlog/${itemId}`, payload),
+
+  updateRoadmapItem: (projectId: string, itemId: string, payload: Partial<RoadmapItem>) =>
+    api.patch<RoadmapItem>(`${BASE}/${projectId}/roadmap-items/${itemId}`, payload),
 };

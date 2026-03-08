@@ -17,11 +17,15 @@
     --accent-foreground: 255 255 255;
     --card: 21 23 24;
     --card-foreground: 255 255 255;
+    --tertiary: 31 31 32;
     --border: 255 255 255;
     --input: 31 31 32;
     --ring: 255 59 48;
     --muted: 31 31 32;
     --muted-foreground: 157 163 166;
+    --subtle: 86 89 91;
+    --neutral-highlight: 207 207 207;
+    --soft-highlight: 230 231 232;
     --destructive: 255 59 48;
     --radius: 0.5rem;
   }

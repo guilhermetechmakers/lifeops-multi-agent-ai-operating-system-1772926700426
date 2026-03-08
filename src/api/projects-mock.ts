@@ -14,6 +14,9 @@ import type {
   ProjectApproval,
   ProjectCronjobOverview,
   RunArtifact,
+  BacklogItem,
+  RoadmapItem,
+  AgentRun,
 } from "@/types/projects";
 
 const projects: Project[] = [
@@ -22,7 +25,10 @@ const projects: Project[] = [
     name: "lifeops-app",
     description: "Core LifeOps application",
     owner: "team-platform",
+    owners: ["team-platform", "alex"],
     team: "Platform",
+    status: "active",
+    integrations: ["github", "slack"],
     createdAt: "2024-01-15T00:00:00Z",
     updatedAt: "2025-03-01T12:00:00Z",
   },
@@ -31,10 +37,32 @@ const projects: Project[] = [
     name: "docs-site",
     description: "Documentation site",
     owner: "team-docs",
+    owners: ["team-docs"],
     team: "Docs",
+    status: "active",
+    integrations: ["github"],
     createdAt: "2024-02-01T00:00:00Z",
     updatedAt: "2025-02-28T10:00:00Z",
   },
+];
+
+const backlogItems: BacklogItem[] = [
+  { id: "bl1", projectId: "proj-1", title: "OAuth flow implementation", status: "In Progress", priority: "High", assigneeName: "Alex", createdAt: "2025-02-01T00:00:00Z", updatedAt: "2025-03-05T00:00:00Z" },
+  { id: "bl2", projectId: "proj-1", title: "RBAC policies design", status: "New", priority: "Medium", createdAt: "2025-02-10T00:00:00Z", updatedAt: "2025-02-10T00:00:00Z" },
+  { id: "bl3", projectId: "proj-1", title: "Kanban drag-and-drop", status: "Blocked", priority: "High", assigneeName: "Sam", createdAt: "2025-02-15T00:00:00Z", updatedAt: "2025-03-06T00:00:00Z" },
+  { id: "bl4", projectId: "proj-1", title: "Roadmap timeline component", status: "Done", priority: "Medium", assigneeName: "Jordan", createdAt: "2025-02-01T00:00:00Z", updatedAt: "2025-03-01T00:00:00Z" },
+];
+
+const roadmapItems: RoadmapItem[] = [
+  { id: "ri1", projectId: "proj-1", title: "Auth MVP", status: "Completed", progress: 100, ownerName: "Alex", dueDate: "2025-02-15", roadmapId: "road-1" },
+  { id: "ri2", projectId: "proj-1", title: "Projects Hub", status: "In Progress", progress: 65, ownerName: "Sam", dueDate: "2025-03-15", roadmapId: "road-1" },
+  { id: "ri3", projectId: "proj-1", title: "CI/CD Integration", status: "Planned", progress: 0, dueDate: "2025-04-30", roadmapId: "road-1" },
+];
+
+const agentRuns: AgentRun[] = [
+  { id: "ar1", projectId: "proj-1", agentName: "Triage Agent", type: "triage", status: "succeeded", startedAt: "2025-03-06T09:00:00Z", endedAt: "2025-03-06T09:02:00Z", logsUrl: "/dashboard/runs/run-1" },
+  { id: "ar2", projectId: "proj-1", agentName: "PR Summarizer", type: "summarizePR", status: "succeeded", startedAt: "2025-03-06T09:00:00Z", endedAt: "2025-03-06T09:01:30Z", logsUrl: "/dashboard/runs/run-2" },
+  { id: "ar3", projectId: "proj-1", agentName: "Release Notes", type: "generateReleaseNotes", status: "running", startedAt: "2025-03-06T10:00:00Z" },
 ];
 
 const epics: Epic[] = [
@@ -92,9 +120,9 @@ const releases: Release[] = [
 ];
 
 const ciJobs: CIJob[] = [
-  { id: "ci1", projectId: "proj-1", name: "build", status: "success", startedAt: "2025-03-06T10:00:00Z", finishedAt: "2025-03-06T10:05:00Z" },
-  { id: "ci2", projectId: "proj-1", name: "test", status: "success", startedAt: "2025-03-06T10:05:00Z", finishedAt: "2025-03-06T10:08:00Z" },
-  { id: "ci3", projectId: "proj-1", name: "deploy-staging", status: "failure", startedAt: "2025-03-06T10:08:00Z", finishedAt: "2025-03-06T10:12:00Z" },
+  { id: "ci1", projectId: "proj-1", name: "build", status: "success", startedAt: "2025-03-06T10:00:00Z", finishedAt: "2025-03-06T10:05:00Z", runId: "run-1" },
+  { id: "ci2", projectId: "proj-1", name: "test", status: "success", startedAt: "2025-03-06T10:05:00Z", finishedAt: "2025-03-06T10:08:00Z", runId: "run-1" },
+  { id: "ci3", projectId: "proj-1", name: "deploy-staging", status: "failure", startedAt: "2025-03-06T10:08:00Z", finishedAt: "2025-03-06T10:12:00Z", runId: "run-1" },
 ];
 
 const agentSuggestions: AgentSuggestion[] = [
@@ -122,6 +150,106 @@ export function mockGetProjects(): Promise<Project[]> {
 export function mockGetProject(id: string): Promise<Project | null> {
   const p = projects.find((x) => x.id === id) ?? null;
   return Promise.resolve(p);
+}
+
+export function mockGetBacklog(projectId: string): Promise<BacklogItem[]> {
+  const list = backlogItems.filter((b) => b.projectId === projectId) ?? [];
+  return Promise.resolve(list);
+}
+
+export function mockGetRoadmapItems(projectId: string): Promise<RoadmapItem[]> {
+  const list = roadmapItems.filter((r) => r.projectId === projectId) ?? [];
+  return Promise.resolve(list);
+}
+
+export function mockGetHistory(projectId: string): Promise<AgentRun[]> {
+  const list = agentRuns.filter((a) => a.projectId === projectId) ?? [];
+  return Promise.resolve(list);
+}
+
+export function mockCreateBacklogItem(
+  projectId: string,
+  data: { title: string; description?: string; priority?: string }
+): Promise<BacklogItem> {
+  const item: BacklogItem = {
+    id: `bl-${Date.now()}`,
+    projectId,
+    title: data.title,
+    description: data.description,
+    status: "New",
+    priority: (data.priority as BacklogItem["priority"]) ?? "Medium",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  backlogItems.push(item);
+  return Promise.resolve(item);
+}
+
+export function mockCreateTicket(
+  projectId: string,
+  data: { title: string; description?: string; priority?: string }
+): Promise<Ticket> {
+  const item: Ticket = {
+    id: `t-${Date.now()}`,
+    projectId,
+    title: data.title,
+    description: data.description,
+    status: "backlog",
+    priority: (data.priority as Ticket["priority"]) ?? "medium",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  tickets.push(item);
+  return Promise.resolve(item);
+}
+
+export function mockRunAgent(projectId: string, type: string): Promise<AgentRun> {
+  const run: AgentRun = {
+    id: `ar-${Date.now()}`,
+    projectId,
+    agentName: type === "triage" ? "Triage Agent" : type === "summarizePR" ? "PR Summarizer" : type === "generateReleaseNotes" ? "Release Notes" : "CI Trigger",
+    type: type as AgentRun["type"],
+    status: "pending",
+    startedAt: new Date().toISOString(),
+  };
+  agentRuns.unshift(run);
+  setTimeout(() => {
+    run.status = "succeeded";
+    run.endedAt = new Date().toISOString();
+    run.logsUrl = `/dashboard/runs/${run.id}`;
+  }, 1500);
+  return Promise.resolve(run);
+}
+
+export function mockTriggerCronjob(_cronjobId: string): Promise<{ ok: boolean }> {
+  return Promise.resolve({ ok: true });
+}
+
+export function mockBulkUpdateBacklog(
+  projectId: string,
+  ids: string[],
+  updates: { status?: string }
+): Promise<{ ok: boolean }> {
+  ids.forEach((id) => {
+    const item = backlogItems.find((b) => b.id === id && b.projectId === projectId);
+    if (item && updates.status) item.status = updates.status as BacklogItem["status"];
+  });
+  return Promise.resolve({ ok: true });
+}
+
+export function mockBulkUpdateTickets(
+  projectId: string,
+  ids: string[],
+  updates: { status?: string; assigneeId?: string }
+): Promise<{ ok: boolean }> {
+  ids.forEach((id) => {
+    const item = tickets.find((t) => t.id === id && t.projectId === projectId);
+    if (item) {
+      if (updates.status) item.status = updates.status as Ticket["status"];
+      if (updates.assigneeId) item.assigneeId = updates.assigneeId;
+    }
+  });
+  return Promise.resolve({ ok: true });
 }
 
 export function mockGetRoadmaps(projectId: string): Promise<Roadmap[]> {

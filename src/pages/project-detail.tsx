@@ -1,22 +1,28 @@
 /**
- * Project Detail — single project view with backlog, roadmap, tickets, PRs, agent-run history.
+ * Project Detail — single project cockpit with backlog, roadmap, tickets, PRs, agent history.
  */
 
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, FolderKanban } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useParams } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
 import {
-  RoadmapTimelineCard,
-  TicketKanbanBoard,
-  PRSummariesPanel,
+  ProjectHeader,
+  BacklogPanel,
+  RoadmapPanel,
+  TicketsPanel,
+  PRsPanel,
+  AgentHistoryPanel,
+  ActionsWidgetBar,
+  CronjobsDashboardLink,
+  DataVizTinyCharts,
+} from "@/components/project-detail";
+import {
   CIReleasePanel,
   AgentSuggestionsPanel,
   ApprovalsQueue,
+  CronjobOverview,
   AuditTrailPanel,
 } from "@/components/projects-dashboard";
-import { useProject } from "@/hooks/use-projects";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useProjectCronjobs } from "@/hooks/use-projects";
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -29,33 +35,35 @@ export default function ProjectDetail() {
     );
   }
 
-  const { data: project, isLoading } = useProject(projectId);
+  const { items: cronjobs } = useProjectCronjobs(projectId);
+  const cronjobList = Array.isArray(cronjobs) ? cronjobs : [];
+  const firstCronjobId = cronjobList[0]?.id;
 
   return (
     <AnimatedPage className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link to={`/dashboard/projects/${projectId}`}>
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        {isLoading ? (
-          <Skeleton className="h-8 w-48" />
-        ) : (
-          <header className="flex items-center gap-2">
-            <FolderKanban className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold text-foreground">{project?.name ?? "Project"}</h1>
-          </header>
-        )}
+      <ProjectHeader projectId={projectId} />
+
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground">Quick actions</h2>
+          <ActionsWidgetBar projectId={projectId} cronjobId={firstCronjobId} />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <RoadmapTimelineCard projectId={projectId} />
-          <TicketKanbanBoard projectId={projectId} />
-          <PRSummariesPanel projectId={projectId} />
+          <BacklogPanel projectId={projectId} />
+          <RoadmapPanel projectId={projectId} />
+          <div className="grid gap-6 sm:grid-cols-2">
+            <TicketsPanel projectId={projectId} />
+            <PRsPanel projectId={projectId} />
+          </div>
         </div>
         <div className="space-y-6">
+          <AgentHistoryPanel projectId={projectId} />
+          <CronjobsDashboardLink projectId={projectId} />
+          <CronjobOverview projectId={projectId} />
+          <DataVizTinyCharts projectId={projectId} />
           <CIReleasePanel projectId={projectId} />
           <AgentSuggestionsPanel projectId={projectId} />
           <ApprovalsQueue projectId={projectId} />
