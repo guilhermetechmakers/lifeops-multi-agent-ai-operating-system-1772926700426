@@ -65,6 +65,15 @@ export function mockRevert(_runId: string): Promise<{ success: boolean; auditLog
   return Promise.resolve({ success: true, auditLog: { id: "audit-1", timestamp: new Date().toISOString(), action: "revert" } });
 }
 
+/** Step-through execution. Spec: POST /debug/runs/{runId}/step */
+export function mockStep(
+  _runId: string,
+  payload?: { direction?: "next" | "prev"; stepIndex?: number }
+): Promise<{ stepIndex: number; state: unknown }> {
+  const stepIndex = payload?.stepIndex ?? (payload?.direction === "prev" ? 0 : 1);
+  return Promise.resolve({ stepIndex, state: { stepIndex, memory: {} } });
+}
+
 export function mockExport(_runId: string, options: { format: "json" | "zip" }): Promise<{ format: string; data: unknown }> {
   return Promise.resolve({ format: options.format, data: { exported: true, at: new Date().toISOString() } });
 }

@@ -1,4 +1,5 @@
 export { RunDetailsHeader } from "./run-details-header";
+export { OverviewTab } from "./overview-tab";
 export { InputsPanel } from "./inputs-panel";
 export { MessageTraceViewer } from "./message-trace-viewer";
 export { MessageTraceGraph } from "./message-trace-graph";

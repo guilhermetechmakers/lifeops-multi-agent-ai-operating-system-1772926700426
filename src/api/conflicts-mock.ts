@@ -6,7 +6,6 @@
 import type {
   Conflict,
   Resolution,
-  Rule,
   ConflictInput,
   RuleDraft,
   ResolveConflictsRequest,
@@ -37,23 +36,6 @@ const MOCK_CONFLICTS: Conflict[] = [
     context: { resource: "slack-channel", competingActions: ["notify", "silence"] },
     createdAt: new Date(Date.now() - 1800000).toISOString(),
     status: "resolved",
-  },
-];
-
-const MOCK_RULES: Rule[] = [
-  {
-    id: "rule-1",
-    name: "Higher priority wins",
-    priority: 100,
-    condition: "agent.priority > other.priority",
-    actions: [{ type: "defer", payload: { to: "higher_priority" } }],
-  },
-  {
-    id: "rule-2",
-    name: "First-come-first-served",
-    priority: 50,
-    condition: "timestamp < other.timestamp",
-    actions: [{ type: "accept", payload: {} }],
   },
 ];
 

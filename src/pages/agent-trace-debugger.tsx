@@ -250,14 +250,6 @@ export default function AgentTraceDebuggerPage() {
                       currentStepIndex={currentStepIndex}
                       selectedAgentId={selectedAgentId ?? activeStepAgentId}
                     />
-                    <AnnotationPanel
-                      steps={safeSteps}
-                      messages={messages}
-                      currentStepIndex={currentStepIndex}
-                      selectedAgentId={selectedAgentId ?? activeStepAgentId}
-                      annotations={annotations}
-                      onAddAnnotation={handleAddAnnotation}
-                    />
                     <RunDetailsPanel
                       runId={runId}
                       cronJobId={cronJobId}

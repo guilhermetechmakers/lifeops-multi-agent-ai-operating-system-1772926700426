@@ -63,4 +63,11 @@ export const debugTraceApi = {
 
   getRunDetails: (runId: string) =>
     api.get<RunDetailsPayload>(`${BASE}/runs/${runId}/details`),
+
+  /** Step-through execution: advance to next step. Spec: POST /debug/runs/{runId}/step */
+  step: (runId: string, payload?: { direction?: "next" | "prev"; stepIndex?: number }) =>
+    api.post<{ stepIndex: number; state: unknown }>(
+      `${BASE}/runs/${runId}/step`,
+      payload ?? {}
+    ),
 };

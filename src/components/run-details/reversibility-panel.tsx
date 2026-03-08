@@ -30,6 +30,8 @@ export interface ReversibilityPanelProps {
   /** When true, opens the revert dialog (e.g. from header Revert button). */
   revertDialogOpen?: boolean;
   onRevertDialogOpenChange?: (open: boolean) => void;
+  /** When provided, "Confirm Revert" opens the parent's RevertModal instead of the inline dialog. */
+  onOpenRevertModal?: () => void;
   className?: string;
 }
 
@@ -41,9 +43,11 @@ export function ReversibilityPanel({
   isReverting = false,
   revertDialogOpen: controlledOpen,
   onRevertDialogOpenChange,
+  onOpenRevertModal,
   className,
 }: ReversibilityPanelProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const useExternalModal = Boolean(onOpenRevertModal);
   const isControlled = controlledOpen !== undefined;
   const dialogOpen = isControlled ? controlledOpen : internalOpen;
   const setDialogOpen = isControlled ? (onRevertDialogOpenChange ?? (() => {})) : setInternalOpen;
@@ -113,7 +117,7 @@ export function ReversibilityPanel({
                 variant="outline"
                 size="sm"
                 className="gap-2 text-amber focus-visible:ring-amber/50"
-                onClick={() => setDialogOpen(true)}
+                onClick={useExternalModal ? onOpenRevertModal : () => setDialogOpen(true)}
                 disabled={!canRevert || isReverting}
                 title={!canRevert ? revertDisabledReason : undefined}
                 aria-label={canRevert ? "Open revert confirmation" : revertDisabledReason ?? "Revert not available"}
@@ -130,6 +134,7 @@ export function ReversibilityPanel({
           </>
         )}
 
+        {!useExternalModal && (
         <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -159,6 +164,7 @@ export function ReversibilityPanel({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        )}
       </CardContent>
     </Card>
   );

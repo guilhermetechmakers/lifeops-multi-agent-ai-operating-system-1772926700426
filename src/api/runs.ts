@@ -3,8 +3,7 @@
  * All responses consumed with nullish coalescing and safe arrays.
  */
 
-import { api } from "@/lib/api";
-import { safeArray } from "@/lib/api";
+import { api, safeArray } from "@/lib/api";
 import type {
   RunDetail,
   TraceEvent,
@@ -14,6 +13,12 @@ import type {
   RevertPayload,
   RevertResponse,
 } from "@/types/run-details";
+import type { MemoryScope } from "@/types/orchestration";
+
+export interface RunMemoryResponse {
+  scopes: MemoryScope[];
+  data?: Record<string, unknown>;
+}
 
 const BASE = "runs";
 
@@ -64,4 +69,26 @@ export const runsApi = {
 
   injectInput: (runId: string, payload: { stepId?: string; agentId?: string; input: Record<string, unknown>; reason?: string }) =>
     api.post<{ success: boolean }>(`${BASE}/${runId}/inject-input`, payload),
+
+  getMemory: (runId: string, scope?: string) => {
+    const query = scope ? `?scope=${encodeURIComponent(scope)}` : "";
+    return api
+      .get<RunMemoryResponse>(`${BASE}/${runId}/memory${query}`)
+      .then((r) => ({
+        scopes: safeArray<MemoryScope>((r ?? {}).scopes),
+        data: (r ?? {})?.data ?? {},
+      }));
+  },
+
+  putMemory: (
+    runId: string,
+    scope: string,
+    data: Record<string, unknown>,
+    ttl?: number
+  ) =>
+    api.post<{ success: boolean }>(`${BASE}/${runId}/memory`, {
+      scope,
+      data,
+      ttl,
+    }),
 };

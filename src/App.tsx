@@ -66,10 +66,10 @@ import {
 } from "@/components/admin";
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
+import ConflictResolutionPage from "@/pages/conflict-resolution";
 import CronjobEditor from "@/pages/cronjob-editor";
 import CIIntegrationsPage from "@/pages/ci-integrations";
 import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
-import ConflictsPage from "@/pages/conflicts";
 import { AnalyticsDashboardShell, AnalyticsReportsOverview } from "@/components/analytics-reports";
 import PrivacyPolicyPage from "@/pages/privacy-policy";
 import CookiePolicyPage from "@/pages/cookie-policy";
@@ -157,7 +157,8 @@ function App() {
               <Route path="reports" element={<ReportsPanel />} />
             </Route>
             <Route path="debug" element={<AgentTraceDebuggerPage />} />
-            <Route path="conflicts" element={<ConflictsPage />} />
+            <Route path="conflict-resolution" element={<ConflictResolutionPage />} />
+            <Route path="conflicts" element={<Navigate to="/dashboard/conflict-resolution" replace />} />
             <Route path="projects" element={<Outlet />}>
               <Route index element={<ProjectsDashboardShell />} />
               <Route path=":projectId" element={<ProjectsDashboardShell />} />

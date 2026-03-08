@@ -188,29 +188,20 @@ export function getRunWithStatus(runId: string, status: RunDetail["status"], cro
 export async function mockGetRunDetail(runId: string, cronjobId?: string): Promise<RunDetail | null> {
   await new Promise((r) => setTimeout(r, 300));
   const run = getOrCreateRun(runId, cronjobId);
+  const pendingApprovals = [
+    {
+      id: "approval-1",
+      actionType: "human-review",
+      context: { prCount: 3, threshold: 5 },
+      requestedAt: run.startedAt,
+    },
+  ];
+
   if (runId === "run-2" || runId.endsWith("-running")) {
-    const runningRun = { ...run, status: "running" as const, endedAt: undefined };
-    runningRun.pendingApprovals = [
-      {
-        id: "approval-1",
-        actionType: "human-review",
-        context: { prCount: 3, threshold: 5 },
-        requestedAt: run.startedAt,
-      },
-    ];
-    return runningRun;
+    return { ...run, status: "running" as const, endedAt: undefined, pendingApprovals };
   }
   if (runId.endsWith("-paused")) {
-    const pausedRun = { ...run, status: "paused" as const, endedAt: undefined };
-    pausedRun.pendingApprovals = [
-      {
-        id: "approval-1",
-        actionType: "human-review",
-        context: { prCount: 3, threshold: 5 },
-        requestedAt: run.startedAt,
-      },
-    ];
-    return pausedRun;
+    return { ...run, status: "paused" as const, endedAt: undefined, pendingApprovals };
   }
   return run;
 }

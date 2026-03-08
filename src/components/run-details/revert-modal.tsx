@@ -1,6 +1,6 @@
 /**
  * RevertModal — confirm revert actions with audit trail details.
- * Shows reversible actions and recent audit entries for transparency.
+ * Spec: page_run_details_010 RevertModal with audit details.
  */
 
 import {

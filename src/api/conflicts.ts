@@ -8,7 +8,6 @@ import { safeArray } from "@/lib/api";
 import type {
   Conflict,
   Resolution,
-  Rule,
   ResolveConflictsRequest,
   ResolveConflictsResponse,
 } from "@/types/conflicts";

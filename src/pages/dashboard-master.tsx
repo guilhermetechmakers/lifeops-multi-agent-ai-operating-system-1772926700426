@@ -26,6 +26,12 @@ import {
   ChartPanel,
   ApprovalsQueueWidget,
 } from "@/components/master-dashboard";
+import { CREnginePanel } from "@/components/conflict-resolution";
+import {
+  useConflicts,
+  useResolveConflicts,
+  useLastResolutions,
+} from "@/hooks/use-conflicts";
 import { NotificationCenter } from "@/components/notifications";
 
 export default function DashboardMaster() {
@@ -42,6 +48,29 @@ export default function DashboardMaster() {
   const criticalAlerts = alertList.filter(
     (a) => a.severity === "critical" || a.severity === "error"
   ).length;
+
+  const { items: conflictItems } = useConflicts();
+  const lastResolutions = useLastResolutions();
+  const resolveMutation = useResolveConflicts();
+  const openConflicts = (conflictItems ?? []).filter((c) => c.status === "open");
+  const handleResolveAll = () => {
+    if (openConflicts.length === 0) return;
+    const rule = {
+      id: "rule-1",
+      name: "Higher priority wins",
+      priority: 100,
+      condition: "agent.priority > other.priority",
+      actions: [{ type: "defer", payload: { to: "higher_priority" } }],
+    };
+    resolveMutation.mutate({
+      conflicts: openConflicts.map((c) => ({
+        id: c.id,
+        agents: c.agents ?? [],
+        context: c.context ?? undefined,
+      })),
+      rules: [rule],
+    });
+  };
 
   return (
     <AnimatedPage className="space-y-6">
@@ -151,6 +180,13 @@ export default function DashboardMaster() {
           </div>
 
           <CronjobsDashboardLink />
+
+          <CREnginePanel
+            conflicts={conflictItems ?? []}
+            resolutions={lastResolutions}
+            isResolving={resolveMutation.isPending}
+            onResolve={handleResolveAll}
+          />
 
           <ApprovalsQueueWidget />
 

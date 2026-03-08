@@ -19,6 +19,7 @@ import {
 import { useMemoryDiffs } from "@/hooks/use-memory-diffs";
 import {
   RunDetailsHeader,
+  OverviewTab,
   InputsPanel,
   MessageTraceViewer,
   MessageTraceGraph,
@@ -39,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
+  LayoutDashboard,
   FileInput,
   GitBranch,
   FileText,
@@ -239,8 +241,23 @@ export default function RunDetailsPage() {
         runId={run.id}
       />
 
-      <Tabs defaultValue="inputs" className="space-y-4">
+      <RevertModal
+        open={revertDialogOpen}
+        onOpenChange={setRevertDialogOpen}
+        reversibleActions={reversibleActions ?? []}
+        auditTrail={auditTrail ?? []}
+        reason={revertReason}
+        onReasonChange={setRevertReason}
+        onConfirm={(reason?: string) => handleConfirmRevert(reason ?? revertReason)}
+        isReverting={revertMutation.isPending}
+      />
+
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-secondary border border-white/[0.03] flex flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="overview" className="gap-2">
+            <LayoutDashboard className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
           <TabsTrigger value="inputs" className="gap-2">
             <FileInput className="h-4 w-4" />
             Inputs
@@ -288,6 +305,15 @@ export default function RunDetailsPage() {
             </TabsTrigger>
           )}
         </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <OverviewTab
+            run={run}
+            traceCount={trace.length}
+            logsCount={logs.length}
+            artifactsCount={artifacts.length}
+          />
+        </TabsContent>
 
         <TabsContent value="inputs" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-3">
@@ -375,13 +401,12 @@ export default function RunDetailsPage() {
 
         <TabsContent value="revert" className="space-y-4">
           <ReversibilityPanel
-            reversibleActions={reversibleActions}
+            reversibleActions={reversibleActions ?? []}
             canRevert={canRevert}
             revertDisabledReason={revertDisabledReason}
             onConfirmRevert={handleConfirmRevert}
             isReverting={revertMutation.isPending}
-            revertDialogOpen={revertDialogOpen}
-            onRevertDialogOpenChange={setRevertDialogOpen}
+            onOpenRevertModal={() => setRevertDialogOpen(true)}
           />
         </TabsContent>
 

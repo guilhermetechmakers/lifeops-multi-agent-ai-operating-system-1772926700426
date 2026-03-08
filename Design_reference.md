@@ -326,201 +326,344 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-# Cookie Policy
+# Conflict Resolution Engine
 
 ## Overview
-Create a self-contained Cookie Policy page that clearly explains cookie categories, data usage, and provides a robust consent management experience. The page should be accessible, privacy-forward, and integrate with the project’s UI system and runtime safety standards. It must require minimal friction for users to understand cookies and to grant or modify consent, while preserving a clear audit trail for actions and run artifacts.
+Develop a deterministic Conflict Resolution Engine (CRE) that resolves inter-agent conflicts using an ordered set of priority-based rules defined in a DSL. The engine must produce reproducible outcomes with full explainability for each decision, support human-in-the-loop overrides, and emit a complete audit trail of every resolution. It will be a core service within LifeOps, interoperating with the Master Dashboard, Cronjobs, and run artifacts. The CRE should be robust to partial data, guard against null/undefined values, and provide strict validation and logging to support audits and rollback.
 
-## Page Description (Full Detail)
-What this page is:
-- A dedicated Cookie Policy page that educates users about cookies and provides a consent management UI to enable/disable categories.
-
-Goals:
-- Educate users about cookie categories (necessary, analytics, marketing).
-- Provide a clear, accessible consent management experience with granular controls for each category.
-- Persist user consent selections, reflect them in the UI, and expose consent state to downstream modules if needed.
-- Ensure all actions are reversible and auditable, with explicit user confirmations where appropriate.
-
-Connected features:
-- Consent state persisted to user preferences (localStorage/session or backend if user is authenticated).
-- Optional integration hooks for analytics and marketing tooling to respect user consent.
-- No external APIs required for this task, but the design should accommodate API-based persistence if needed later.
-
-UI elements and visuals:
-- Header with page title and brief description.
-- Cookie categories section:
-  - Category pills or cards for: Necessary, Analytics, Marketing.
-  - Each category shows a short explanation, data usage notes, and a toggle/checkbox control.
-  - Analytics and Marketing categories should be disabled by default unless user consents to necessary cookies enabling them, depending on policy.
-- Consent controls:
-  - “Accept All” and “Reject All” primary actions.
-  - Per-category toggles with clear on/off states.
-  - A compact “Save Preferences” button to persist changes.
-  - Optional “Audit trail” indicator showing when consent was last updated.
-- Accessibility:
-  - Keyboard navigable, screen-reader friendly, and proper ARIA roles.
-- Feedback:
-  - Toast or inline confirmation after saving preferences.
-  - Visual cues for required/active/inactive states.
-- Visual guidance:
-  - Dark UI with high-contrast typography per project style.
-  - Card-based layout for category explanations with subtle elevation.
-  - Persisted state reflected immediately in the UI and in the save feedback.
-
-API integrations:
-- No external APIs required for this prompt. The design must accommodate future API-backed persistence, but for now the cookie policy page should:
-  - Use a local persistence approach (e.g., localStorage) to store consent state.
-  - Respect the runtime safety rules for array handling and nullish values if lists are populated.
+---
 
 ## Components to Build
-- CookiePolicyPage
-  - Layout: header, description, category grid, action bar.
-  - State management: per-category consent state, overall saved state, and a “dirty” flag for unsaved changes.
-  - Persistence: save to and load from localStorage with safe guards.
-  - Accessibility: ARIA labels, roles, and keyboard focus management.
-- CookieCategoryCard
-  - Props: id, title, description, dataUsageNotes, defaultConsent, disabled (for necessary cookies).
-  - UI: explanatory copy, toggle control, and status badge.
-  - Behavior: toggling updates parent state, enforces that Necessary category cannot be turned off if policy requires it.
-- ConsentControls
-  - Controls: Accept All, Reject All, Save Preferences.
-  - Behavior: update all category states, reset to defaults, show confirmation.
-- AuditTrailPreview (optional)
-  - Lightweight readout showing last consent update timestamp and changes (read-only display).
-- PersistenceService (utility)
-  - Methods: loadConsent(), saveConsent(payload), resetConsent().
-  - Safeguards: use data ?? [] patterns, ensure arrays are valid before mapping.
-- UIToast (optional)
-  - Simple toast for saving confirmations.
-- Accessibility helpers
-  - FocusTrap or proper focus management when modal/section expands.
+
+1) Conflict Resolution Engine (Core Engine)
+- Purpose: Evaluate a given set of agent conflicts, apply deterministic, prioritized rules, and produce a resolution with explanation.
+- Key features:
+  - Rule Definition DSL:
+    - Priority-ordered rules with explicit precedence.
+    - Conditional checks (predicates) with support for memory-scoped reads and tool/permission constraints.
+    - Ability to reference run inputs, agent states, and historical traces.
+  - Evaluation Kernel:
+    - Deterministic, reproducible outputs given the same inputs.
+    - Pure function mode with an optional side-effect hook for reversible actions.
+  - Explainability & Audit:
+    - For each conflict, emit a decision record containing: inputs, matched rules, rationale, final outcome, and per-agent justifications.
+  - Human-in-the-Loop:
+    - Support manual overrides, approvals, and notes that can alter the automatic outcome while preserving an audit trail.
+  - Safety & Constraints:
+    - Enforce safety rails (e.g., required confirmations for irreversible actions).
+    - Respect permissions/automation levels, quotas, and spend limits.
+  - Reversibility:
+    - Generated artifacts include a reversible delta/log that can revert actions if needed.
+- Data model:
+  - Conflicts: { id, agents: [AgentSlot], context: object, createdAt, status }
+  - Rules: { id, name, priority, conditionAST, actions }
+  - Resolutions: { id, conflictId, outcome, explanations, appliedActions, overrides, timestamp }
+  - AgentState: per-agent memory and variables used by rules
+  - History/Log: trace entries for explainability
+
+2) Run Details Page (Run Details View)
+- Purpose: Present a detailed view of a single cron/agent run, including inputs, inter-agent trace, logs, diffs, artifacts, timing, and outcome, with the ability to revert actions.
+- Features:
+  - Inputs Panel: Show all inputs, with redaction/abstraction for sensitive data; guard against undefined values.
+  - Agent-to-Agent Trace: Render a directed graph of messages exchanged during the run; allow filtering by agent, type, and time; robustly handle missing nodes gracefully.
+  - Logs & Events: Sequenced log stream with timestamps; support searching, filtering, and collapsing long logs.
+  - Diffs & Artifacts: Show diffs between pre/post states, artifacts produced, and their provenance; if data is missing, render placeholders with helpful hints.
+  - Timing & Timelines: Visual timeline showing start, end, and durations for each stage; handle partial timing data safely.
+  - Outcome & Reverts:
+    - Display final resolution, rationale, and per-agent outcomes.
+    - Revert Actions: UI to revert executed actions with safety confirmations; trace the revert as a reversible operation in the audit log.
+  - Validation & Safety:
+    - All data reads guarded with Array.isArray checks and data ?? [] defaults.
+    - Use nullish coalescing for all API results; never assume non-null arrays.
+- Data interactions:
+  - API: GET /runs/{runId}, GET /runs/{runId}/trace, GET /runs/{runId}/logs, POST /runs/{runId}/revert
+  - State: Use useState<T[]>([]) for array-type state; guard rendering with Array.isArray checks.
+
+3) Agent Trace & Debugger (Debugger Tool)
+- Purpose: Debug agent behavior via an interactive tool that presents a visual conversation graph, scoped memory, variable states, and step-through execution.
+- Features:
+  - Visual Conversation Graph:
+    - Nodes represent agents/messages; edges depict handoffs and negotiations.
+    - Real-time or replayed execution modes; handle incomplete traces gracefully.
+  - Scoped Memory & Variables:
+    - Per-agent memory segments exposed as read-only by default with the ability to inspect and annotate.
+    - Variable state panels showing current values, types, and change history.
+  - Step-Through Execution:
+    - Step, pause, resume, and replay execution steps; allow stepping over or into function calls.
+  - Filtering, Search, and Safeguards:
+    - Filter trace by agent, message type, or time window.
+    - Guard against rendering null/undefined data; render empty states gracefully.
+- Data interactions:
+  - API: GET /debug/run/{runId}/trace, GET /debug/run/{runId}/memory, POST /debug/run/{runId}/step
+  - State: Initialize arrays with [] defaults; verify with Array.isArray() before mapping.
+
+---
 
 ## Implementation Requirements
 
 ### Frontend
-- State initialization:
-  - useState with explicit array types for category states, e.g., useState<{ id: string; enabled: boolean }[]>([]).
-  - Initialize consent categories as an array with three entries: Necessary (must be enabled and non-toggleable by policy), Analytics, Marketing.
-- Data handling and safety:
-  - Always guard array operations:
-    - const categories = (consent?.categories ?? []) as Array<{ id: string; enabled: boolean }>;
-    - categories?.map(...) should be used safely with Array.isArray checks.
-  - Persist consent state to localStorage with a stable key (e.g., "lifeops_cookie_consent_v1"). When loading, ensure shape validity: Array.isArray(data?.categories) ? data.categories : [].
-  - Ensure null safety for any API-esque responses (even if not used) with data ?? [] and Array.isArray checks.
-- UI behavior:
-  - Necessary category cannot be disabled. If user attempts to toggle analytics/marketing off, allow but reflect caveat in UI and validation.
-  - Per-category toggles update state immutably.
-  - Save button is disabled if nothing has changed since last save (use a dirty flag).
-  - On save, show a small inline confirmation or toast and update lastSavedAt in AuditTrailPreview.
-- Accessibility and semantics:
-  - Use semantic HTML (section, header, main, nav, etc.).
-  - ARIA attributes for the cookie category toggles (aria-checked, role="switch" or input type="checkbox" with proper labeling).
-  - Keyboard accessible: allow toggle via Space/Enter; provide visible focus states.
-- Styling:
-  - Implement per the provided visual style tokens: use the color palette and typography guidelines. Cards with rounded corners, subtle borders, and a soft elevation. Use the dark background gradient described for depth.
-  - Spacing and rhythm follow the 8px baseline grid with 16/24/32 spacings as described.
+- UI Framework: React (TypeScript) with a design system aligned to the provided Visual Style.
+- Components:
+  - CREnginePanel: Card-style container for engine configuration and status.
+  - RuleDSLEditor: DSL editor with syntax highlighting, validation, and live preview of rule evaluation impact.
+  - ConflictList: Compact, searchable list of conflicts with per-item actions (resolve, override, inspect).
+  - RunDetailsPage (page_run_details_010):
+    - Tabs: Overview, Inputs, Trace, Logs, Diffs, Artifacts, Timing, Outcome, Revert.
+    - RevertModal: Confirm irreversible actions with explicit user confirmation data.
+  - AgentTraceDebugger (page_agent_trace_011):
+    - GraphCanvas: Visual graph with pan/zoom.
+    - MemoryInspector: Per-agent memory and variable state inspector.
+    - Stepper: Controls to step through execution with play/pause.
+  - LogsView: Filterable, searchable log stream with timestamp formatting.
+  - DiffViewer: Side-by-side diffs with contextual annotations.
+- Data Safety:
+  - All arrays guarded: (data ?? []).map(...), Array.isArray(data) ? data.map(...) : [].
+  - Supabase-like results: treat data as data ?? [] for arrays; const items = data ?? [].
+  - State defaults: useState<Type[]>([]) for all array types; useState<MemoryEntry> for memory.
+- API Integration:
+  - Typed API clients with proper input validation and error handling.
+  - Validation / normalization: const list = Array.isArray(response?.data) ? response.data : [].
+- Accessibility:
+  - Keyboard navigable, proper aria attributes for graphs and controls.
 - Performance:
-  - Lightweight; no heavy computations or rerenders beyond necessary state updates.
-  - Avoid memory leaks by cleaning up effects if used.
+  - Virtualized lists for large traces, pagination or lazy loading for logs/diffs to prevent overdraw.
+- Security:
+  - Ensure that any action requiring permissions checks is gated server-side; UI only surfaces allowed actions.
+  - Sensitive data redaction in UI (e.g., inputs, prompts) where necessary.
 
 ### Backend
-- No APIs required for this task. Prepare the code to be API-ready:
-  - Provide an API-agnostic persistence layer (ConsentStorage) that can be swapped to API calls later without changing core components.
-  - If you implement a mock API layer, ensure responses align with the runtime safety rules (data ?? [], Array.isArray checks).
+- APIs:
+  - Conflict Engine
+    - POST /conflicts/resolve
+      - Body: { conflicts: ConflictInput[], rules: RuleDraft[] }
+      - Returns: { resolutions: ResolutionRecord[], trace: ExplanationTrail, artifacts: ArtifactList }
+    - GET /conflicts/{id}
+    - POST /conflicts/{id}/override
+  - Run Details
+    - GET /runs/{runId}
+    - GET /runs/{runId}/trace
+    - GET /runs/{runId}/logs
+    - POST /runs/{runId}/revert
+  - Debugger
+    - GET /debug/runs/{runId}/trace
+    - GET /debug/runs/{runId}/memory
+    - POST /debug/runs/{runId}/step
+- Data Models (with strict validation and null safety):
+  - Conflict
+    - id: string
+    - agents: { id: string, role: string, priority: number }[]
+    - context: Record<string, any> | null
+    - status: 'open' | 'resolved' | 'overridden'
+  - Rule
+    - id: string
+    - name: string
+    - priority: number
+    - condition: string // DSL or AST
+    - actions: Array<{ type: string, payload?: any }>
+  - Resolution
+    - id: string
+    - conflictId: string
+    - outcome: string
+    - explanations: string[]
+    - appliedActions: Array<{ agentId: string, action: string, success: boolean }>
+    - overrides?: string
+    - timestamp: string
+  - Run
+    - id: string
+    - cronjobId: string
+    - inputs: Record<string, any>
+    - agentTrace: Array<any>
+    - logs: string[]
+    - artifacts: Array<{ name: string, uri: string, type: string }>
+    - outcome: string
+    - timing: { start: string, end?: string, duration?: number }
+  - Memory
+    - agentId: string
+    - memory: Record<string, any>
+  - Artifact
+    - id: string
+    - name: string
+    - uri: string
+    - type: string
+- DSL & Evaluation:
+  - DSL Parser/Compiler to an internal AST
+  - Evaluator that executes rules in priority order
+  - Reproducibility: seedable RNG if randomness exists; deterministic memory reads
+- Audit & Logging:
+  - Every resolution must be logged with justification, rule trace, time, and who invoked human override
+- Validation:
+  - Input schemas validated with runtime checks
+  - Outputs always shaped to expected types; null-safe.
 
 ### Integration
-- The CookiePolicyPage should be a standalone route/component that can be mounted within LifeOps Master Dashboard.
-- If there is a global theme or design system, ensure the component uses that system for colors, typography, and spacing.
-- The Consent state must be available to child modules if needed; expose via props or a simple context (e.g., ConsentContext) with safe defaults.
+- Data flow:
+  - Cronjob creates a Run with inputs and initial memory.
+  - The Conflict Engine processes conflicts for a run and emits a Resolution with explanations.
+  - Run Details page reads run, trace, and logs via safe API calls; supports revert.
+  - Debugger pulls trace/memory for the run and allows step-through execution.
+- State management:
+  - Centralized store for runs and conflicts with robust selectors and memoization.
+  - API clients with fallback defaults to [] for arrays; use of Array.isArray checks.
+- Observability:
+  - Structured logging for all steps; traces emitted as JSON with position, timestamp, and actor.
+  - Metrics: resolution latency, rule hit count per run, number of overrides, revert counts.
+- Security:
+  - All endpoints protected by authentication/authorization middleware.
+  - Data leakage prevention: redact sensitive fields in responses unless explicitly authorized.
+
+---
 
 ## User Experience Flow
-- User lands on Cookie Policy page.
-- Page loads with three categories:
-  - Necessary: enabled and non-toggleable, with a short explanation.
-  - Analytics: default off; description provided; user can toggle on/off.
-  - Marketing: default off; description provided; user can toggle on/off.
-- User reviews explanations and toggles analytics/marketing as desired.
-- User clicks Save Preferences.
-  - If successfully saved, a confirmation appears (toast or inline).
-  - Audit trail shows the timestamp and changes.
-- User can click Accept All to enable all categories (subject to Necessary constraints) and Save Preferences, then confirmation appears.
-- User can click Reject All to disable Analytics and Marketing, then Save Preferences, with confirmation.
-- All interactions gracefully handle null/undefined data and guard array operations as described.
+
+1) Access Master Dashboard
+- Open Conflict Resolution Engine panel; see quick overview: active conflicts, latest resolutions, and run history.
+- Create or edit a Rule DSL with a guided editor.
+
+2) Create/Inspect Conflicts
+- User defines or imports a set of conflicts with agents and goals.
+- CRE validates input data (guards against null/undefined; uses data ?? [] and Array.isArray checks).
+
+3) Run Conflict Resolution
+- Trigger POST /conflicts/resolve with conflicts + rules.
+- Engine processes in deterministic order, saving a Resolution and trace.
+- The Run includes: inputs, agent traces, logs, and outcome; create a Run record.
+
+4) Run Details Page (page_run_details_010)
+- Navigate to a specific run.
+- View:
+  - Inputs panel with redaction for sensitive data.
+  - Agent-to-Agent Trace graph with drill-down per message.
+  - Logs and Diffs showing state changes.
+  - Artifacts produced and their provenance.
+  - Timing chart and duration bars.
+  - Outcome summary with per-agent decisions and rationale.
+- Revert Actions:
+  - If allowed, click Revert to trigger a reversible delta, with a confirmation step.
+  - Audit log updated to reflect reversal.
+
+5) Agent Trace & Debugger (page_agent_trace_011)
+- Open debugger for a specific run.
+- Visual graph shows agents and message flow; filter by type or time.
+- Inspect per-agent memory and variable states.
+- Step through execution:
+  - Step, Resume, Pause, and Jump-to-step.
+  - See state changes in memory and variables in real time.
+- Save or export a snapshot of the trace for audits.
+
+6) Human-in-the-Loop Overrides
+- Approvals Queue: actions requiring human approval appear with context, rationale, and risk indicators.
+- Approve/Reject with notes; ensure changes are captured in the Resolution history.
+
+7) Reproducibility & Audit
+- All decisions are explainable and auditable with a full trace of rule hits, inputs, and actions.
+- Replays are possible using the same inputs and rule set to reproduce outcomes.
+
+---
 
 ## Technical Specifications
 
-Data Models:
-- ConsentCategory
-  - id: string ("necessary" | "analytics" | "marketing")
-  - enabled: boolean
-  - description: string
-  - required?: boolean (true for necessary)
-- CookieConsentState
-  - categories: ConsentCategory[]
-  - lastUpdated?: string (ISO timestamp)
-  - auditTrail?: Array<{ timestamp: string, changes: string[] }>
+- Data Models (key schemas to implement)
+  - Conflict: { id: string, agents: { id: string, role: string, priority: number }[], context?: Record<string, any>, status: 'open'|'resolved'|'overridden' }
+  - Rule: { id: string, name: string, priority: number, condition: string, actions: Array<{ type: string, payload?: any }> }
+  - Resolution: { id: string, conflictId: string, outcome: string, explanations: string[], appliedActions: Array<{ agentId: string, action: string, success: boolean }>, overrides?: string, timestamp: string }
+  - Run: { id: string, cronjobId: string, inputs: Record<string, any>, agentTrace: any[], logs: string[], artifacts: { name: string, uri: string, type: string }[], outcome: string, timing: { start: string, end?: string, duration?: number } }
+  - Memory: { agentId: string, memory: Record<string, any> }
 
-API Endpoints (Design-Only for now; implement later):
-- GET /consent-cookie
-  - Returns CookieConsentState
-- POST /consent-cookie
-  - Payload: CookieConsentState
-  - Persists consent and returns updated state
-- DELETE /consent-cookie
-  - Clears stored consent
+- API Endpoints
+  - POST /conflicts/resolve
+  - GET /conflicts/{id}
+  - POST /conflicts/{id}/override
+  - GET /runs/{runId}
+  - GET /runs/{runId}/trace
+  - GET /runs/{runId}/logs
+  - POST /runs/{runId}/revert
+  - GET /debug/runs/{runId}/trace
+  - GET /debug/runs/{runId}/memory
+  - POST /debug/runs/{runId}/step
 
-Security:
-- Since this is a client-side page, implement no sensitive data handling. When integrating with backend later, ensure authentication checks and proper authorization for retrieving/updating consent.
+- Security
+  - JWT/OAuth-based authentication; RBAC for actions (viewer, editor, approver, admin).
+  - Data access controls per run/conflict; sensitive fields redacted unless authorized.
 
-Validation:
-- Ensure categories is an array.
-- Ensure each category item has id and enabled properties with correct types.
-- For saving, ensure at least necessary category is enabled; otherwise show validation error.
+- Validation
+  - Always ensure inputs are validated server-side; use runtime guards:
+    - const list = Array.isArray(response?.data) ? response.data : []
+    - const items = data ?? []
+    - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
-Destructuring with defaults and null-safety patterns:
-- const { categories = [], lastUpdated = new Date().toISOString() } = response ?? {}
-- Always guard array methods: (categories ?? []).map(...)
+- Runtime Safety Rules (enforced across code)
+  - Supabase-like query results: use data ?? [] for arrays.
+  - Array methods guarded: (items ?? []).map(...), Array.isArray(items) ? items.map(...) : [].
+  - React useState defaults: useState<Type[]>([]) for arrays; useState<{...} | null>(null) only when needed.
+  - Optional chaining for nested API responses: obj?.property?.nested.
+  - Destructuring defaults: const { items = [], count = 0 } = response ?? {}
 
-Optional chaining:
-- const firstCat = consent?.categories?.[0]
-- Use obj?.property?.nested for nested API responses.
+---
 
 ## Acceptance Criteria
-- [ ] Three categories render with correct default states (Necessary enabled and non-toggleable; Analytics and Marketing toggles off by default).
-- [ ] Toggling Analytics/Marketing updates state immutably and preserves accessibility semantics.
-- [ ] Save Preferences persists to localStorage and reloads correctly on page refresh.
-- [ ] Accept All and Reject All actions behave as expected, with Necessary always enabled and a confirmation shown after save.
-- [ ] Audit trail displays last updated timestamp and the changed categories upon save.
-- [ ] All array operations guarded with (array ?? []).map(...) or Array.isArray checks.
-- [ ] useState initializations for arrays use correct defaults: useState<CookieConsentState["categories"]>([]) and consistent typing.
 
-UI/UX Guidelines
-- Adhere to the project’s visual style: dark UI, elevated cards, subtle borders, and a restrained accent color usage (red for critical alerts if any).
-- Maintain consistent typography, spacing, and alignment with the LifeOps dashboard.
-- Provide clear affordances for interactions, with smooth micro-interactions (200ms transitions) and accessible focus states.
+- [ ] Deterministic resolution outcomes: Given identical inputs and rules, engine yields identical resolutions with identical explanations.
+- [ ] Full explainability: Each resolution includes a trace of matched rules, inputs, agent justifications, and per-action rationale.
+- [ ] Reversibility: Revert actions produce a reversible delta and an audit trail entry; UI supports safe confirm flows.
+- [ ] Safe UI rendering: All arrays and potential nulls guarded (e.g., (data ?? []).map(...), Array.isArray checks, etc.).
+- [ ] Human-in-the-loop: Approvals queue surfaces necessary context and allows producers/approvers to annotate decisions.
+- [ ] Performance: Graph rendering, trace navigation, and large logs are paginated or virtualized; responsive under 1–2 seconds for typical runs.
+- [ ] Accessibility: Keyboard nav, screen-reader friendly graphs and controls.
+- [ ] Security: All mutations authorized; sensitive data redacted; audit logs immutable or append-only.
 
-Visual Style (as provided)
-- Follow the exact color palette and typography guidance:
-  - Backgrounds, surfaces, text, borders, and accent colors as specified.
-  - Elevation, border radii, padding, and spacing tuned to the 8px grid.
-  - Card, navigation, and data-visual design patterns consistent with LifeOps style.
+---
 
-Mandatory Coding Standards — Runtime Safety
-- Supabase or API results guard:
-  - Not applicable here, but apply: data ?? [] when dealing with results.
-- Array methods safety:
-  - (categories ?? []).map(...)
-  - Array.isArray(categories) ? categories.map(...) : []
-- React useState for arrays:
-  - useState<ConsentCategory[]>([]) or equivalent type-safe initialization.
-- API response shapes:
-  - const list = Array.isArray(response?.data) ? response.data : []
-- Optional chaining:
-  - Use obj?.property?.nested throughout.
-- Destructuring with defaults:
-  - const { categories = [], lastUpdated = "" } = response ?? {}
+## UI/UX Guidelines (Applied Design System)
 
-Generate the complete, detailed prompt now so the AI development tool can build this feature.
+- Visual Style
+  - Colors and typography as specified in the Visual Style section.
+  - Dark, elevated cards with subtle borders and shadows.
+  - Consistent typography scales: headings 20–28px, card titles 14–16px, body 12–14px, microcopy 11–12px.
+- Layout
+  - 8px baseline grid; sidebars 220–260px; header 56–64px.
+  - Dense, information-rich panels suitable for power users.
+- Components
+  - Card components with top icon, bold title, metadata subtext.
+  - Graphs with minimal gridlines and clearly distinguishable data series.
+  - Tables/lists with compact density and quick actions.
+  - Modals for confirm actions (revert, approvals) with explicit warnings.
+- Interaction
+  - Hover lifts, focus rings, smooth transitions (120–200ms).
+  - Clear affordances for destructive/critical actions (red accent, confirmation steps).
+  - Tooltips for dense data—avoid clutter but provide clarifications on demand.
+
+---
+
+## Mandatory Coding Standards — Runtime Safety
+
+CRITICAL: Follow these rules in ALL generated code to prevent runtime crashes.
+
+1) Supabase query results: Always use nullish coalescing — const items = data ?? [].
+2) Array methods: Never call on a value that could be null/undefined or non-array. Guard:
+   - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+3) React useState for arrays/objects: Always initialize with the correct type — useState<Type[]>([]) or useState<MemoryEntry[]>([]); never useState() or useState(null) for arrays.
+4) API response shapes: Always validate — const list = Array.isArray(response?.data) ? response.data : [].
+5) Optional chaining: Use obj?.property?.nested when accessing nested API responses.
+6) Destructuring with defaults: const { items = [], count = 0 } = response ?? {}.
+
+---
+
+## Deliverables
+
+- Fully implemented Conflict Resolution Engine with deterministic rule evaluation, explainability, and reversibility.
+- Run Details Page (page_run_details_010) with inputs, traces, logs, diffs, artifacts, timing, outcome, and revert capability.
+- Agent Trace & Debugger (page_agent_trace_011) with visual conversation graph, scoped memory, variable states, and step-through execution.
+- Type-safe API layer, thorough input validation, and runtime safeguards as described.
+- Complete tests:
+  - Unit tests for engine rule evaluation and explainability paths.
+  - Integration tests for run creation, trace generation, and revert flow.
+  - End-to-end tests for UI flows with mock data for the two pages.
+- Documentation:
+  - DSL spec and examples.
+  - Run details schema and trace format.
+  - Developer guide on how to extend rules, add manual overrides, and audit trails.
+
+If you need a concrete data model diagram, API contract definitions (OpenAPI-like), or starter code templates (TypeScript/React and Node.js), I can generate those next.
 
 ## Implementation Notes
 

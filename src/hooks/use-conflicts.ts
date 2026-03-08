@@ -59,11 +59,11 @@ export function useResolveConflicts() {
     onSuccess: (data: ResolveConflictsResponse) => {
       const resolutions = safeArray<ResolutionRecord>(data?.resolutions);
       setLastResolutions(resolutions);
+      qc.setQueryData(keys.resolutions(), resolutions);
       if (resolutions.length > 0) {
         toast.success(`Resolved ${resolutions.length} conflict(s)`);
       }
       qc.invalidateQueries({ queryKey: keys.list() });
-      qc.invalidateQueries({ queryKey: keys.resolutions() });
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Resolution failed");
@@ -99,10 +99,16 @@ export function useOverrideConflict() {
 /** Cached resolutions from last resolve; for display in CRE panel. */
 const lastResolutionsRef: { current: ResolutionRecord[] } = { current: [] };
 
-export function useLastResolutions(): ResolutionRecord[] {
-  return lastResolutionsRef.current;
-}
-
 export function setLastResolutions(resolutions: ResolutionRecord[]): void {
   lastResolutionsRef.current = resolutions ?? [];
+}
+
+/** Resolutions from last resolve; reactive via React Query. */
+export function useLastResolutions(): ResolutionRecord[] {
+  const query = useQuery({
+    queryKey: keys.resolutions(),
+    queryFn: () => Promise.resolve(lastResolutionsRef.current),
+    staleTime: 60 * 1000,
+  });
+  return safeArray<ResolutionRecord>(query.data);
 }
