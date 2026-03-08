@@ -78,10 +78,11 @@ export function normalizeGoogleFit(
     const start = (p as GoogleFitPoint).startTimeNanos;
     const end = (p as GoogleFitPoint).endTimeNanos;
     const timestamp = isoFromNanos(start || end);
-    const vals = safeArray((p as GoogleFitPoint).value);
+    const vals = safeArray<{ fpVal?: number; intVal?: number }>((p as GoogleFitPoint).value);
+    const first = vals[0];
     const value =
-      vals.length > 0
-        ? (vals[0]?.fpVal ?? vals[0]?.intVal ?? 0)
+      first !== undefined
+        ? (first.fpVal ?? first.intVal ?? 0)
         : 0;
     out.push({ userId, source: "google_fit", type, timestamp, value });
   }

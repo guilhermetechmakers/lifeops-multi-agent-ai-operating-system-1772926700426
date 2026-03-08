@@ -18,7 +18,6 @@ import type {
   GroceryItem,
   AuditLog,
   HealthDataSource,
-  HealthDataPoint,
   HealthConsents,
   CalendarEvent,
 } from "@/types/health";
@@ -422,7 +421,9 @@ export async function fetchConsents(userId: string): Promise<HealthConsents | nu
       `/consents?userId=${encodeURIComponent(userId)}`
     );
     const raw = (data as { data?: HealthConsents })?.data ?? data;
-    return raw && typeof raw === "object" && raw.userId ? (raw as HealthConsents) : null;
+    return raw && typeof raw === "object" && !Array.isArray(raw) && "userId" in raw
+      ? (raw as HealthConsents)
+      : null;
   } catch {
     await delay(MOCK_DELAY);
     return {
