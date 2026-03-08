@@ -7,6 +7,7 @@ import { api, safeArray } from "@/lib/api";
 import type {
   FinanceDashboardData,
   Transaction,
+  Category,
   Subscription,
   Anomaly,
   Forecast,
@@ -39,6 +40,10 @@ function asMonthlyCloseTasks(data: unknown): MonthlyCloseTask[] {
 
 function asRecommendations(data: unknown): AgentRecommendation[] {
   return safeArray<AgentRecommendation>(data);
+}
+
+function asCategories(data: unknown): Category[] {
+  return safeArray<Category>(data);
 }
 
 function isDashboardData(v: unknown): v is FinanceDashboardData {
@@ -128,6 +133,13 @@ export async function updateFinanceTransaction(id: string, payload: Partial<Tran
   const t = (res as { data?: Transaction })?.data ?? (typeof (res as Transaction).id === "string" ? (res as Transaction) : null);
   if (!t) throw new Error("Failed to update transaction");
   return t;
+}
+
+/** GET /finance/categories */
+export async function fetchFinanceCategories(): Promise<Category[]> {
+  const raw = await api.get<Category[] | { data?: Category[] }>(`${BASE}/categories`);
+  const data = Array.isArray(raw) ? raw : (raw as { data?: Category[] })?.data;
+  return asCategories(data);
 }
 
 export async function ingestTransactions(transactions: Transaction[]): Promise<{ count: number }> {

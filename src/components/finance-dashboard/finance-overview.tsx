@@ -50,7 +50,15 @@ export function FinanceOverview() {
         opportunitiesCount={opportunities.count ?? 0}
         isLoading={isLoading}
       />
-
+      <FinanceKpiStrip
+        runwayMonths={runwayMonths}
+        mrr={mrr}
+        arr={arr}
+        churnRate={churnRate}
+        forecastVariance={forecastVariance}
+        currency={balances.currency ?? "USD"}
+        isLoading={isLoading}
+      />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <TransactionsOverview

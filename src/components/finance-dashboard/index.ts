@@ -2,6 +2,7 @@ export { FinanceDashboardShell } from "./finance-dashboard-shell";
 export { FinanceOverview } from "./finance-overview";
 export { FinanceNavPane } from "./nav-pane";
 export { SnapshotTiles } from "./snapshot-tiles";
+export { FinanceKpiStrip } from "./kpi-strip";
 export { TransactionsOverview } from "./transactions-overview";
 export { SubscriptionsPanel } from "./subscriptions-panel";
 export { AnomaliesPanel } from "./anomalies-panel";
