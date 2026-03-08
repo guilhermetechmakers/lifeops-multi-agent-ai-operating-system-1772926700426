@@ -189,10 +189,28 @@ export async function mockGetRunDetail(runId: string, cronjobId?: string): Promi
   await new Promise((r) => setTimeout(r, 300));
   const run = getOrCreateRun(runId, cronjobId);
   if (runId === "run-2" || runId.endsWith("-running")) {
-    return { ...run, status: "running", endedAt: undefined };
+    const runningRun = { ...run, status: "running" as const, endedAt: undefined };
+    runningRun.pendingApprovals = [
+      {
+        id: "approval-1",
+        actionType: "human-review",
+        context: { prCount: 3, threshold: 5 },
+        requestedAt: run.startedAt,
+      },
+    ];
+    return runningRun;
   }
   if (runId.endsWith("-paused")) {
-    return { ...run, status: "paused", endedAt: undefined };
+    const pausedRun = { ...run, status: "paused" as const, endedAt: undefined };
+    pausedRun.pendingApprovals = [
+      {
+        id: "approval-1",
+        actionType: "human-review",
+        context: { prCount: 3, threshold: 5 },
+        requestedAt: run.startedAt,
+      },
+    ];
+    return pausedRun;
   }
   return run;
 }

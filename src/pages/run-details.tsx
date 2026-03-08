@@ -28,6 +28,7 @@ import {
   ArtifactsPanel,
   TimingPane,
   ReversibilityPanel,
+  RevertModal,
   AuditTrailPanel,
   RelatedContextPanel,
   RunOverviewPanel,
@@ -63,6 +64,7 @@ export default function RunDetailsPage() {
   const haltMutation = useHaltRun(runId ?? null);
   const injectMutation = useInjectInput(runId ?? null);
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
+  const [revertReason, setRevertReason] = useState("");
   const [injectModalOpen, setInjectModalOpen] = useState(false);
   const [traceViewMode, setTraceViewMode] = useState<"timeline" | "graph">("timeline");
 
@@ -109,6 +111,7 @@ export default function RunDetailsPage() {
         confirmations: [],
       });
       setRevertDialogOpen(false);
+      setRevertReason("");
     },
     [revertMutation]
   );

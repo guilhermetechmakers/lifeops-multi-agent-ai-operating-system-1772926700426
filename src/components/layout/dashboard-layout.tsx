@@ -19,6 +19,7 @@ import {
   Bell,
   HelpCircle,
   Shield,
+  GitMerge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const navItems = [
   { to: "/dashboard/cronjobs", label: "Cronjobs", icon: Clock },
   { to: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },
   { to: "/dashboard/debug", label: "Agent Trace", icon: Bug },
+  { to: "/dashboard/conflicts", label: "Conflict Resolution", icon: GitMerge },
   { to: "/dashboard/projects", label: "Projects", icon: FolderKanban },
   { to: "/dashboard/content", label: "Content", icon: FileText },
   { to: "/dashboard/artifacts", label: "Artifacts", icon: Paperclip },

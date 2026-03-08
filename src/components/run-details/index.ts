@@ -8,6 +8,7 @@ export { MemoryDiffPanel } from "./memory-diff-panel";
 export { ArtifactsPanel } from "./artifacts-panel";
 export { TimingPane } from "./timing-pane";
 export { ReversibilityPanel } from "./reversibility-panel";
+export { RevertModal } from "./revert-modal";
 export { AuditTrailPanel } from "./audit-trail-panel";
 export { RelatedContextPanel } from "./related-context-panel";
 export { RunOverviewPanel } from "./run-overview-panel";
