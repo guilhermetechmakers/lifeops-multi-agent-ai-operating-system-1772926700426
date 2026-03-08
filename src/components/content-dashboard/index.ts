@@ -2,6 +2,8 @@ export { ContentDashboardShell } from "./content-dashboard-shell";
 export { ContentCalendarPanel } from "./content-calendar-panel";
 export { DraftsPanel } from "./drafts-panel";
 export { PublishingQueuePanel } from "./publishing-queue-panel";
+export { PipelineSummaryCard } from "./pipeline-summary-card";
+export { ApprovalsQueuePanel } from "./approvals-queue-panel";
 export { AgentRecommendationsPanel } from "./agent-recommendations-panel";
 export { SEOPerformancePanel } from "./seo-performance-panel";
 export { GlobalSearchBar } from "./global-search-bar";

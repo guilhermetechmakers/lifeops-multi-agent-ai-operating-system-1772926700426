@@ -10,6 +10,8 @@ import type {
   SEOInsight,
   AgentRecommendation,
   PublishingQueueItem,
+  PipelineRunSummary,
+  ApprovalItem,
 } from "@/types/content-dashboard";
 import type { ContentItemsResponse } from "./content-dashboard";
 
@@ -21,6 +23,7 @@ const MOCK_CONTENT_ITEMS: ContentItem[] = [
     projectId: "proj-1",
     status: "draft",
     authorId: "u1",
+    authorName: "Alex Chen",
     assigneeIds: ["u1"],
     scheduledAt: "2025-03-15T10:00:00Z",
     version: 2,
@@ -35,6 +38,7 @@ const MOCK_CONTENT_ITEMS: ContentItem[] = [
     projectId: "proj-1",
     status: "edit",
     authorId: "u2",
+    authorName: "Sam Rivera",
     assigneeIds: ["u2", "u3"],
     scheduledAt: "2025-03-18T14:00:00Z",
     version: 3,
@@ -49,6 +53,7 @@ const MOCK_CONTENT_ITEMS: ContentItem[] = [
     projectId: "proj-1",
     status: "idea",
     authorId: "u1",
+    authorName: "Alex Chen",
     assigneeIds: [],
     version: 1,
     createdAt: "2025-03-05T00:00:00Z",
@@ -61,6 +66,7 @@ const MOCK_CONTENT_ITEMS: ContentItem[] = [
     projectId: "proj-2",
     status: "ready-to-publish",
     authorId: "u3",
+    authorName: "Jordan Lee",
     assigneeIds: ["u3"],
     scheduledAt: "2025-03-10T09:00:00Z",
     version: 4,
@@ -76,6 +82,7 @@ const MOCK_CONTENT_ITEMS: ContentItem[] = [
     projectId: "proj-1",
     status: "research",
     authorId: "u2",
+    authorName: "Sam Rivera",
     assigneeIds: ["u2"],
     version: 1,
     createdAt: "2025-03-04T00:00:00Z",
@@ -88,6 +95,7 @@ const MOCK_CONTENT_ITEMS: ContentItem[] = [
     projectId: "proj-1",
     status: "published",
     authorId: "u1",
+    authorName: "Alex Chen",
     assigneeIds: [],
     publishedAt: "2025-03-01T12:00:00Z",
     version: 5,
@@ -387,4 +395,76 @@ export async function mockOpenEditorWithData(
 
 export function mockGetPublishingQueue(): Promise<PublishingQueueItem[]> {
   return Promise.resolve([...MOCK_PUBLISHING_QUEUE]);
+}
+
+export async function mockRetryPublishingQueueItem(
+  id: string
+): Promise<PublishingQueueItem> {
+  const item = MOCK_PUBLISHING_QUEUE.find((i) => i.id === id);
+  if (!item) throw new Error("Queue item not found");
+  return {
+    ...item,
+    status: "scheduled",
+    retries: (item.retries ?? 0) + 1,
+    outcome: "Retry scheduled",
+  };
+}
+
+const MOCK_PIPELINE_RUNS: PipelineRunSummary[] = [
+  {
+    id: "pr-1",
+    draftId: "ci-1",
+    contentTitle: "Getting Started with LifeOps",
+    status: "running",
+    currentStep: "drafting",
+    progress: 45,
+    eta: "~5 min",
+    lastAction: "Research completed",
+    startedAt: "2025-03-08T10:00:00Z",
+  },
+  {
+    id: "pr-2",
+    draftId: "ci-2",
+    contentTitle: "Content Pipeline Best Practices",
+    status: "completed",
+    progress: 100,
+    lastAction: "Published to blog",
+    startedAt: "2025-03-07T14:00:00Z",
+    endedAt: "2025-03-07T14:12:00Z",
+  },
+];
+
+const MOCK_APPROVALS: ApprovalItem[] = [
+  {
+    id: "ap-1",
+    runId: "pr-1",
+    contentTitle: "Getting Started with LifeOps",
+    reviewerId: "u2",
+    reviewerName: "Sam Rivera",
+    status: "pending",
+    requestedAt: "2025-03-08T10:30:00Z",
+    comments: "Ready for review",
+  },
+];
+
+export async function mockFetchPipelineRuns(): Promise<PipelineRunSummary[]> {
+  return [...MOCK_PIPELINE_RUNS];
+}
+
+export async function mockFetchApprovalsQueue(): Promise<ApprovalItem[]> {
+  return [...MOCK_APPROVALS];
+}
+
+export async function mockDecideApproval(
+  _runId: string,
+  approvalId: string,
+  payload: { status: "approved" | "rejected"; comments?: string }
+): Promise<ApprovalItem> {
+  const item = MOCK_APPROVALS.find((a) => a.id === approvalId);
+  if (!item) throw new Error("Approval not found");
+  return {
+    ...item,
+    status: payload.status,
+    comments: payload.comments,
+  };
 }

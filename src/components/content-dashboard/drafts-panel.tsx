@@ -121,8 +121,8 @@ export function DraftsPanel({
                         {item.title}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        Author
+                        <User className="h-3 w-3 shrink-0" />
+                        {item.authorName ?? "Author"}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <Button

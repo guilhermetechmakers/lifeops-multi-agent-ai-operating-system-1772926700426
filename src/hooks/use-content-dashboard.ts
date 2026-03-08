@@ -32,6 +32,8 @@ const QUERY_KEYS = {
   runAudit: (runId: string) => ["content-dashboard", "audit", runId] as const,
   agentRecommendations: ["content-dashboard", "recommendations"] as const,
   publishingQueue: ["content-dashboard", "publishing-queue"] as const,
+  pipelineRuns: ["content-dashboard", "pipelines"] as const,
+  approvalsQueue: ["content-dashboard", "approvals"] as const,
 };
 
 export function useContentItems(params: ContentItemsParams = {}) {
@@ -111,6 +113,21 @@ export function usePublishingQueue() {
   return { ...query, data, items };
 }
 
+export function useRetryPublish() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      USE_MOCK
+        ? mock.mockRetryPublishingQueueItem(id)
+        : api.retryPublishingQueueItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.publishingQueue });
+      toast.success("Retry scheduled");
+    },
+    onError: () => toast.error("Failed to schedule retry"),
+  });
+}
+
 export function useRunAudit(runId: string | null) {
   return useQuery({
     queryKey: QUERY_KEYS.runAudit(runId ?? ""),
@@ -168,5 +185,57 @@ export function useOpenEditor() {
       USE_MOCK
         ? mock.mockOpenEditorWithData(payload)
         : api.openEditorWithData(payload),
+  });
+}
+
+export function usePipelineRuns() {
+  const query = useQuery({
+    queryKey: QUERY_KEYS.pipelineRuns,
+    queryFn: () =>
+      USE_MOCK
+        ? mock.mockFetchPipelineRuns()
+        : api.fetchPipelineRuns(),
+    placeholderData: [],
+  });
+  const items = Array.isArray(query.data) ? query.data : [];
+  return { ...query, items };
+}
+
+export function useApprovalsQueue() {
+  const query = useQuery({
+    queryKey: QUERY_KEYS.approvalsQueue,
+    queryFn: () =>
+      USE_MOCK
+        ? mock.mockFetchApprovalsQueue()
+        : api.fetchApprovalsQueue(),
+    placeholderData: [],
+  });
+  const items = Array.isArray(query.data) ? query.data : [];
+  return { ...query, items };
+}
+
+export function useDecideApproval() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      runId,
+      approvalId,
+      status,
+      comments,
+    }: {
+      runId: string;
+      approvalId: string;
+      status: "approved" | "rejected";
+      comments?: string;
+    }) =>
+      USE_MOCK
+        ? mock.mockDecideApproval(runId, approvalId, { status, comments })
+        : api.decideApproval(runId, approvalId, { status, comments }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.approvalsQueue });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineRuns });
+      toast.success("Approval decided");
+    },
+    onError: () => toast.error("Failed to decide approval"),
   });
 }

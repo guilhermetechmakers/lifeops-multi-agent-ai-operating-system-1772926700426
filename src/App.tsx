@@ -20,6 +20,7 @@ import ProjectDetail from "@/pages/project-detail";
 import TicketBoardPage from "@/pages/ticket-board";
 import ContentDashboardPage from "@/pages/content-dashboard";
 import ContentEditorPage from "@/pages/content-editor";
+import ContentCalendarPage from "@/pages/content-calendar";
 import ArtifactsPage from "@/pages/artifacts";
 import DashboardFinance from "@/pages/dashboard-finance";
 import DashboardHealth from "@/pages/dashboard-health";
@@ -72,6 +73,9 @@ function App() {
           <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
+          {/* Content Dashboard canonical URLs (redirect to dashboard nested routes) */}
+          <Route path="/content-dashboard" element={<Navigate to="/dashboard/content" replace />} />
+          <Route path="/content-dashboard/editor" element={<Navigate to="/dashboard/content/editor" replace />} />
           <Route path="/dashboard" element={<SessionGuard><CommandPaletteProvider><DashboardLayout /></CommandPaletteProvider></SessionGuard>}>
             <Route index element={<DashboardMaster />} />
             <Route path="cronjobs" element={<CronjobsDashboard />} />
@@ -91,6 +95,7 @@ function App() {
             </Route>
             <Route path="content" element={<ContentDashboardPage />} />
             <Route path="content/editor" element={<ContentEditorPage />} />
+            <Route path="content/calendar" element={<ContentCalendarPage />} />
             <Route path="artifacts" element={<ArtifactsPage />} />
             <Route path="finance" element={<DashboardFinance />} />
             <Route path="health" element={<DashboardHealth />} />

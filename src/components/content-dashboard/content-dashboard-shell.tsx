@@ -10,6 +10,7 @@ import { ModuleFiltersBar, type ContentFiltersState } from "./module-filters-bar
 import { ContentCalendarPanel } from "./content-calendar-panel";
 import { DraftsPanel } from "./drafts-panel";
 import { PublishingQueuePanel } from "./publishing-queue-panel";
+import { ApprovalsQueuePanel } from "./approvals-queue-panel";
 import { AgentRecommendationsPanel } from "./agent-recommendations-panel";
 import { SEOPerformancePanel } from "./seo-performance-panel";
 import { ContentEditorShortcutHub } from "./content-editor-shortcut-hub";
@@ -33,7 +34,8 @@ export function ContentDashboardShell() {
     filters,
     search: search || undefined,
   });
-  const recentItems = (contentData?.items ?? []).slice(0, 5);
+  const rawItems = contentData?.items ?? [];
+  const recentItems = Array.isArray(rawItems) ? rawItems.slice(0, 5) : [];
 
   const handleOpenEditor = useCallback(
     (item?: ContentItem) => {
@@ -54,12 +56,14 @@ export function ContentDashboardShell() {
 
   return (
     <AnimatedPage className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Content Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+      <header className="flex flex-col gap-1" style={{ minHeight: "56px" }}>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+          Content Dashboard
+        </h1>
+        <p className="text-sm text-muted-foreground">
           Content pipelines, calendar, drafts, publishing queue, SEO insights
         </p>
-      </div>
+      </header>
 
       {/* Global search + filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -103,6 +107,7 @@ export function ContentDashboardShell() {
 
         {/* Right: Panels */}
         <div className="space-y-6">
+          <ApprovalsQueuePanel />
           <ContentEditorShortcutHub recentItems={recentItems} />
           <AgentRecommendationsPanel onUseIdea={handleUseIdea} />
           <SEOPerformancePanel

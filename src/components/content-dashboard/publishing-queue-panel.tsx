@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Send, RefreshCw, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePublishingQueue } from "@/hooks/use-content-dashboard";
+import { usePublishingQueue, useRetryPublish } from "@/hooks/use-content-dashboard";
 import { format, parseISO } from "date-fns";
 
 export interface PublishingQueuePanelProps {
@@ -16,6 +16,7 @@ export interface PublishingQueuePanelProps {
 
 export function PublishingQueuePanel({ className }: PublishingQueuePanelProps) {
   const { data: queueItems, isLoading } = usePublishingQueue();
+  const retryPublish = useRetryPublish();
   const items = queueItems ?? [];
 
   if (isLoading) {
@@ -105,7 +106,13 @@ export function PublishingQueuePanel({ className }: PublishingQueuePanelProps) {
                     )}
                   </div>
                   {item.status === "failed" && (
-                    <Button size="sm" variant="outline" className="shrink-0 h-7">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 h-7"
+                      onClick={() => retryPublish.mutate(item.id)}
+                      disabled={retryPublish.isPending}
+                    >
                       <RefreshCw className="h-3 w-3 mr-1" />
                       Retry
                     </Button>

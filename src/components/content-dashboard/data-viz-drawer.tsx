@@ -44,28 +44,28 @@ export function DataVizDrawer({ className }: DataVizDrawerProps) {
     <Card className={cn("border-white/[0.03] bg-card", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-purple" />
+          <BarChart3 className="h-5 w-5 text-purple" aria-hidden />
           Content Metrics
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Views trend, draft count
+        <p className="text-xs text-muted-foreground" id="content-metrics-desc">
+          Views trend, draft count. KPI summary for content pipeline health.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent aria-describedby="content-metrics-desc">
         <div className="grid gap-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Drafts</span>
-            <span className="text-lg font-semibold text-foreground">
+            <span className="text-lg font-semibold text-foreground" aria-label={`${draftCount} drafts in progress`}>
               {draftCount}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Published (30d)</span>
-            <span className="text-lg font-semibold text-foreground">
+            <span className="text-lg font-semibold text-foreground" aria-label={`${published.length} published items`}>
               {published.length}
             </span>
           </div>
-          <div className="h-[80px]">
+          <div className="h-[80px]" role="img" aria-label="Views trend sparkline for the last 7 days">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={MOCK_SPARKLINE} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>

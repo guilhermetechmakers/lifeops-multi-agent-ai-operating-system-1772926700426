@@ -108,3 +108,27 @@ export interface ContentFilters {
   tags?: string[];
   search?: string;
 }
+
+export interface PipelineRunSummary {
+  id: string;
+  draftId: string;
+  contentTitle?: string;
+  status: "pending" | "running" | "completed" | "failed";
+  currentStep?: string;
+  progress?: number;
+  eta?: string;
+  lastAction?: string;
+  startedAt: string;
+  endedAt?: string;
+}
+
+export interface ApprovalItem {
+  id: string;
+  runId: string;
+  contentTitle?: string;
+  reviewerId: string;
+  reviewerName?: string;
+  status: "pending" | "approved" | "rejected";
+  requestedAt: string;
+  comments?: string;
+}

@@ -11,6 +11,8 @@ import type {
   SEOInsight,
   AgentRecommendation,
   PublishingQueueItem,
+  PipelineRunSummary,
+  ApprovalItem,
 } from "@/types/content-dashboard";
 
 const BASE = "/content";
@@ -161,4 +163,44 @@ export async function fetchPublishingQueue(): Promise<PublishingQueueItem[]> {
   return safeArray<PublishingQueueItem>(
     (raw as { data?: PublishingQueueItem[] })?.data ?? (raw as PublishingQueueItem[])
   );
+}
+
+export async function retryPublishingQueueItem(id: string): Promise<PublishingQueueItem> {
+  const raw = await api.post<PublishingQueueItem | { data?: PublishingQueueItem }>(
+    `${BASE}/publishing-queue/${id}/retry`,
+    {}
+  );
+  if (raw && typeof raw === "object" && "data" in raw)
+    return (raw as { data?: PublishingQueueItem }).data ?? (raw as PublishingQueueItem);
+  return raw as PublishingQueueItem;
+}
+
+export async function fetchPipelineRuns(): Promise<PipelineRunSummary[]> {
+  const raw = await api.get<PipelineRunSummary[] | { data?: PipelineRunSummary[] }>(
+    `${BASE}/pipelines`
+  );
+  const arr = Array.isArray(raw) ? raw : (raw as { data?: PipelineRunSummary[] })?.data;
+  return safeArray<PipelineRunSummary>(arr ?? raw);
+}
+
+export async function fetchApprovalsQueue(): Promise<ApprovalItem[]> {
+  const raw = await api.get<ApprovalItem[] | { data?: ApprovalItem[] }>(
+    `${BASE}/approvals`
+  );
+  const arr = Array.isArray(raw) ? raw : (raw as { data?: ApprovalItem[] })?.data;
+  return safeArray<ApprovalItem>(arr ?? raw);
+}
+
+export async function decideApproval(
+  runId: string,
+  approvalId: string,
+  payload: { status: "approved" | "rejected"; comments?: string }
+): Promise<ApprovalItem> {
+  const raw = await api.post<ApprovalItem | { data?: ApprovalItem }>(
+    `${BASE}/pipelines/${runId}/approvals/${approvalId}/decide`,
+    payload
+  );
+  if (raw && typeof raw === "object" && "data" in raw)
+    return (raw as { data?: ApprovalItem }).data ?? (raw as ApprovalItem);
+  return raw as ApprovalItem;
 }

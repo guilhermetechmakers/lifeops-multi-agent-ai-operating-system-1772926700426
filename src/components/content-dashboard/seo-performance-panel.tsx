@@ -66,15 +66,16 @@ export function SEOPerformancePanel({
       <CardContent>
         {topItems.length === 0 ? (
           <div className="py-6 text-center">
-            <TrendingUp className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+            <TrendingUp className="h-10 w-10 text-muted-foreground mx-auto mb-2" aria-hidden />
             <p className="text-sm text-muted-foreground">No SEO insights yet</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3" role="list" aria-label="SEO keyword recommendations">
             {(topItems ?? []).map((insight) => (
               <div
                 key={insight.id}
-                className="rounded-lg border border-white/[0.03] bg-secondary/30 p-3 transition-all duration-200 hover:shadow-card-hover"
+                role="listitem"
+                className="rounded-lg border border-white/[0.03] bg-secondary/30 p-3 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5"
               >
                 <p className="text-sm font-medium text-foreground">
                   {insight.keyword}
@@ -90,7 +91,8 @@ export function SEOPerformancePanel({
                   size="sm"
                   variant="ghost"
                   className="h-7 text-xs mt-2 gap-1"
-                  onClick={() => handleOpenEditor(insight)}
+                  onClick={() => handleOpenEditor({ contentItemId: insight.contentItemId })}
+                  aria-label={`Open ${insight.keyword} in editor`}
                 >
                   Open in Editor
                   <ExternalLink className="h-3 w-3" />

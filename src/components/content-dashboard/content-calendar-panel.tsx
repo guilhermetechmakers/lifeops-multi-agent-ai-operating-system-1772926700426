@@ -17,10 +17,12 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Calendar, GripVertical } from "lucide-react";
+import { Calendar, GripVertical, ExternalLink } from "lucide-react";
 import { format, addDays, startOfWeek, isSameDay, parseISO } from "date-fns";
+import { Link } from "react-router-dom";
 import {
   useContentItems,
   useMoveContentCalendar,
@@ -197,13 +199,23 @@ export function ContentCalendarPanel({
   return (
     <Card className={cn("border-white/[0.03] bg-card", className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-teal" />
-          Content Calendar
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Drag items to reschedule
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-teal" />
+              Content Calendar
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Drag items to reschedule
+            </p>
+          </div>
+          <Link to="/dashboard/content/calendar">
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+              Full calendar
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
       <CardContent>
         <DndContext
