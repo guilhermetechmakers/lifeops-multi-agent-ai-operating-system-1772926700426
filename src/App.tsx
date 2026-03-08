@@ -63,6 +63,7 @@ import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
 import CIIntegrationsPage from "@/pages/ci-integrations";
 import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
+import { AnalyticsDashboardShell, AnalyticsReportsOverview } from "@/components/analytics-reports";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
 import Docs from "@/pages/docs";
@@ -99,6 +100,7 @@ function App() {
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
           {/* Content Dashboard canonical URLs (redirect to dashboard nested routes) */}
+          <Route path="/analytics-reports" element={<Navigate to="/dashboard/analytics-reports" replace />} />
           <Route path="/content-dashboard" element={<Navigate to="/dashboard/content" replace />} />
           <Route path="/habits-tracker" element={<Navigate to="/dashboard/health/habits" replace />} />
           <Route path="/content-dashboard/editor" element={<Navigate to="/dashboard/content/editor" replace />} />
@@ -145,6 +147,9 @@ function App() {
               <Route index element={<HealthDashboardOverview />} />
               <Route path="habits" element={<HealthHabitsPage />} />
               <Route path="training-meals" element={<HealthTrainingMealsPage />} />
+            </Route>
+            <Route path="analytics-reports" element={<AnalyticsDashboardShell />}>
+              <Route index element={<AnalyticsReportsOverview />} />
             </Route>
             <Route path="about-help" element={<AboutHelpPage />} />
             <Route path="settings" element={<SettingsDashboardShell />}>

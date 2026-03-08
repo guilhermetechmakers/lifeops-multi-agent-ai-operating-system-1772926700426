@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
+  BarChart3,
   Clock,
   CheckSquare,
   Bug,
@@ -32,6 +33,7 @@ const SIDEBAR_COLLAPSED_WIDTH = 64;
 
 const navItems = [
   { to: "/dashboard", label: "Master", icon: LayoutDashboard },
+  { to: "/dashboard/analytics-reports", label: "Analytics & Reports", icon: BarChart3 },
   { to: "/dashboard/admin", label: "Admin", icon: Shield },
   { to: "/dashboard/cronjobs", label: "Cronjobs", icon: Clock },
   { to: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },

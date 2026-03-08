@@ -63,6 +63,7 @@ const MOCK_CRONJOBS: CronjobHealth[] = [
     status: "success",
     latency: 1240,
     retries: 0,
+    successRate: 100,
     runs: [
       { id: "r1", cronjobId: "c1", runAt: "2025-03-07T06:00:00Z", status: "success", durationMs: 1240 },
       { id: "r2", cronjobId: "c1", runAt: "2025-03-06T06:00:00Z", status: "success", durationMs: 1180 },
@@ -79,6 +80,7 @@ const MOCK_CRONJOBS: CronjobHealth[] = [
     status: "success",
     latency: 3200,
     retries: 0,
+    successRate: 100,
     runs: [
       { id: "r3", cronjobId: "c2", runAt: "2025-03-03T09:00:00Z", status: "success", durationMs: 3200 },
     ],
@@ -94,6 +96,7 @@ const MOCK_CRONJOBS: CronjobHealth[] = [
     status: "failure",
     latency: 450,
     retries: 2,
+    successRate: 0,
     runs: [
       { id: "r4", cronjobId: "c3", runAt: "2025-03-08T07:00:00Z", status: "failure", durationMs: 450, errors: "Timeout" },
     ],

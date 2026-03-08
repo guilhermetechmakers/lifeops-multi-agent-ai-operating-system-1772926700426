@@ -40,9 +40,10 @@ export interface CronjobHealth {
   timezone?: string;
   nextRun?: string;
   lastRun?: string;
-  status?: "success" | "failure" | "pending" | "running";
+  status?: "success" | "failure" | "pending" | "running" | "idle";
   latency?: number;
   retries?: number;
+  successRate?: number;
   runs?: CronjobRun[];
 }
 
@@ -54,6 +55,7 @@ export interface AgentPerformance {
   successCount: number;
   failureCount: number;
   avgRuntimeMs: number;
+  successRate?: number;
   errorTypes?: string[];
 }
 

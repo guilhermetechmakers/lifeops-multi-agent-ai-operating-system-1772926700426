@@ -1,6 +1,6 @@
 /**
  * TimeSeriesChart — Reusable line/bar chart with teal/amber/purple accents.
- * Tooltip, legends, responsive; dark theme.
+ * Tooltips, legends, responsive; dark theme.
  */
 
 import { useMemo } from "react";
@@ -37,7 +37,7 @@ export interface TimeSeriesSeries {
 
 export interface TimeSeriesChartProps {
   title?: string;
-  type: "line" | "bar";
+  type?: "line" | "bar";
   data: Array<Record<string, string | number>>;
   series: TimeSeriesSeries[];
   categories?: string[];
@@ -48,30 +48,22 @@ export interface TimeSeriesChartProps {
 
 export function TimeSeriesChart({
   title,
-  type,
+  type = "line",
   data,
   series,
-  categories = ["name", "date"],
+  categories,
   xKey,
   height = 240,
   className,
 }: TimeSeriesChartProps) {
-  const chartData = useMemo(() => {
-    const d = data ?? [];
-    return Array.isArray(d) ? d : [];
-  }, [data]);
-
-  const seriesList = useMemo(() => {
-    const s = series ?? [];
-    return Array.isArray(s) ? s : [];
-  }, [series]);
-
-  const xAxisKey = xKey ?? categories[0] ?? "name";
+  const chartData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const seriesList = useMemo(() => (Array.isArray(series) ? series : []), [series]);
+  const xAxisKey = xKey ?? categories?.[0] ?? "date" ?? "name";
 
   if (chartData.length === 0) {
     return (
       <Card className={cn("card-health", className)}>
-        {title != null && (
+        {title && (
           <CardHeader>
             <CardTitle className="text-base">{title}</CardTitle>
           </CardHeader>
@@ -94,10 +86,13 @@ export function TimeSeriesChart({
       {type === "line" ? (
         <LineChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-white/5" />
-          <XAxis dataKey={xAxisKey} tick={{ fill: "rgb(157 163 166)", fontSize: 12 }} />
+          <XAxis
+            dataKey={xAxisKey}
+            tick={{ fill: "rgb(157 163 166)", fontSize: 12 }}
+          />
           <YAxis tick={{ fill: "rgb(157 163 166)", fontSize: 12 }} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend />
           {seriesList.map((s, idx) => (
             <Line
               key={s.dataKey}
@@ -107,17 +102,19 @@ export function TimeSeriesChart({
               stroke={COLORS[s.colorIndex ?? idx % COLORS.length]}
               strokeWidth={2}
               dot={false}
-              connectNulls
             />
           ))}
         </LineChart>
       ) : (
         <BarChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-white/5" />
-          <XAxis dataKey={xAxisKey} tick={{ fill: "rgb(157 163 166)", fontSize: 12 }} />
+          <XAxis
+            dataKey={xAxisKey}
+            tick={{ fill: "rgb(157 163 166)", fontSize: 12 }}
+          />
           <YAxis tick={{ fill: "rgb(157 163 166)", fontSize: 12 }} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend />
           {seriesList.map((s, idx) => (
             <Bar
               key={s.dataKey}
@@ -134,7 +131,7 @@ export function TimeSeriesChart({
 
   return (
     <Card className={cn("card-health", className)}>
-      {title != null && (
+      {title && (
         <CardHeader>
           <CardTitle className="text-base">{title}</CardTitle>
         </CardHeader>
