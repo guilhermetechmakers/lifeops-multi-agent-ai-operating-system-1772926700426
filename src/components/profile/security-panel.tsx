@@ -25,6 +25,7 @@ import {
   useUpdateTwoFactor,
   useUpdatePassword,
 } from "@/hooks/use-profile";
+import { AuditTrailPanel } from "@/components/auth/audit-trail-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 
@@ -211,6 +212,8 @@ export function SecurityPanel() {
           )}
         </CardContent>
       </Card>
+
+      <AuditTrailPanel currentUserOnly limit={8} />
 
       <AlertDialog open={!!revokeTarget} onOpenChange={() => setRevokeTarget(null)}>
         <AlertDialogContent>

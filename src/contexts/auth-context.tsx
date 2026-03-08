@@ -1,12 +1,15 @@
 /**
  * LifeOps Auth context: session, user, RBAC, and auth actions.
  * Persists token in localStorage; guards all array/object access.
+ * Syncs with Supabase Auth when configured.
  */
 
 import * as React from "react";
 import type { User, AuthResponse } from "@/types/auth";
 import * as authApi from "@/api/auth";
 import { toast } from "sonner";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import * as supabaseAuth from "@/lib/supabase-auth";
 
 const AUTH_TOKEN_KEY = "auth_token";
 const AUTH_USER_KEY = "auth_user";
@@ -64,10 +67,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {
       token,
       user,
-      isLoading: false,
+      isLoading: isSupabaseConfigured(),
       isAuthenticated: Boolean(token),
     };
   });
+
+  React.useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setState((s) => ({ ...s, isLoading: false }));
+      return;
+    }
+    let cancelled = false;
+    supabaseAuth.supabaseGetSession().then((session) => {
+      if (cancelled) return;
+      if (session?.token && session?.user) {
+        writeStoredSession(session.token, session.user);
+        setState({
+          token: session.token,
+          user: session.user,
+          isLoading: false,
+          isAuthenticated: true,
+        });
+      } else {
+        setState((s) => ({ ...s, isLoading: false }));
+      }
+    }).catch(() => {
+      if (!cancelled) setState((s) => ({ ...s, isLoading: false }));
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const setSession = React.useCallback((response: AuthResponse) => {
     const user = response?.user ?? null;
@@ -81,7 +109,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const logout = React.useCallback(() => {
+  const logout = React.useCallback(async () => {
+    if (isSupabaseConfigured()) {
+      try {
+        await supabaseAuth.supabaseLogout();
+      } catch {
+        // ignore
+      }
+    }
     writeStoredSession("", null);
     setState({
       token: "",

@@ -1,5 +1,6 @@
 export { AuthContainer } from "./auth-container";
 export { SessionGuard } from "./session-guard";
+export { AuditTrailPanel } from "./audit-trail-panel";
 export { EmailAuthForm } from "./email-auth-form";
 export type { LoginFormValues, SignupFormValues } from "./email-auth-form";
 export { SocialOAuthButtons } from "./social-oauth-buttons";

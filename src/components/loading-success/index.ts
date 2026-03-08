@@ -17,7 +17,7 @@ export { LoadingSpinner } from "./loading-spinner";
 export type { LoadingSpinnerProps, SpinnerSize } from "./loading-spinner";
 
 export { StatusBanner } from "./status-banner";
-export type { StatusBannerProps, StatusBannerVariant } from "./status-banner";
+export type { StatusBannerProps } from "./status-banner";
 
 export { ErrorSnippet, ErrorSnippetFromInfo } from "./error-snippet";
 export type {

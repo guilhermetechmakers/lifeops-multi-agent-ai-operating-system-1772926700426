@@ -1,9 +1,11 @@
 /**
  * LifeOps Auth API - login, signup, OAuth, SSO, password reset, onboarding.
- * Uses native fetch via api client. Falls back to mock when backend is unavailable.
+ * Uses Supabase Auth when configured; otherwise native fetch via api client or mock.
  */
 
 import { api, safeArray } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import * as supabaseAuth from "@/lib/supabase-auth";
 import type {
   User,
   SignInInput,
@@ -33,6 +35,14 @@ function mockUser(email: string, displayName?: string): User {
 
 /** Login with email/password */
 export async function login(input: SignInInput): Promise<AuthResponse> {
+  if (isSupabaseConfigured()) {
+    try {
+      const result = await supabaseAuth.supabaseLogin(input.email, input.password);
+      if (result) return result;
+    } catch (err) {
+      throw err;
+    }
+  }
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500));
     const user = mockUser(input.email);
@@ -44,6 +54,18 @@ export async function login(input: SignInInput): Promise<AuthResponse> {
 
 /** Sign up with email/password */
 export async function signup(input: SignUpInput): Promise<AuthResponse> {
+  if (isSupabaseConfigured()) {
+    try {
+      const result = await supabaseAuth.supabaseSignUp({
+        email: input.email,
+        password: input.password,
+        displayName: input.displayName,
+      });
+      if (result) return result;
+    } catch (err) {
+      throw err;
+    }
+  }
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500));
     const user = mockUser(input.email, input.displayName);
@@ -75,6 +97,14 @@ export async function initiateSSO(domain?: string): Promise<{ url: string }> {
 
 /** Request password reset email */
 export async function requestPasswordReset(email: string): Promise<{ success: boolean; message?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const result = await supabaseAuth.supabaseRequestPasswordReset(email);
+      return result;
+    } catch {
+      return { success: false, message: "Failed to send reset email." };
+    }
+  }
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500));
     return { success: true, message: "If this email is registered, you will receive a reset link." };
@@ -157,10 +187,11 @@ export async function getProviders(): Promise<OAuthProvider[]> {
 /** Get onboarding wizard steps */
 export async function getOnboardingSteps(): Promise<OnboardingStep[]> {
   const defaults: OnboardingStep[] = [
-    { id: "modules", title: "Choose Modules", description: "Select the modules you want to use", order: 0 },
-    { id: "integrations", title: "Connect Integrations", description: "Connect your first integrations", order: 1 },
-    { id: "rbac", title: "RBAC & Permissions", description: "Set up roles and permissions", order: 2 },
-    { id: "finish", title: "Finish", description: "You're all set", order: 3 },
+    { id: "profile", title: "Profile Basics", description: "Choose your account type", order: 0 },
+    { id: "security", title: "Security & RBAC", description: "Set your security scope", order: 1 },
+    { id: "modules", title: "Permissions & Modules", description: "Select the modules you want to use", order: 2 },
+    { id: "tasks", title: "Onboarding Tasks", description: "Connect your first integrations", order: 3 },
+    { id: "review", title: "Review & Create", description: "You're all set", order: 4 },
   ];
   if (USE_MOCK) return defaults;
   try {
@@ -188,7 +219,7 @@ export async function submitOnboarding(
       userId: "mock",
       currentStep: stepIndex,
       data: data as { modules?: string[]; integrations?: string[]; roles?: string[] },
-      isCompleted: stepIndex >= 3,
+      isCompleted: stepIndex >= 4,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

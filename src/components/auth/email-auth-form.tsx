@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ValidationMessage } from "./validation-message";
 import { LegalConsentChecklist } from "./legal-consent-checklist";
 import { ForgotPasswordLink } from "./forgot-password-link";
+import { StrengthMeter } from "./password-reset/strength-meter";
 import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
@@ -35,6 +36,16 @@ const signupSchema = loginSchema
   .refine(
     (data) => (data.password?.length ?? 0) >= 8,
     { message: "Password must be at least 8 characters", path: ["password"] }
+  )
+  .refine(
+    (data) => {
+      const p = data.password ?? "";
+      return /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p);
+    },
+    {
+      message: "Password must include uppercase, lowercase, and a number",
+      path: ["password"],
+    }
   );
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -46,6 +57,8 @@ export interface EmailAuthFormProps {
   isLoading?: boolean;
   error?: string;
   className?: string;
+  /** Disable form (e.g. during rate limit cooldown) */
+  disabled?: boolean;
 }
 
 export function EmailAuthForm({
@@ -54,6 +67,7 @@ export function EmailAuthForm({
   isLoading = false,
   error,
   className,
+  disabled = false,
 }: EmailAuthFormProps) {
   const [showPassword, setShowPassword] = React.useState(false);
   const schema = mode === "login" ? loginSchema : signupSchema;
@@ -126,7 +140,13 @@ export function EmailAuthForm({
             placeholder="••••••••"
             className="bg-input border-white/[0.03] pr-10"
             aria-invalid={Boolean(form.formState.errors.password)}
-            aria-describedby={form.formState.errors.password ? "auth-password-error" : undefined}
+            aria-describedby={
+              form.formState.errors.password
+                ? "auth-password-error"
+                : isSignup
+                  ? "auth-password-strength"
+                  : undefined
+            }
             {...form.register("password")}
           />
           <button
@@ -143,6 +163,14 @@ export function EmailAuthForm({
             )}
           </button>
         </div>
+        {isSignup && (
+          <StrengthMeter
+            password={form.watch("password") ?? ""}
+            minLevel={2}
+            id="auth-password-strength"
+            className="mt-1"
+          />
+        )}
         <ValidationMessage
           id="auth-password-error"
           message={form.formState.errors.password?.message}
@@ -203,7 +231,7 @@ export function EmailAuthForm({
       <Button
         type="submit"
         className="w-full bg-primary hover:bg-primary/90 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-        disabled={isLoading || form.formState.isSubmitting}
+        disabled={disabled || isLoading || form.formState.isSubmitting}
       >
         {form.formState.isSubmitting || isLoading
           ? mode === "login"

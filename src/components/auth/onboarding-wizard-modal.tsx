@@ -13,6 +13,18 @@ import { getOnboardingSteps, submitOnboarding } from "@/api/auth";
 import type { OnboardingStep as OnboardingStepType } from "@/types/auth";
 import { cn } from "@/lib/utils";
 
+const ACCOUNT_TYPES = [
+  { id: "personal", label: "Personal", description: "Solo use, individual projects" },
+  { id: "team", label: "Team", description: "Small team, shared workspace" },
+  { id: "enterprise", label: "Enterprise", description: "Organization, SSO, advanced RBAC" },
+];
+
+const RBAC_SCOPES = [
+  { id: "member", label: "Member", description: "Default access" },
+  { id: "editor", label: "Editor", description: "Create and edit" },
+  { id: "admin", label: "Admin", description: "Full access" },
+];
+
 const MODULES = [
   { id: "cronjobs", label: "Cronjobs & automation" },
   { id: "approvals", label: "Approvals" },
@@ -45,6 +57,8 @@ export function OnboardingWizardModal({
   const [steps, setSteps] = React.useState<OnboardingStepType[]>([]);
   const [current, setCurrent] = React.useState(0);
   const [data, setData] = React.useState<Record<string, unknown>>({
+    accountType: "personal",
+    rbacScope: "member",
     modules: [],
     integrations: [],
     roles: [],
@@ -57,7 +71,7 @@ export function OnboardingWizardModal({
       const list = Array.isArray(s) ? s : [];
       setSteps(list.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
       setCurrent(0);
-      setData({ modules: [], integrations: [], roles: [] });
+      setData({ accountType: "personal", rbacScope: "member", modules: [], integrations: [], roles: [] });
     });
   }, [open]);
 
@@ -99,6 +113,9 @@ export function OnboardingWizardModal({
     setData((d) => ({ ...d, integrations: next }));
   };
 
+  const setAccountType = (id: string) => setData((d) => ({ ...d, accountType: id }));
+  const setRbacScope = (id: string) => setData((d) => ({ ...d, rbacScope: id }));
+
   if (!step) return null;
 
   return (
@@ -112,6 +129,64 @@ export function OnboardingWizardModal({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {step.id === "profile" && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Select your account type. You can change this later in Settings.
+              </p>
+              <div className="flex flex-col gap-2">
+                {(ACCOUNT_TYPES ?? []).map((a) => {
+                  const selected = (data.accountType as string) === a.id;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setAccountType(a.id)}
+                      className={cn(
+                        "flex flex-col items-start rounded-lg border px-4 py-3 text-left transition-all hover:scale-[1.01] active:scale-[0.99]",
+                        selected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-white/[0.06] bg-secondary/50 text-foreground"
+                      )}
+                    >
+                      <span className="font-medium">{a.label}</span>
+                      <span className="text-xs text-muted-foreground">{a.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step.id === "security" && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Choose your default RBAC scope. Admins can manage roles later.
+              </p>
+              <div className="flex flex-col gap-2">
+                {(RBAC_SCOPES ?? []).map((r) => {
+                  const selected = (data.rbacScope as string) === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setRbacScope(r.id)}
+                      className={cn(
+                        "flex flex-col items-start rounded-lg border px-4 py-3 text-left transition-all hover:scale-[1.01] active:scale-[0.99]",
+                        selected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-white/[0.06] bg-secondary/50 text-foreground"
+                      )}
+                    >
+                      <span className="font-medium">{r.label}</span>
+                      <span className="text-xs text-muted-foreground">{r.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {step.id === "modules" && (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -141,7 +216,7 @@ export function OnboardingWizardModal({
             </div>
           )}
 
-          {step.id === "integrations" && (
+          {step.id === "tasks" && (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 Connect your first integrations (optional).
@@ -170,12 +245,18 @@ export function OnboardingWizardModal({
             </div>
           )}
 
-          {(step.id === "rbac" || step.id === "finish") && (
-            <p className="text-sm text-muted-foreground">
-              {step.id === "rbac"
-                ? "Your default role has been set. You can change permissions later in Settings."
-                : "You're all set. You can always change these in Settings."}
-            </p>
+          {step.id === "review" && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Review your choices. You can always change these in Settings.
+              </p>
+              <div className="rounded-lg border border-white/[0.06] bg-secondary/30 p-4 text-sm space-y-2">
+                <p><span className="text-muted-foreground">Account type:</span> {String(data.accountType ?? "personal")}</p>
+                <p><span className="text-muted-foreground">RBAC scope:</span> {String(data.rbacScope ?? "member")}</p>
+                <p><span className="text-muted-foreground">Modules:</span> {(Array.isArray(data.modules) ? data.modules : []).join(", ") || "None"}</p>
+                <p><span className="text-muted-foreground">Integrations:</span> {(Array.isArray(data.integrations) ? data.integrations : []).join(", ") || "None"}</p>
+              </div>
+            </div>
           )}
         </div>
 

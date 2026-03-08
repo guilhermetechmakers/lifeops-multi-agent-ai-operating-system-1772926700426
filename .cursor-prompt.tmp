@@ -1,0 +1,2328 @@
+âš ï¸ CRITICAL EXECUTION RULES - READ FIRST âš ï¸
+âŒ NEVER run: npm run dev, npm start, yarn dev, pnpm dev, or ANY development server
+âŒ NEVER run: long-running processes, servers, or commands that don't exit
+âŒ NEVER test the application by starting it
+âœ… ALLOWED: npm install, npm run build, npm run test (if needed)
+âœ… YOUR TASK: Create/modify files only, then STOP and EXIT immediately
+âš ï¸ The MCP server handles all testing and validation separately
+
+You are an expert full-stack developer proficient in TypeScript, React, Next.js, and modern UI/UX frameworks (Tailwind CSS, Shadcn UI, Radix UI).
+
+=== DESIGN REFERENCE (MANDATORY) ===
+# Modern Design Best Practices
+
+## Philosophy
+
+Create unique, memorable experiences while maintaining consistency through modern design principles. Every project should feel distinct yet professional, innovative yet intuitive.
+
+---
+
+## Landing Pages & Marketing Sites
+
+### Hero Sections
+**Go beyond static backgrounds:**
+- Animated gradients with subtle movement
+- Particle systems or geometric shapes floating
+- Interactive canvas backgrounds (Three.js, WebGL)
+- Video backgrounds with proper fallbacks
+- Parallax scrolling effects
+- Gradient mesh animations
+- Morphing blob animations
+
+
+### Layout Patterns
+**Use modern grid systems:**
+- Bento grids (asymmetric card layouts)
+- Masonry layouts for varied content
+- Feature sections with diagonal cuts or curves
+- Overlapping elements with proper z-index
+- Split-screen designs with scroll-triggered reveals
+
+**Avoid:** Traditional 3-column equal grids
+
+### Scroll Animations
+**Engage users as they scroll:**
+- Fade-in and slide-up animations for sections
+- Scroll-triggered parallax effects
+- Progress indicators for long pages
+- Sticky elements that transform on scroll
+- Horizontal scroll sections for portfolios
+- Text reveal animations (word by word, letter by letter)
+- Number counters animating into view
+
+**Avoid:** Static pages with no scroll interaction
+
+### Call-to-Action Areas
+**Make CTAs impossible to miss:**
+- Gradient buttons with hover effects
+- Floating action buttons with micro-interactions
+- Animated borders or glowing effects
+- Scale/lift on hover
+- Interactive elements that respond to mouse position
+- Pulsing indicators for primary actions
+
+---
+
+## Dashboard Applications
+
+### Layout Structure
+**Always use collapsible side navigation:**
+- Sidebar that can collapse to icons only
+- Smooth transition animations between states
+- Persistent navigation state (remember user preference)
+- Mobile: drawer that slides in/out
+- Desktop: sidebar with expand/collapse toggle
+- Icons visible even when collapsed
+
+**Structure:**
+```
+/dashboard (layout wrapper with sidebar)
+  /dashboard/overview
+  /dashboard/analytics
+  /dashboard/settings
+  /dashboard/users
+  /dashboard/projects
+```
+
+All dashboard pages should be nested inside the dashboard layout, not separate routes.
+
+### Data Tables
+**Modern table design:**
+- Sticky headers on scroll
+- Row hover states with subtle elevation
+- Sortable columns with clear indicators
+- Pagination with items-per-page control
+- Search/filter with instant feedback
+- Selection checkboxes with bulk actions
+- Responsive: cards on mobile, table on desktop
+- Loading skeletons, not spinners
+- Empty states with illustrations or helpful text
+
+**Use modern table libraries:**
+- TanStack Table (React Table v8)
+- AG Grid for complex data
+- Data Grid from MUI (if using MUI)
+
+### Charts & Visualizations
+**Use the latest charting libraries:**
+- Recharts (for React, simple charts)
+- Chart.js v4 (versatile, well-maintained)
+- Apache ECharts (advanced, interactive)
+- D3.js (custom, complex visualizations)
+- Tremor (for dashboards, built on Recharts)
+
+**Chart best practices:**
+- Animated transitions when data changes
+- Interactive tooltips with detailed info
+- Responsive sizing
+- Color scheme matching design system
+- Legend placement that doesn't obstruct data
+- Loading states while fetching data
+
+### Dashboard Cards
+**Metric cards should stand out:**
+- Gradient backgrounds or colored accents
+- Trend indicators (↑ ↓ with color coding)
+- Sparkline charts for historical data
+- Hover effects revealing more detail
+- Icon representing the metric
+- Comparison to previous period
+
+---
+
+## Color & Visual Design
+
+### Color Palettes
+**Create depth with gradients:**
+- Primary gradient (not just solid primary color)
+- Subtle background gradients
+- Gradient text for headings
+- Gradient borders on cards
+- Elevated surfaces for depth
+
+**Color usage:**
+- 60-30-10 rule (dominant, secondary, accent)
+- Consistent semantic colors (success, warning, error)
+- Accessible contrast ratios (WCAG AA minimum)
+
+### Typography
+**Create hierarchy through contrast:**
+- Large, bold headings (48-72px for heroes)
+- Clear size differences between levels
+- Variable font weights (300, 400, 600, 700)
+- Letter spacing for small caps
+- Line height 1.5-1.7 for body text
+- Inter, Poppins, or DM Sans for modern feel
+
+### Shadows & Depth
+**Layer UI elements:**
+- Multi-layer shadows for realistic depth
+- Colored shadows matching element color
+- Elevated states on hover
+- Neumorphism for special elements (sparingly)
+
+---
+
+## Interactions & Micro-animations
+
+### Button Interactions
+**Every button should react:**
+- Scale slightly on hover (1.02-1.05)
+- Lift with shadow on hover
+- Ripple effect on click
+- Loading state with spinner or progress
+- Disabled state clearly visible
+- Success state with checkmark animation
+
+### Card Interactions
+**Make cards feel alive:**
+- Lift on hover with increased shadow
+- Subtle border glow on hover
+- Tilt effect following mouse (3D transform)
+- Smooth transitions (200-300ms)
+- Click feedback for interactive cards
+
+### Form Interactions
+**Guide users through forms:**
+- Input focus states with border color change
+- Floating labels that animate up
+- Real-time validation with inline messages
+- Success checkmarks for valid inputs
+- Error states with shake animation
+- Password strength indicators
+- Character count for text areas
+
+### Page Transitions
+**Smooth between views:**
+- Fade + slide for page changes
+- Skeleton loaders during data fetch
+- Optimistic UI updates
+- Stagger animations for lists
+- Route transition animations
+
+---
+
+## Mobile Responsiveness
+
+### Mobile-First Approach
+**Design for mobile, enhance for desktop:**
+- Touch targets minimum 44x44px
+- Generous padding and spacing
+- Sticky bottom navigation on mobile
+- Collapsible sections for long content
+- Swipeable cards and galleries
+- Pull-to-refresh where appropriate
+
+### Responsive Patterns
+**Adapt layouts intelligently:**
+- Hamburger menu → full nav bar
+- Card grid → stack on mobile
+- Sidebar → drawer
+- Multi-column → single column
+- Data tables → card list
+- Hide/show elements based on viewport
+
+---
+
+## Loading & Empty States
+
+### Loading States
+**Never leave users wondering:**
+- Skeleton screens matching content layout
+- Progress bars for known durations
+- Animated placeholders
+- Spinners only for short waits (<3s)
+- Stagger loading for multiple elements
+- Shimmer effects on skeletons
+
+### Empty States
+**Make empty states helpful:**
+- Illustrations or icons
+- Helpful copy explaining why it's empty
+- Clear CTA to add first item
+- Examples or suggestions
+- No "no data" text alone
+
+---
+
+## Unique Elements to Stand Out
+
+### Distinctive Features
+**Add personality:**
+- Custom cursor effects on landing pages
+- Animated page numbers or section indicators
+- Unusual hover effects (magnification, distortion)
+- Custom scrollbars
+- Glassmorphism for overlays
+- Animated SVG icons
+- Typewriter effects for hero text
+- Confetti or celebration animations for actions
+
+### Interactive Elements
+**Engage users:**
+- Drag-and-drop interfaces
+- Sliders and range controls
+- Toggle switches with animations
+- Progress steps with animations
+- Expandable/collapsible sections
+- Tabs with slide indicators
+- Image comparison sliders
+- Interactive demos or playgrounds
+
+---
+
+## Consistency Rules
+
+### Maintain Consistency
+**What should stay consistent:**
+- Spacing scale (4px, 8px, 16px, 24px, 32px, 48px, 64px)
+- Border radius values
+- Animation timing (200ms, 300ms, 500ms)
+- Color system (primary, secondary, accent, neutrals)
+- Typography scale
+- Icon style (outline vs filled)
+- Button styles across the app
+- Form element styles
+
+### What Can Vary
+**Project-specific customization:**
+- Color palette (different colors, same system)
+- Layout creativity (grids, asymmetry)
+- Illustration style
+- Animation personality
+- Feature-specific interactions
+- Hero section design
+- Card styling variations
+- Background patterns or textures
+
+---
+
+## Technical Excellence
+
+### Performance
+- Optimize images (WebP, lazy loading)
+- Code splitting for faster loads
+- Debounce search inputs
+- Virtualize long lists
+- Minimize re-renders
+- Use proper memoization
+
+### Accessibility
+- Keyboard navigation throughout
+- ARIA labels where needed
+- Focus indicators visible
+- Screen reader friendly
+- Sufficient color contrast
+- Respect reduced motion preferences
+
+---
+
+## Key Principles
+
+1. **Be Bold** - Don't be afraid to try unique layouts and interactions
+2. **Be Consistent** - Use the same patterns for similar functions
+3. **Be Responsive** - Design works beautifully on all devices
+4. **Be Fast** - Animations are smooth, loading is quick
+5. **Be Accessible** - Everyone can use what you build
+6. **Be Modern** - Use current design trends and technologies
+7. **Be Unique** - Each project should have its own personality
+8. **Be Intuitive** - Users shouldn't need instructions
+
+
+---
+
+# Project-Specific Customizations
+
+**IMPORTANT: This section contains the specific design requirements for THIS project. The guidelines above are universal best practices - these customizations below take precedence for project-specific decisions.**
+
+## User Design Requirements
+
+# Cookie Policy
+
+## Overview
+Create a self-contained Cookie Policy page that clearly explains cookie categories, data usage, and provides a robust consent management experience. The page should be accessible, privacy-forward, and integrate with the project’s UI system and runtime safety standards. It must require minimal friction for users to understand cookies and to grant or modify consent, while preserving a clear audit trail for actions and run artifacts.
+
+## Page Description (Full Detail)
+What this page is:
+- A dedicated Cookie Policy page that educates users about cookies and provides a consent management UI to enable/disable categories.
+
+Goals:
+- Educate users about cookie categories (necessary, analytics, marketing).
+- Provide a clear, accessible consent management experience with granular controls for each category.
+- Persist user consent selections, reflect them in the UI, and expose consent state to downstream modules if needed.
+- Ensure all actions are reversible and auditable, with explicit user confirmations where appropriate.
+
+Connected features:
+- Consent state persisted to user preferences (localStorage/session or backend if user is authenticated).
+- Optional integration hooks for analytics and marketing tooling to respect user consent.
+- No external APIs required for this task, but the design should accommodate API-based persistence if needed later.
+
+UI elements and visuals:
+- Header with page title and brief description.
+- Cookie categories section:
+  - Category pills or cards for: Necessary, Analytics, Marketing.
+  - Each category shows a short explanation, data usage notes, and a toggle/checkbox control.
+  - Analytics and Marketing categories should be disabled by default unless user consents to necessary cookies enabling them, depending on policy.
+- Consent controls:
+  - “Accept All” and “Reject All” primary actions.
+  - Per-category toggles with clear on/off states.
+  - A compact “Save Preferences” button to persist changes.
+  - Optional “Audit trail” indicator showing when consent was last updated.
+- Accessibility:
+  - Keyboard navigable, screen-reader friendly, and proper ARIA roles.
+- Feedback:
+  - Toast or inline confirmation after saving preferences.
+  - Visual cues for required/active/inactive states.
+- Visual guidance:
+  - Dark UI with high-contrast typography per project style.
+  - Card-based layout for category explanations with subtle elevation.
+  - Persisted state reflected immediately in the UI and in the save feedback.
+
+API integrations:
+- No external APIs required for this prompt. The design must accommodate future API-backed persistence, but for now the cookie policy page should:
+  - Use a local persistence approach (e.g., localStorage) to store consent state.
+  - Respect the runtime safety rules for array handling and nullish values if lists are populated.
+
+## Components to Build
+- CookiePolicyPage
+  - Layout: header, description, category grid, action bar.
+  - State management: per-category consent state, overall saved state, and a “dirty” flag for unsaved changes.
+  - Persistence: save to and load from localStorage with safe guards.
+  - Accessibility: ARIA labels, roles, and keyboard focus management.
+- CookieCategoryCard
+  - Props: id, title, description, dataUsageNotes, defaultConsent, disabled (for necessary cookies).
+  - UI: explanatory copy, toggle control, and status badge.
+  - Behavior: toggling updates parent state, enforces that Necessary category cannot be turned off if policy requires it.
+- ConsentControls
+  - Controls: Accept All, Reject All, Save Preferences.
+  - Behavior: update all category states, reset to defaults, show confirmation.
+- AuditTrailPreview (optional)
+  - Lightweight readout showing last consent update timestamp and changes (read-only display).
+- PersistenceService (utility)
+  - Methods: loadConsent(), saveConsent(payload), resetConsent().
+  - Safeguards: use data ?? [] patterns, ensure arrays are valid before mapping.
+- UIToast (optional)
+  - Simple toast for saving confirmations.
+- Accessibility helpers
+  - FocusTrap or proper focus management when modal/section expands.
+
+## Implementation Requirements
+
+### Frontend
+- State initialization:
+  - useState with explicit array types for category states, e.g., useState<{ id: string; enabled: boolean }[]>([]).
+  - Initialize consent categories as an array with three entries: Necessary (must be enabled and non-toggleable by policy), Analytics, Marketing.
+- Data handling and safety:
+  - Always guard array operations:
+    - const categories = (consent?.categories ?? []) as Array<{ id: string; enabled: boolean }>;
+    - categories?.map(...) should be used safely with Array.isArray checks.
+  - Persist consent state to localStorage with a stable key (e.g., "lifeops_cookie_consent_v1"). When loading, ensure shape validity: Array.isArray(data?.categories) ? data.categories : [].
+  - Ensure null safety for any API-esque responses (even if not used) with data ?? [] and Array.isArray checks.
+- UI behavior:
+  - Necessary category cannot be disabled. If user attempts to toggle analytics/marketing off, allow but reflect caveat in UI and validation.
+  - Per-category toggles update state immutably.
+  - Save button is disabled if nothing has changed since last save (use a dirty flag).
+  - On save, show a small inline confirmation or toast and update lastSavedAt in AuditTrailPreview.
+- Accessibility and semantics:
+  - Use semantic HTML (section, header, main, nav, etc.).
+  - ARIA attributes for the cookie category toggles (aria-checked, role="switch" or input type="checkbox" with proper labeling).
+  - Keyboard accessible: allow toggle via Space/Enter; provide visible focus states.
+- Styling:
+  - Implement per the provided visual style tokens: use the color palette and typography guidelines. Cards with rounded corners, subtle borders, and a soft elevation. Use the dark background gradient described for depth.
+  - Spacing and rhythm follow the 8px baseline grid with 16/24/32 spacings as described.
+- Performance:
+  - Lightweight; no heavy computations or rerenders beyond necessary state updates.
+  - Avoid memory leaks by cleaning up effects if used.
+
+### Backend
+- No APIs required for this task. Prepare the code to be API-ready:
+  - Provide an API-agnostic persistence layer (ConsentStorage) that can be swapped to API calls later without changing core components.
+  - If you implement a mock API layer, ensure responses align with the runtime safety rules (data ?? [], Array.isArray checks).
+
+### Integration
+- The CookiePolicyPage should be a standalone route/component that can be mounted within LifeOps Master Dashboard.
+- If there is a global theme or design system, ensure the component uses that system for colors, typography, and spacing.
+- The Consent state must be available to child modules if needed; expose via props or a simple context (e.g., ConsentContext) with safe defaults.
+
+## User Experience Flow
+- User lands on Cookie Policy page.
+- Page loads with three categories:
+  - Necessary: enabled and non-toggleable, with a short explanation.
+  - Analytics: default off; description provided; user can toggle on/off.
+  - Marketing: default off; description provided; user can toggle on/off.
+- User reviews explanations and toggles analytics/marketing as desired.
+- User clicks Save Preferences.
+  - If successfully saved, a confirmation appears (toast or inline).
+  - Audit trail shows the timestamp and changes.
+- User can click Accept All to enable all categories (subject to Necessary constraints) and Save Preferences, then confirmation appears.
+- User can click Reject All to disable Analytics and Marketing, then Save Preferences, with confirmation.
+- All interactions gracefully handle null/undefined data and guard array operations as described.
+
+## Technical Specifications
+
+Data Models:
+- ConsentCategory
+  - id: string ("necessary" | "analytics" | "marketing")
+  - enabled: boolean
+  - description: string
+  - required?: boolean (true for necessary)
+- CookieConsentState
+  - categories: ConsentCategory[]
+  - lastUpdated?: string (ISO timestamp)
+  - auditTrail?: Array<{ timestamp: string, changes: string[] }>
+
+API Endpoints (Design-Only for now; implement later):
+- GET /consent-cookie
+  - Returns CookieConsentState
+- POST /consent-cookie
+  - Payload: CookieConsentState
+  - Persists consent and returns updated state
+- DELETE /consent-cookie
+  - Clears stored consent
+
+Security:
+- Since this is a client-side page, implement no sensitive data handling. When integrating with backend later, ensure authentication checks and proper authorization for retrieving/updating consent.
+
+Validation:
+- Ensure categories is an array.
+- Ensure each category item has id and enabled properties with correct types.
+- For saving, ensure at least necessary category is enabled; otherwise show validation error.
+
+Destructuring with defaults and null-safety patterns:
+- const { categories = [], lastUpdated = new Date().toISOString() } = response ?? {}
+- Always guard array methods: (categories ?? []).map(...)
+
+Optional chaining:
+- const firstCat = consent?.categories?.[0]
+- Use obj?.property?.nested for nested API responses.
+
+## Acceptance Criteria
+- [ ] Three categories render with correct default states (Necessary enabled and non-toggleable; Analytics and Marketing toggles off by default).
+- [ ] Toggling Analytics/Marketing updates state immutably and preserves accessibility semantics.
+- [ ] Save Preferences persists to localStorage and reloads correctly on page refresh.
+- [ ] Accept All and Reject All actions behave as expected, with Necessary always enabled and a confirmation shown after save.
+- [ ] Audit trail displays last updated timestamp and the changed categories upon save.
+- [ ] All array operations guarded with (array ?? []).map(...) or Array.isArray checks.
+- [ ] useState initializations for arrays use correct defaults: useState<CookieConsentState["categories"]>([]) and consistent typing.
+
+UI/UX Guidelines
+- Adhere to the project’s visual style: dark UI, elevated cards, subtle borders, and a restrained accent color usage (red for critical alerts if any).
+- Maintain consistent typography, spacing, and alignment with the LifeOps dashboard.
+- Provide clear affordances for interactions, with smooth micro-interactions (200ms transitions) and accessible focus states.
+
+Visual Style (as provided)
+- Follow the exact color palette and typography guidance:
+  - Backgrounds, surfaces, text, borders, and accent colors as specified.
+  - Elevation, border radii, padding, and spacing tuned to the 8px grid.
+  - Card, navigation, and data-visual design patterns consistent with LifeOps style.
+
+Mandatory Coding Standards — Runtime Safety
+- Supabase or API results guard:
+  - Not applicable here, but apply: data ?? [] when dealing with results.
+- Array methods safety:
+  - (categories ?? []).map(...)
+  - Array.isArray(categories) ? categories.map(...) : []
+- React useState for arrays:
+  - useState<ConsentCategory[]>([]) or equivalent type-safe initialization.
+- API response shapes:
+  - const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining:
+  - Use obj?.property?.nested throughout.
+- Destructuring with defaults:
+  - const { categories = [], lastUpdated = "" } = response ?? {}
+
+Generate the complete, detailed prompt now so the AI development tool can build this feature.
+
+## Implementation Notes
+
+When implementing this project:
+
+1. **Follow Universal Guidelines**: Use the design best practices documented above as your foundation
+2. **Apply Project Customizations**: Implement the specific design requirements stated in the "User Design Requirements" section
+3. **Priority Order**: Project-specific requirements override universal guidelines when there's a conflict
+4. **Color System**: Extract and implement color values as CSS custom properties in RGB format
+5. **Typography**: Define font families, sizes, and weights based on specifications
+6. **Spacing**: Establish consistent spacing scale following the design system
+7. **Components**: Style all Shadcn components to match the design aesthetic
+8. **Animations**: Use Motion library for transitions matching the design personality
+9. **Responsive Design**: Ensure mobile-first responsive implementation
+
+## Implementation Checklist
+
+- [ ] Review universal design guidelines above
+- [ ] Extract project-specific color palette and define CSS variables
+- [ ] Configure Tailwind theme with custom colors
+- [ ] Set up typography system (fonts, sizes, weights)
+- [ ] Define spacing and sizing scales
+- [ ] Create component variants matching design
+- [ ] Implement responsive breakpoints
+- [ ] Add animations and transitions
+- [ ] Ensure accessibility standards
+- [ ] Validate against user design requirements
+
+---
+
+**Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
+
+
+*IMPORTANT*: For every page or component refer to # Modern Design Best Practices
+
+## Philosophy
+
+Create unique, memorable experiences while maintaining consistency through modern design principles. Every project should feel distinct yet professional, innovative yet intuitive.
+
+---
+
+## Landing Pages & Marketing Sites
+
+### Hero Sections
+**Go beyond static backgrounds:**
+- Animated gradients with subtle movement
+- Particle systems or geometric shapes floating
+- Interactive canvas backgrounds (Three.js, WebGL)
+- Video backgrounds with proper fallbacks
+- Parallax scrolling effects
+- Gradient mesh animations
+- Morphing blob animations
+
+
+### Layout Patterns
+**Use modern grid systems:**
+- Bento grids (asymmetric card layouts)
+- Masonry layouts for varied content
+- Feature sections with diagonal cuts or curves
+- Overlapping elements with proper z-index
+- Split-screen designs with scroll-triggered reveals
+
+**Avoid:** Traditional 3-column equal grids
+
+### Scroll Animations
+**Engage users as they scroll:**
+- Fade-in and slide-up animations for sections
+- Scroll-triggered parallax effects
+- Progress indicators for long pages
+- Sticky elements that transform on scroll
+- Horizontal scroll sections for portfolios
+- Text reveal animations (word by word, letter by letter)
+- Number counters animating into view
+
+**Avoid:** Static pages with no scroll interaction
+
+### Call-to-Action Areas
+**Make CTAs impossible to miss:**
+- Gradient buttons with hover effects
+- Floating action buttons with micro-interactions
+- Animated borders or glowing effects
+- Scale/lift on hover
+- Interactive elements that respond to mouse position
+- Pulsing indicators for primary actions
+
+---
+
+## Dashboard Applications
+
+### Layout Structure
+**Always use collapsible side navigation:**
+- Sidebar that can collapse to icons only
+- Smooth transition animations between states
+- Persistent navigation state (remember user preference)
+- Mobile: drawer that slides in/out
+- Desktop: sidebar with expand/collapse toggle
+- Icons visible even when collapsed
+
+**Structure:**
+```
+/dashboard (layout wrapper with sidebar)
+  /dashboard/overview
+  /dashboard/analytics
+  /dashboard/settings
+  /dashboard/users
+  /dashboard/projects
+```
+
+All dashboard pages should be nested inside the dashboard layout, not separate routes.
+
+### Data Tables
+**Modern table design:**
+- Sticky headers on scroll
+- Row hover states with subtle elevation
+- Sortable columns with clear indicators
+- Pagination with items-per-page control
+- Search/filter with instant feedback
+- Selection checkboxes with bulk actions
+- Responsive: cards on mobile, table on desktop
+- Loading skeletons, not spinners
+- Empty states with illustrations or helpful text
+
+**Use modern table libraries:**
+- TanStack Table (React Table v8)
+- AG Grid for complex data
+- Data Grid from MUI (if using MUI)
+
+### Charts & Visualizations
+**Use the latest charting libraries:**
+- Recharts (for React, simple charts)
+- Chart.js v4 (versatile, well-maintained)
+- Apache ECharts (advanced, interactive)
+- D3.js (custom, complex visualizations)
+- Tremor (for dashboards, built on Recharts)
+
+**Chart best practices:**
+- Animated transitions when data changes
+- Interactive tooltips with detailed info
+- Responsive sizing
+- Color scheme matching design system
+- Legend placement that doesn't obstruct data
+- Loading states while fetching data
+
+### Dashboard Cards
+**Metric cards should stand out:**
+- Gradient backgrounds or colored accents
+- Trend indicators (↑ ↓ with color coding)
+- Sparkline charts for historical data
+- Hover effects revealing more detail
+- Icon representing the metric
+- Comparison to previous period
+
+---
+
+## Color & Visual Design
+
+### Color Palettes
+**Create depth with gradients:**
+- Primary gradient (not just solid primary color)
+- Subtle background gradients
+- Gradient text for headings
+- Gradient borders on cards
+- Elevated surfaces for depth
+
+**Color usage:**
+- 60-30-10 rule (dominant, secondary, accent)
+- Consistent semantic colors (success, warning, error)
+- Accessible contrast ratios (WCAG AA minimum)
+
+### Typography
+**Create hierarchy through contrast:**
+- Large, bold headings (48-72px for heroes)
+- Clear size differences between levels
+- Variable font weights (300, 400, 600, 700)
+- Letter spacing for small caps
+- Line height 1.5-1.7 for body text
+- Inter, Poppins, or DM Sans for modern feel
+
+### Shadows & Depth
+**Layer UI elements:**
+- Multi-layer shadows for realistic depth
+- Colored shadows matching element color
+- Elevated states on hover
+- Neumorphism for special elements (sparingly)
+
+---
+
+## Interactions & Micro-animations
+
+### Button Interactions
+**Every button should react:**
+- Scale slightly on hover (1.02-1.05)
+- Lift with shadow on hover
+- Ripple effect on click
+- Loading state with spinner or progress
+- Disabled state clearly visible
+- Success state with checkmark animation
+
+### Card Interactions
+**Make cards feel alive:**
+- Lift on hover with increased shadow
+- Subtle border glow on hover
+- Tilt effect following mouse (3D transform)
+- Smooth transitions (200-300ms)
+- Click feedback for interactive cards
+
+### Form Interactions
+**Guide users through forms:**
+- Input focus states with border color change
+- Floating labels that animate up
+- Real-time validation with inline messages
+- Success checkmarks for valid inputs
+- Error states with shake animation
+- Password strength indicators
+- Character count for text areas
+
+### Page Transitions
+**Smooth between views:**
+- Fade + slide for page changes
+- Skeleton loaders during data fetch
+- Optimistic UI updates
+- Stagger animations for lists
+- Route transition animations
+
+---
+
+## Mobile Responsiveness
+
+### Mobile-First Approach
+**Design for mobile, enhance for desktop:**
+- Touch targets minimum 44x44px
+- Generous padding and spacing
+- Sticky bottom navigation on mobile
+- Collapsible sections for long content
+- Swipeable cards and galleries
+- Pull-to-refresh where appropriate
+
+### Responsive Patterns
+**Adapt layouts intelligently:**
+- Hamburger menu → full nav bar
+- Card grid → stack on mobile
+- Sidebar → drawer
+- Multi-column → single column
+- Data tables → card list
+- Hide/show elements based on viewport
+
+---
+
+## Loading & Empty States
+
+### Loading States
+**Never leave users wondering:**
+- Skeleton screens matching content layout
+- Progress bars for known durations
+- Animated placeholders
+- Spinners only for short waits (<3s)
+- Stagger loading for multiple elements
+- Shimmer effects on skeletons
+
+### Empty States
+**Make empty states helpful:**
+- Illustrations or icons
+- Helpful copy explaining why it's empty
+- Clear CTA to add first item
+- Examples or suggestions
+- No "no data" text alone
+
+---
+
+## Unique Elements to Stand Out
+
+### Distinctive Features
+**Add personality:**
+- Custom cursor effects on landing pages
+- Animated page numbers or section indicators
+- Unusual hover effects (magnification, distortion)
+- Custom scrollbars
+- Glassmorphism for overlays
+- Animated SVG icons
+- Typewriter effects for hero text
+- Confetti or celebration animations for actions
+
+### Interactive Elements
+**Engage users:**
+- Drag-and-drop interfaces
+- Sliders and range controls
+- Toggle switches with animations
+- Progress steps with animations
+- Expandable/collapsible sections
+- Tabs with slide indicators
+- Image comparison sliders
+- Interactive demos or playgrounds
+
+---
+
+## Consistency Rules
+
+### Maintain Consistency
+**What should stay consistent:**
+- Spacing scale (4px, 8px, 16px, 24px, 32px, 48px, 64px)
+- Border radius values
+- Animation timing (200ms, 300ms, 500ms)
+- Color system (primary, secondary, accent, neutrals)
+- Typography scale
+- Icon style (outline vs filled)
+- Button styles across the app
+- Form element styles
+
+### What Can Vary
+**Project-specific customization:**
+- Color palette (different colors, same system)
+- Layout creativity (grids, asymmetry)
+- Illustration style
+- Animation personality
+- Feature-specific interactions
+- Hero section design
+- Card styling variations
+- Background patterns or textures
+
+---
+
+## Technical Excellence
+
+### Performance
+- Optimize images (WebP, lazy loading)
+- Code splitting for faster loads
+- Debounce search inputs
+- Virtualize long lists
+- Minimize re-renders
+- Use proper memoization
+
+### Accessibility
+- Keyboard navigation throughout
+- ARIA labels where needed
+- Focus indicators visible
+- Screen reader friendly
+- Sufficient color contrast
+- Respect reduced motion preferences
+
+---
+
+## Key Principles
+
+1. **Be Bold** - Don't be afraid to try unique layouts and interactions
+2. **Be Consistent** - Use the same patterns for similar functions
+3. **Be Responsive** - Design works beautifully on all devices
+4. **Be Fast** - Animations are smooth, loading is quick
+5. **Be Accessible** - Everyone can use what you build
+6. **Be Modern** - Use current design trends and technologies
+7. **Be Unique** - Each project should have its own personality
+8. **Be Intuitive** - Users shouldn't need instructions
+
+
+---
+
+# Project-Specific Customizations
+
+**IMPORTANT: This section contains the specific design requirements for THIS project. The guidelines above are universal best practices - these customizations below take precedence for project-specific decisions.**
+
+## User Design Requirements
+
+# Cookie Policy
+
+## Overview
+Create a self-contained Cookie Policy page that clearly explains cookie categories, data usage, and provides a robust consent management experience. The page should be accessible, privacy-forward, and integrate with the project’s UI system and runtime safety standards. It must require minimal friction for users to understand cookies and to grant or modify consent, while preserving a clear audit trail for actions and run artifacts.
+
+## Page Description (Full Detail)
+What this page is:
+- A dedicated Cookie Policy page that educates users about cookies and provides a consent management UI to enable/disable categories.
+
+Goals:
+- Educate users about cookie categories (necessary, analytics, marketing).
+- Provide a clear, accessible consent management experience with granular controls for each category.
+- Persist user consent selections, reflect them in the UI, and expose consent state to downstream modules if needed.
+- Ensure all actions are reversible and auditable, with explicit user confirmations where appropriate.
+
+Connected features:
+- Consent state persisted to user preferences (localStorage/session or backend if user is authenticated).
+- Optional integration hooks for analytics and marketing tooling to respect user consent.
+- No external APIs required for this task, but the design should accommodate API-based persistence if needed later.
+
+UI elements and visuals:
+- Header with page title and brief description.
+- Cookie categories section:
+  - Category pills or cards for: Necessary, Analytics, Marketing.
+  - Each category shows a short explanation, data usage notes, and a toggle/checkbox control.
+  - Analytics and Marketing categories should be disabled by default unless user consents to necessary cookies enabling them, depending on policy.
+- Consent controls:
+  - “Accept All” and “Reject All” primary actions.
+  - Per-category toggles with clear on/off states.
+  - A compact “Save Preferences” button to persist changes.
+  - Optional “Audit trail” indicator showing when consent was last updated.
+- Accessibility:
+  - Keyboard navigable, screen-reader friendly, and proper ARIA roles.
+- Feedback:
+  - Toast or inline confirmation after saving preferences.
+  - Visual cues for required/active/inactive states.
+- Visual guidance:
+  - Dark UI with high-contrast typography per project style.
+  - Card-based layout for category explanations with subtle elevation.
+  - Persisted state reflected immediately in the UI and in the save feedback.
+
+API integrations:
+- No external APIs required for this prompt. The design must accommodate future API-backed persistence, but for now the cookie policy page should:
+  - Use a local persistence approach (e.g., localStorage) to store consent state.
+  - Respect the runtime safety rules for array handling and nullish values if lists are populated.
+
+## Components to Build
+- CookiePolicyPage
+  - Layout: header, description, category grid, action bar.
+  - State management: per-category consent state, overall saved state, and a “dirty” flag for unsaved changes.
+  - Persistence: save to and load from localStorage with safe guards.
+  - Accessibility: ARIA labels, roles, and keyboard focus management.
+- CookieCategoryCard
+  - Props: id, title, description, dataUsageNotes, defaultConsent, disabled (for necessary cookies).
+  - UI: explanatory copy, toggle control, and status badge.
+  - Behavior: toggling updates parent state, enforces that Necessary category cannot be turned off if policy requires it.
+- ConsentControls
+  - Controls: Accept All, Reject All, Save Preferences.
+  - Behavior: update all category states, reset to defaults, show confirmation.
+- AuditTrailPreview (optional)
+  - Lightweight readout showing last consent update timestamp and changes (read-only display).
+- PersistenceService (utility)
+  - Methods: loadConsent(), saveConsent(payload), resetConsent().
+  - Safeguards: use data ?? [] patterns, ensure arrays are valid before mapping.
+- UIToast (optional)
+  - Simple toast for saving confirmations.
+- Accessibility helpers
+  - FocusTrap or proper focus management when modal/section expands.
+
+## Implementation Requirements
+
+### Frontend
+- State initialization:
+  - useState with explicit array types for category states, e.g., useState<{ id: string; enabled: boolean }[]>([]).
+  - Initialize consent categories as an array with three entries: Necessary (must be enabled and non-toggleable by policy), Analytics, Marketing.
+- Data handling and safety:
+  - Always guard array operations:
+    - const categories = (consent?.categories ?? []) as Array<{ id: string; enabled: boolean }>;
+    - categories?.map(...) should be used safely with Array.isArray checks.
+  - Persist consent state to localStorage with a stable key (e.g., "lifeops_cookie_consent_v1"). When loading, ensure shape validity: Array.isArray(data?.categories) ? data.categories : [].
+  - Ensure null safety for any API-esque responses (even if not used) with data ?? [] and Array.isArray checks.
+- UI behavior:
+  - Necessary category cannot be disabled. If user attempts to toggle analytics/marketing off, allow but reflect caveat in UI and validation.
+  - Per-category toggles update state immutably.
+  - Save button is disabled if nothing has changed since last save (use a dirty flag).
+  - On save, show a small inline confirmation or toast and update lastSavedAt in AuditTrailPreview.
+- Accessibility and semantics:
+  - Use semantic HTML (section, header, main, nav, etc.).
+  - ARIA attributes for the cookie category toggles (aria-checked, role="switch" or input type="checkbox" with proper labeling).
+  - Keyboard accessible: allow toggle via Space/Enter; provide visible focus states.
+- Styling:
+  - Implement per the provided visual style tokens: use the color palette and typography guidelines. Cards with rounded corners, subtle borders, and a soft elevation. Use the dark background gradient described for depth.
+  - Spacing and rhythm follow the 8px baseline grid with 16/24/32 spacings as described.
+- Performance:
+  - Lightweight; no heavy computations or rerenders beyond necessary state updates.
+  - Avoid memory leaks by cleaning up effects if used.
+
+### Backend
+- No APIs required for this task. Prepare the code to be API-ready:
+  - Provide an API-agnostic persistence layer (ConsentStorage) that can be swapped to API calls later without changing core components.
+  - If you implement a mock API layer, ensure responses align with the runtime safety rules (data ?? [], Array.isArray checks).
+
+### Integration
+- The CookiePolicyPage should be a standalone route/component that can be mounted within LifeOps Master Dashboard.
+- If there is a global theme or design system, ensure the component uses that system for colors, typography, and spacing.
+- The Consent state must be available to child modules if needed; expose via props or a simple context (e.g., ConsentContext) with safe defaults.
+
+## User Experience Flow
+- User lands on Cookie Policy page.
+- Page loads with three categories:
+  - Necessary: enabled and non-toggleable, with a short explanation.
+  - Analytics: default off; description provided; user can toggle on/off.
+  - Marketing: default off; description provided; user can toggle on/off.
+- User reviews explanations and toggles analytics/marketing as desired.
+- User clicks Save Preferences.
+  - If successfully saved, a confirmation appears (toast or inline).
+  - Audit trail shows the timestamp and changes.
+- User can click Accept All to enable all categories (subject to Necessary constraints) and Save Preferences, then confirmation appears.
+- User can click Reject All to disable Analytics and Marketing, then Save Preferences, with confirmation.
+- All interactions gracefully handle null/undefined data and guard array operations as described.
+
+## Technical Specifications
+
+Data Models:
+- ConsentCategory
+  - id: string ("necessary" | "analytics" | "marketing")
+  - enabled: boolean
+  - description: string
+  - required?: boolean (true for necessary)
+- CookieConsentState
+  - categories: ConsentCategory[]
+  - lastUpdated?: string (ISO timestamp)
+  - auditTrail?: Array<{ timestamp: string, changes: string[] }>
+
+API Endpoints (Design-Only for now; implement later):
+- GET /consent-cookie
+  - Returns CookieConsentState
+- POST /consent-cookie
+  - Payload: CookieConsentState
+  - Persists consent and returns updated state
+- DELETE /consent-cookie
+  - Clears stored consent
+
+Security:
+- Since this is a client-side page, implement no sensitive data handling. When integrating with backend later, ensure authentication checks and proper authorization for retrieving/updating consent.
+
+Validation:
+- Ensure categories is an array.
+- Ensure each category item has id and enabled properties with correct types.
+- For saving, ensure at least necessary category is enabled; otherwise show validation error.
+
+Destructuring with defaults and null-safety patterns:
+- const { categories = [], lastUpdated = new Date().toISOString() } = response ?? {}
+- Always guard array methods: (categories ?? []).map(...)
+
+Optional chaining:
+- const firstCat = consent?.categories?.[0]
+- Use obj?.property?.nested for nested API responses.
+
+## Acceptance Criteria
+- [ ] Three categories render with correct default states (Necessary enabled and non-toggleable; Analytics and Marketing toggles off by default).
+- [ ] Toggling Analytics/Marketing updates state immutably and preserves accessibility semantics.
+- [ ] Save Preferences persists to localStorage and reloads correctly on page refresh.
+- [ ] Accept All and Reject All actions behave as expected, with Necessary always enabled and a confirmation shown after save.
+- [ ] Audit trail displays last updated timestamp and the changed categories upon save.
+- [ ] All array operations guarded with (array ?? []).map(...) or Array.isArray checks.
+- [ ] useState initializations for arrays use correct defaults: useState<CookieConsentState["categories"]>([]) and consistent typing.
+
+UI/UX Guidelines
+- Adhere to the project’s visual style: dark UI, elevated cards, subtle borders, and a restrained accent color usage (red for critical alerts if any).
+- Maintain consistent typography, spacing, and alignment with the LifeOps dashboard.
+- Provide clear affordances for interactions, with smooth micro-interactions (200ms transitions) and accessible focus states.
+
+Visual Style (as provided)
+- Follow the exact color palette and typography guidance:
+  - Backgrounds, surfaces, text, borders, and accent colors as specified.
+  - Elevation, border radii, padding, and spacing tuned to the 8px grid.
+  - Card, navigation, and data-visual design patterns consistent with LifeOps style.
+
+Mandatory Coding Standards — Runtime Safety
+- Supabase or API results guard:
+  - Not applicable here, but apply: data ?? [] when dealing with results.
+- Array methods safety:
+  - (categories ?? []).map(...)
+  - Array.isArray(categories) ? categories.map(...) : []
+- React useState for arrays:
+  - useState<ConsentCategory[]>([]) or equivalent type-safe initialization.
+- API response shapes:
+  - const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining:
+  - Use obj?.property?.nested throughout.
+- Destructuring with defaults:
+  - const { categories = [], lastUpdated = "" } = response ?? {}
+
+Generate the complete, detailed prompt now so the AI development tool can build this feature.
+
+## Implementation Notes
+
+When implementing this project:
+
+1. **Follow Universal Guidelines**: Use the design best practices documented above as your foundation
+2. **Apply Project Customizations**: Implement the specific design requirements stated in the "User Design Requirements" section
+3. **Priority Order**: Project-specific requirements override universal guidelines when there's a conflict
+4. **Color System**: Extract and implement color values as CSS custom properties in RGB format
+5. **Typography**: Define font families, sizes, and weights based on specifications
+6. **Spacing**: Establish consistent spacing scale following the design system
+7. **Components**: Style all Shadcn components to match the design aesthetic
+8. **Animations**: Use Motion library for transitions matching the design personality
+9. **Responsive Design**: Ensure mobile-first responsive implementation
+
+## Implementation Checklist
+
+- [ ] Review universal design guidelines above
+- [ ] Extract project-specific color palette and define CSS variables
+- [ ] Configure Tailwind theme with custom colors
+- [ ] Set up typography system (fonts, sizes, weights)
+- [ ] Define spacing and sizing scales
+- [ ] Create component variants matching design
+- [ ] Implement responsive breakpoints
+- [ ] Add animations and transitions
+- [ ] Ensure accessibility standards
+- [ ] Validate against user design requirements
+
+---
+
+**Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
+ for bestpractices and # User Authentication Prompt for AI Development Tool
+
+Overview:
+Build a secure, scalable User Authentication system for LifeOps that supports email/password signups, social OAuth, SSO, JWT-based sessions, and RBAC. Include comprehensive frontend pages (Login/Signup, User Profile, Email Verification, Password Reset) and robust backend APIs with proper data models, security measures, auditing, rate limiting, and brute-force protections. All code must guard against null/undefined values before using array methods, initialize arrays with proper useState defaults, and follow the runtime safety rules explicitly outlined.
+
+Project Metadata:
+- PROJECT CONTEXT: LifeOps — Multi-Agent AI Operating System with audit trails, run artifacts, and a Cronjobs system. All auth events must be auditable, reversible, and permissioned.
+- TARGET FEATURE: User Authentication
+- Associated Pages: page_auth_login_002, page_auth_password_reset_003, page_auth_email_verify_004, page_profile_005
+- Design System: Provided in detail (dark UI, specific color palette, typography, spacing, and component behavior)
+
+# User Authentication
+
+## Overview
+Implement a secure, flexible authentication system that enables:
+- Email/password signups and logins with strong password hashing (bcrypt/argon2).
+- Social OAuth (OAuth 2.0 / OpenID Connect): Google, GitHub, Microsoft.
+- Enterprise SSO (SAML/OIDC-based as applicable) with seamless user provisioning.
+- JWT-based sessions with secure cookies or storage strategies (short-lived access tokens, refresh tokens with rotation).
+- RBAC at resource/module level with audit logging for auth events and admin actions.
+- Rate limiting, brute-force protection, and robust token lifecycle management.
+- Clear onboarding flow and user onboarding wizard during signup.
+- API endpoints and pages aligned with provided page names and semantics.
+
+## Components to Build
+
+- Frontend Components & Pages
+  - UnifiedAuthEntry (LoginSignupShell)
+    - Email/password sign-up and login forms with real-time validation.
+    - Password strength meter integration.
+    - Onboarding wizard steps (stepper: account type, preferences, onboarding tasks).
+    - Social OAuth buttons for Google, GitHub, Microsoft.
+    - Enterprise SSO (redirect to IdP) toggle with helpful guidance.
+  - LoginPage (page_auth_login_002)
+    - Email/password login form with “Forgot password” and “Remember me.”
+    - Social OAuth buttons and Enterprise SSO access links.
+    - Client-side rate-limiting feedback for failed attempts.
+  - SignupPage (page_auth_login_002)
+    - Email/password sign-up form with password strength indicator, terms acceptance, onboarding wizard integration.
+    - Optional invitation code or domain restrictions for enterprise onboarding.
+  - PasswordResetPage (page_auth_password_reset_003)
+    - Request reset form (email), sending a time-limited reset token.
+    - Token verification screen (with token from URL) and password reset with strength meter.
+  - EmailVerificationPage (page_auth_email_verify_004)
+    - Verification link handler, show success/failure UI with next steps and retry option.
+  - UserProfilePage (page_profile_005)
+    - Personal information management (name, email, contact), connected integrations, security (2FA enablement), API keys management, billing summary, and module preferences.
+    - Session management (view active sessions and revoke).
+  - RBACAdminUI (optional helper for admins)
+    - Manage roles, permissions, and resource access controls with audit trail references.
+  - AuditTrailPanel (shared)
+    - Show recent authentication events, admin actions, and run artifacts for traceability.
+
+- Backend APIs & Services
+  - Auth API
+    - POST /auth/signup
+    - POST /auth/login
+    - POST /auth/logout
+    - POST /auth/refresh
+    - GET /auth/me (current user)
+    - POST /auth/logoutAllSessions
+  - Social/OIDC/SSO
+    - GET /auth/oauth/{provider}
+    - GET /auth/oauth/{provider}/callback
+    - GET /auth/sso/initiate
+    - POST /auth/sso/complete
+  - Password Reset & Email Verification
+    - POST /auth/request-password-reset
+    - POST /auth/verify-reset-token
+    - POST /auth/reset-password
+    - GET /auth/verify-email?token=...
+  - Email Verification
+    - GET /auth/verify-email/:token
+  - RBAC & Admin
+    - GET/POST/PUT /admin/roles
+    - GET /admin/permissions
+  - Profile & Preferences
+    - GET/PUT /profile
+    - POST /profile/api-keys
+    - DELETE /profile/api-keys/:keyId
+    - POST /profile/2fa/enable
+    - POST /profile/2fa/disable
+  - Billing & Integrations (read-only for UI, or lightweight endpoints)
+    - GET /billing/summary
+    - GET /integrations/connected
+  - Audit & Logging
+    - POST /audits/log-auth-event
+    - GET /audits/events
+  - Security / Tokens
+    - JWT signing keys management (RS256 recommended)
+    - Token rotation for refresh tokens
+  - Rate Limiting & Brute-Force
+    - Implement per-IP and per-user rate limits on login endpoints
+  - Data Protection
+    - Password hashing with bcrypt or argon2 (salted)
+    - Secure storage of tokens (httpOnly, Secure cookies) or secure client storage as per platform
+
+- Data Models (Database Schema)
+  - User
+    - id (UUID)
+    - email (unique)
+    - passwordHash
+    - name
+    - emailVerified (bool)
+    - preferredLanguage, locale
+    - createdAt, updatedAt
+    - lastSignInAt
+    - active (bool)
+  - UserProfile
+    - userId (FK to User)
+    - phone
+    - avatarUrl
+  - UserRoles / RBAC
+    - id
+    - userId (FK)
+    - roleId (FK)
+    - scope (resource/module-level or global)
+    - assignedAt
+  - Role
+    - id
+    - name
+    - permissions: array of permission strings
+    - scope
+  - Permission
+    - id
+    - name
+    - resource
+  - Session
+    - id (sessionId)
+    - userId
+    - jwtId (jti)
+    - createdAt
+    - expiresAt
+    - lastUsedAt
+    - userAgent
+    - ip
+    - deviceInfo
+  - RefreshToken
+    - id
+    - token
+    - userId
+    - jwtId
+    - createdAt
+    - expiresAt
+    - revoked (bool)
+  - 2FA
+    - userId
+    - secret
+    - enabled (bool)
+    - recoveryCodes[]
+  - PasswordResetToken
+    - id
+    - userId
+    - token
+    - expiresAt
+    - used (bool)
+  - EmailVerificationToken
+    - id
+    - userId
+    - token
+    - expiresAt
+    - used (bool)
+  - AuditLog
+    - id
+    - userId
+    - action
+    - resource
+    - timestamp
+    - details (JSON)
+  - ApiKey
+    - id
+    - userId
+    - key
+    - name
+    - createdAt
+    - lastUsedAt
+    - enabled (bool)
+  - Billing
+    - userId
+    - plan
+    - status
+    - nextBillingDate
+  - Integrations
+    - id
+    - userId
+    - provider
+    - connectedAt
+    - metadata (JSON)
+
+- API Endpoints & Methods (Routes)
+  - Authentication
+    - POST /auth/signup -> 200 with user, tokens
+    - POST /auth/login -> 200 with tokens
+    - POST /auth/logout -> 200
+    - POST /auth/refresh -> 200 with new access token
+    - GET /auth/me -> 200 with user profile
+  - Password & Email
+    - POST /auth/request-password-reset -> 200
+    - POST /auth/verify-reset-token -> 200
+    - POST /auth/reset-password -> 200
+    - GET /auth/verify-email/:token -> 200/400
+  - OAuth / SSO
+    - GET /auth/oauth/:provider -> redirects to provider
+    - GET /auth/oauth/:provider/callback -> process OAuth login
+    - GET /auth/sso/initiate -> start enterprise SSO flow
+    - GET /auth/sso/callback -> finish SSO
+  - Profile & Settings
+    - GET /profile -> 200
+    - PUT /profile -> 200
+    - POST /profile/api-keys -> 201
+    - DELETE /profile/api-keys/:id -> 204
+    - POST /profile/2fa/enable -> 200
+    - POST /profile/2fa/disable -> 200
+  - Billing & Integrations
+    - GET /billing/summary -> 200
+    - GET /integrations/connected -> 200
+  - Admin / RBAC
+    - GET /admin/roles -> 200
+    - POST /admin/roles -> 201
+    - PUT /admin/roles/:id -> 200
+  - Auditing
+    - POST /audits/log-auth-event -> 201
+    - GET /audits/events -> 200
+  - Security
+    - GET /healthz / readiness checks
+
+- Security & Validation
+  - Passwords stored with bcrypt (or Argon2) + per-user salt
+  - Email verification and password reset tokens are time-bound and single-use
+  - JWT access tokens short-lived (e.g., 15 minutes) with rotation via refresh tokens
+  - Secure HttpOnly cookies for tokens where appropriate; alternative safe storage with proper CSRF protection on SPAs
+  - Implement CSRF protection for state-changing requests when using cookies
+  - Role-based access control (RBAC) enforcement at API layer for resource access
+  - Audit logging for all auth events: login, logout, token refresh, password reset, email verify, 2FA changes, admin actions
+  - Rate limiting: per-IP and per-user, to protect login and sensitive endpoints
+  - Brute-force protection with account lockouts or progressive delays
+  - Input validation: strict schema validation on all inputs, with defaults to prevent undefined/null usage
+
+- Validation & Safety Rules (Runtime)
+  - Supabase-like results: use data ?? [] wherever a query returns potential null
+  - Guard array operations: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+  - Initialize React state for arrays: useState<Type[]>([])
+  - API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: use obj?.prop?.subprop when handling nested objects
+  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+  - All API data shaping must defensively handle null/undefined values
+
+- Integration & Flow
+  - Frontend <-> Backend
+    - Sign-up/login flows trigger token issuance; store access token in secure storage per platform considerations
+    - On successful login, fetch user profile and RBAC roles; enforce client-side route guards and server-side checks
+    - OAuth/SSO flows redirect back with authorization codes or tokens; server exchanges codes for user sessions
+  - Profile & Security
+    - Users can enable 2FA using TOTP (Google Authenticator/Authy) with QR codes
+    - API keys management tied to user accounts with revocation and auditing
+  - Audit & Observability
+    - Each auth event creates an audit log entry with userId, action, resource, timestamp, and details
+  - Data Privacy & Compliance
+    - Sensitive data token rotation and secure storage
+  - Accessibility
+    - All forms and controls labeled properly; keyboard accessible
+
+## Implementation Requirements
+
+### Frontend
+- Use React (or framework of choice) with TypeScript for strong typing
+- State Management
+  - Use useState/useEffect and context providers for auth state
+  - Initialize arrays as [] and ensure types are enforced
+- Components & UI
+  - UnifiedAuthEntry: orchestrates sign-up, login, onboarding wizard, and transitions
+  - LoginPage: email/password fields, social OAuth buttons, SSO link
+  - SignupPage: onboarding wizard steps, terms acceptance, validation
+  - PasswordResetPage: two-phase flow (request and set new password)
+  - EmailVerificationPage: verifies token and shows outcome
+  - UserProfilePage: profile editing, 2FA, API keys, billing, integrations, module preferences
+  - Dashboard Integration: ensure components receive user RBAC context to render appropriate UI
+- Data Handling
+  - Use data ?? [] when mapping over server-fetched arrays
+  - Validate API responses with Array.isArray(...) before .map()
+- Security UI
+  - Don’t expose raw tokens in UI
+  - Show password strength meter; enforce password rules (min length, complexity)
+  - Show 2FA status and setup flow clearly
+- Accessibility & UX
+  - Clear focus states, aria labels, and error messaging
+  - Onboarding wizard supports back/next, progress indicators, validation on each step
+- Error Handling
+  - Graceful error messages with actionable next steps
+  - Retry mechanisms for transient network errors
+- Localization
+  - Prepare for i18n if applicable (strings externalized)
+
+### Backend
+- Tech: Node.js/Express or NestJS (or equivalent) with TypeScript; or your preferred stack
+- Security
+  - Password hashing: bcrypt (or argon2) with proper salting
+  - Token management: JWTs with RS256 keys; rotate refresh tokens; store in secure, HttpOnly cookies or secure storage
+  - 2FA: TOTP with secret provisioning and recovery codes
+  - Email verification and password reset tokens: secure random tokens with expiration
+  - SSO/OAuth: implement OAuth2/OIDC flows for Google, GitHub, Microsoft; support enterprise SSO (SAML/OIDC)
+  - RBAC: roles, permissions, and resource-level scoping
+  - Audit logging: comprehensive events for auth actions and admin operations
+  - Rate limiting: middleware-based throttling (per IP and per user)
+  - Brute-force protection: exponential backoff, temporary account lockouts
+  - Input validation: strict DTOs/schemas (e.g., using zod/joi/validator)
+- Data Model
+  - Create schemas per above (User, Session, RefreshToken, 2FA, PasswordResetToken, EmailVerificationToken, AuditLog, ApiKey, Role, Permission)
+  - Use null-safe accessors and defaults when querying
+- Endpoints
+  - Implement the routes listed above with proper authentication guards
+  - Return validated shapes: ensure data ?? [] is used for array responses
+  - Implement error handling with standardized error payloads
+- Integrations
+  - OAuth providers configured with client IDs/secrets
+  - SSO endpoints and metadata retrieval
+- Testing
+  - Unit tests for token issuance/verification, password reset flows, 2FA, RBAC checks
+  - Integration tests for login, signup, OAuth callbacks, email verification
+  - Security tests: token theft, CSRF, rate limits, login attempt throttling
+- Observability
+  - Structured logging for auth events
+  - Metrics: login attempts/sec, success rate, token refresh frequency
+- Reliability
+  - Idempotent operations for verification flows
+  - Idempotent token creation and consumption
+  - Idempotent user provisioning from SSO
+
+### Integration
+
+- Authorization Workflow
+  - On app boot or session restoration, fetch current user and RBAC roles, then set global auth context
+  - All protected API routes enforce RBAC by validating user roles/permissions
+- Token Lifecycle
+  - Access Token: short-lived; used for API authorization
+  - Refresh Token: long-lived but stored securely; rotate on use
+  - Attempt to renew tokens via /auth/refresh; on failure, redirect to login
+- Email & Password Flows
+  - Signup triggers email verification if required
+  - Password reset triggers time-limited tokens and UI flows to reset
+- OAuth/SSO Flows
+  - OAuth callback handles code exchange, user provisioning, and session initialization
+  - Enterprise SSO flow allows provisioning or linking accounts with existing users
+- Auditing
+  - All auth events create audit logs with details; expose a UI panel for admins to review
+- RBAC
+  - Admins can view/manage roles and permissions; end-user actions limited by assigned roles
+- Data Integrity
+  - Guard against null/undefined in all data flows; use default values; ensure array operations are guarded
+
+## User Experience Flow
+
+1) Entry
+- User lands on UnifiedAuthEntry with options: Sign up, Sign in, Enterprise SSO, or Continue with Social (Google, GitHub, Microsoft)
+
+2) Sign-Up Path
+- User selects Sign Up
+- Onboarding Wizard: Step 1 (Profile basics), Step 2 (Security & RBAC scope selection), Step 3 (Permissions & Modules), Step 4 (Onboarding tasks), Step 5 (Review & Create)
+- User provides email, password (validated strength), accepts terms
+- System stores user with emailVerified=false; sends verification email
+- User verifies email via link; UI shows verification success or failure with guidance
+- User is signed in (session created) and navigated to UserProfilePage or first-time onboarding dashboard
+
+3) Sign-In Path
+- User chooses email/password or Social OAuth/SSO
+- If email/password:
+  - Validate credentials; on success, issue access/refresh tokens; set secure cookies or store tokens safely
+  - Load user profile, RBAC roles, and navigate to Home/Dashboard
+- If social OAuth:
+  - Redirect to provider; upon callback, link or create user; provision RBAC roles if needed
+  - Sign in and redirect to profile/dashboard
+- If Enterprise SSO:
+  - Redirect to IdP; after successful assertion, provision user account or link with existing one; sign in
+
+4) Password Reset
+- User requests reset via Email field
+- System sends time-limited link/token
+- User clicks link, lands on PasswordResetPage; enters new password with strength checks
+- Password updated; user logged in and redirected
+
+5) Email Verification
+- User receives verification email with token link
+- User clicks link; system marks email as verified
+- If verification fails (expired/used), show error state with retry guidance
+
+6) Profile & Security
+- User navigates to Profile: edit personal info, connect integrations
+- Enable/disable 2FA; scan QR code to set up TOTP
+- Manage API keys; create/revoke as needed
+- View billing summary and manage module preferences
+- Review active sessions; revoke any suspicious sessions
+
+7) Admin & Auditing
+- Admins access RBAC panels to adjust roles/permissions
+- All auth-related actions appear in AuditLog with details
+- Admins can review run artifacts and inter-agent traces if relevant
+
+8) Error States
+- Clear error messages with retry options
+- Guidance for 2FA backup codes, account recovery, or contacting support
+
+## Technical Specifications
+
+Data Models (Schema Details)
+- User: id: UUID, email, passwordHash, name, emailVerified boolean, locale, createdAt, updatedAt, lastSignInAt, active boolean
+- UserProfile: userId FK, phone, avatarUrl
+- Session: id, userId, jwtId, createdAt, expiresAt, lastUsedAt, userAgent, ip, deviceInfo
+- RefreshToken: id, token, userId, jwtId, createdAt, expiresAt, revoked boolean
+- 2FA: userId, secret, enabled boolean, recoveryCodes[]
+- PasswordResetToken: id, userId, token, expiresAt, used boolean
+- EmailVerificationToken: id, userId, token, expiresAt, used boolean
+- AuditLog: id, userId, action, resource, timestamp, details JSON
+- ApiKey: id, userId, key, name, createdAt, lastUsedAt, enabled boolean
+- Role: id, name, permissions string[], scope
+- Permission: id, name, resource
+
+API Endpoints (Routes & Methods)
+- POST /auth/signup
+- POST /auth/login
+- POST /auth/logout
+- POST /auth/refresh
+- GET /auth/me
+- POST /auth/request-password-reset
+- POST /auth/verify-reset-token
+- POST /auth/reset-password
+- GET /auth/verify-email/:token
+- GET /auth/oauth/:provider
+- GET /auth/oauth/:provider/callback
+- GET /auth/sso/initiate
+- GET /auth/sso/callback
+- GET /profile
+- PUT /profile
+- POST /profile/api-keys
+- DELETE /profile/api-keys/:id
+- POST /profile/2fa/enable
+- POST /profile/2fa/disable
+- GET /billing/summary
+- GET /integrations/connected
+- admin endpoints (/admin/roles, /admin/roles/:id, etc.)
+- POST /audits/log-auth-event
+- GET /audits/events
+
+Security
+- Password hashing: bcrypt (or Argon2)
+- Tokens: JWT (RS256); rotate refresh tokens
+- Secure cookies where applicable; HttpOnly, SameSiteLax/Strict
+- CSRF protection for cookie-based sessions
+- Rate limiting on login and token endpoints
+- Brute-force protections and account lockouts with safe UX
+- RBAC enforcement on all protected resources at server and guarded UI on frontend
+- Validation: use DTOs and strict schemas; ensure Array.isArray() checks and default values
+
+Validation Rules
+- Data fetch results guarded with data ?? []
+- All array operations guarded with (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+- API responses shaped via const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining usage throughout
+- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+
+Acceptance Criteria
+
+- [ ] Authentication flow handles email/password, Google, GitHub, Microsoft OAuth, and enterprise SSO with successful sign-in and session creation
+- [ ] JWT access/refresh token lifecycle implemented with rotation, secure storage, and token revocation on logout
+- [ ] RBAC is enforced on server endpoints; users can access only permitted resources; admin can manage roles/permissions
+- [ ] Password reset and email verification flows work end-to-end with tokens, expirations, and proper UI states
+- [ ] 2FA can be enabled/disabled; QR code provisioning works; recovery codes exist
+- [ ] Audit logging records all authentication events and administrative actions with traceable details
+- [ ] Rate limiting and brute-force protection are in effect on login endpoints
+- [ ] All API responses and client-side data handling guard against null/undefined values per runtime safety rules
+- [ ] Frontend pages render correctly with onboarding wizard steps, error states, and success confirmations
+- [ ] UserProfilePage supports personal info edits, 2FA status, API keys, billing summary, integrations, and module preferences
+- [ ] Email verification page gracefully handles verify success/failure with guidance
+
+UI/UX Guidelines (Apply the project's design system)
+- Follow the dark UI palette and layout guidelines described, with dense but readable typography
+- Use 8px baseline grid; card paddings 16–20px; side gutters 220–260px
+- Card design: rounded 8–12px, subtle borders and shadows, hover lift
+- Typography: Inter-like sans; headings 20–28px, weight 600–700; body 12–14px
+- Active states: accent pill (#FF3B30) for active elements, subtle borders, and elevated backgrounds
+- Form elements: dark controls with inner glow; focus rings in accent color
+- Contrast and accessibility: ensure WCAG-compliant color contrast and keyboard navigability
+- Data viz (optional in auth UI): subtle, low-contrast axes; status chips with teal/amber/purple sparingly
+
+Gradual Rollout Plan (if needed)
+- Phase 1: Core email/password + basic OAuth (Google) + JWT session management; minimal RBAC
+- Phase 2: Full OAuth providers (GitHub, Microsoft) + SSO; 2FA; API keys
+- Phase 3: RBAC hardening, audit logs, admin RBAC UI, rate limiting
+- Phase 4: Onboarding wizard, profile improvements, billing, integrations
+
+Notes on Compliance and Extensibility
+- Prepare for additional providers and enterprise IdPs
+- Maintain a pluggable auth strategy (local, OAuth, SSO) with consistent session handling
+- Ensure audit trails remain immutable and timestamped
+- Ensure code is modular to support future module-specific RBAC requirements
+
+Deliverables
+- End-to-end TypeScript codebase (frontend + backend) shaped around the described APIs and models
+- Detailed README with setup, configuration for OAuth providers, SSO, and migrations
+- Migration scripts for initial data models (User, Roles, Tokens, AuditLog)
+- Tests: unit/integration tests for auth flows, token rotation, RBAC enforcement, and password reset/email verify flows
+- Documentation of security decisions and token lifecycles
+- Example environment configuration for OAuth client IDs/secrets and SSO metadata
+
+Implementation Notes / Guardrails
+- Throughout all code, guard against null/undefined before calling array methods
+  - Example: const items = data ?? []; const mapped = items.map(...)
+  - Use Array.isArray checks where appropriate
+- Initialize all array state with useState<Type[]>([]) in React components
+- When consuming API responses, apply:
+  - const list = Array.isArray(response?.data) ? response.data : []
+  - const user = response?.data ?? {}
+- Use optional chaining and destructuring defaults to avoid runtime errors
+
+This prompt should guide the AI development tool to generate a complete, secure, and maintainable User Authentication feature set that meets the LifeOps project’s requirements, with explicit runtime safety patterns baked into code generation. for style.
+
+CRITICAL DESIGN REQUIREMENTS:
+- You MUST follow ALL design principles and patterns specified in the Design Reference above
+- Do NOT deviate from the design specifications without explicit user permission
+- Implement ALL visual design elements (colors, typography, spacing, shadows, animations) as specified
+- Follow the layout patterns and component designs exactly as documented
+- Ensure all interactions and micro-animations match the reference specifications
+
+CRITICAL TECHNICAL REQUIREMENTS:
+- React 18.3.1, React Router 6.30.1
+- Tailwind CSS v3 with tailwind.config.js and custom keyframes
+- @tailwindcss/typography plugin for rich text content
+- Tailwind CSS animations (NOT Motion library or framer-motion)
+- Sonner for toasts
+- Recharts for data visualization
+- Native fetch() with API utilities in src/lib/api.ts
+- Design system with CSS custom properties
+- Use RGB color values for theming
+- When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
+
+=== TASK ===
+# User Authentication Prompt for AI Development Tool
+
+Overview:
+Build a secure, scalable User Authentication system for LifeOps that supports email/password signups, social OAuth, SSO, JWT-based sessions, and RBAC. Include comprehensive frontend pages (Login/Signup, User Profile, Email Verification, Password Reset) and robust backend APIs with proper data models, security measures, auditing, rate limiting, and brute-force protections. All code must guard against null/undefined values before using array methods, initialize arrays with proper useState defaults, and follow the runtime safety rules explicitly outlined.
+
+Project Metadata:
+- PROJECT CONTEXT: LifeOps — Multi-Agent AI Operating System with audit trails, run artifacts, and a Cronjobs system. All auth events must be auditable, reversible, and permissioned.
+- TARGET FEATURE: User Authentication
+- Associated Pages: page_auth_login_002, page_auth_password_reset_003, page_auth_email_verify_004, page_profile_005
+- Design System: Provided in detail (dark UI, specific color palette, typography, spacing, and component behavior)
+
+# User Authentication
+
+## Overview
+Implement a secure, flexible authentication system that enables:
+- Email/password signups and logins with strong password hashing (bcrypt/argon2).
+- Social OAuth (OAuth 2.0 / OpenID Connect): Google, GitHub, Microsoft.
+- Enterprise SSO (SAML/OIDC-based as applicable) with seamless user provisioning.
+- JWT-based sessions with secure cookies or storage strategies (short-lived access tokens, refresh tokens with rotation).
+- RBAC at resource/module level with audit logging for auth events and admin actions.
+- Rate limiting, brute-force protection, and robust token lifecycle management.
+- Clear onboarding flow and user onboarding wizard during signup.
+- API endpoints and pages aligned with provided page names and semantics.
+
+## Components to Build
+
+- Frontend Components & Pages
+  - UnifiedAuthEntry (LoginSignupShell)
+    - Email/password sign-up and login forms with real-time validation.
+    - Password strength meter integration.
+    - Onboarding wizard steps (stepper: account type, preferences, onboarding tasks).
+    - Social OAuth buttons for Google, GitHub, Microsoft.
+    - Enterprise SSO (redirect to IdP) toggle with helpful guidance.
+  - LoginPage (page_auth_login_002)
+    - Email/password login form with “Forgot password” and “Remember me.”
+    - Social OAuth buttons and Enterprise SSO access links.
+    - Client-side rate-limiting feedback for failed attempts.
+  - SignupPage (page_auth_login_002)
+    - Email/password sign-up form with password strength indicator, terms acceptance, onboarding wizard integration.
+    - Optional invitation code or domain restrictions for enterprise onboarding.
+  - PasswordResetPage (page_auth_password_reset_003)
+    - Request reset form (email), sending a time-limited reset token.
+    - Token verification screen (with token from URL) and password reset with strength meter.
+  - EmailVerificationPage (page_auth_email_verify_004)
+    - Verification link handler, show success/failure UI with next steps and retry option.
+  - UserProfilePage (page_profile_005)
+    - Personal information management (name, email, contact), connected integrations, security (2FA enablement), API keys management, billing summary, and module preferences.
+    - Session management (view active sessions and revoke).
+  - RBACAdminUI (optional helper for admins)
+    - Manage roles, permissions, and resource access controls with audit trail references.
+  - AuditTrailPanel (shared)
+    - Show recent authentication events, admin actions, and run artifacts for traceability.
+
+- Backend APIs & Services
+  - Auth API
+    - POST /auth/signup
+    - POST /auth/login
+    - POST /auth/logout
+    - POST /auth/refresh
+    - GET /auth/me (current user)
+    - POST /auth/logoutAllSessions
+  - Social/OIDC/SSO
+    - GET /auth/oauth/{provider}
+    - GET /auth/oauth/{provider}/callback
+    - GET /auth/sso/initiate
+    - POST /auth/sso/complete
+  - Password Reset & Email Verification
+    - POST /auth/request-password-reset
+    - POST /auth/verify-reset-token
+    - POST /auth/reset-password
+    - GET /auth/verify-email?token=...
+  - Email Verification
+    - GET /auth/verify-email/:token
+  - RBAC & Admin
+    - GET/POST/PUT /admin/roles
+    - GET /admin/permissions
+  - Profile & Preferences
+    - GET/PUT /profile
+    - POST /profile/api-keys
+    - DELETE /profile/api-keys/:keyId
+    - POST /profile/2fa/enable
+    - POST /profile/2fa/disable
+  - Billing & Integrations (read-only for UI, or lightweight endpoints)
+    - GET /billing/summary
+    - GET /integrations/connected
+  - Audit & Logging
+    - POST /audits/log-auth-event
+    - GET /audits/events
+  - Security / Tokens
+    - JWT signing keys management (RS256 recommended)
+    - Token rotation for refresh tokens
+  - Rate Limiting & Brute-Force
+    - Implement per-IP and per-user rate limits on login endpoints
+  - Data Protection
+    - Password hashing with bcrypt or argon2 (salted)
+    - Secure storage of tokens (httpOnly, Secure cookies) or secure client storage as per platform
+
+- Data Models (Database Schema)
+  - User
+    - id (UUID)
+    - email (unique)
+    - passwordHash
+    - name
+    - emailVerified (bool)
+    - preferredLanguage, locale
+    - createdAt, updatedAt
+    - lastSignInAt
+    - active (bool)
+  - UserProfile
+    - userId (FK to User)
+    - phone
+    - avatarUrl
+  - UserRoles / RBAC
+    - id
+    - userId (FK)
+    - roleId (FK)
+    - scope (resource/module-level or global)
+    - assignedAt
+  - Role
+    - id
+    - name
+    - permissions: array of permission strings
+    - scope
+  - Permission
+    - id
+    - name
+    - resource
+  - Session
+    - id (sessionId)
+    - userId
+    - jwtId (jti)
+    - createdAt
+    - expiresAt
+    - lastUsedAt
+    - userAgent
+    - ip
+    - deviceInfo
+  - RefreshToken
+    - id
+    - token
+    - userId
+    - jwtId
+    - createdAt
+    - expiresAt
+    - revoked (bool)
+  - 2FA
+    - userId
+    - secret
+    - enabled (bool)
+    - recoveryCodes[]
+  - PasswordResetToken
+    - id
+    - userId
+    - token
+    - expiresAt
+    - used (bool)
+  - EmailVerificationToken
+    - id
+    - userId
+    - token
+    - expiresAt
+    - used (bool)
+  - AuditLog
+    - id
+    - userId
+    - action
+    - resource
+    - timestamp
+    - details (JSON)
+  - ApiKey
+    - id
+    - userId
+    - key
+    - name
+    - createdAt
+    - lastUsedAt
+    - enabled (bool)
+  - Billing
+    - userId
+    - plan
+    - status
+    - nextBillingDate
+  - Integrations
+    - id
+    - userId
+    - provider
+    - connectedAt
+    - metadata (JSON)
+
+- API Endpoints & Methods (Routes)
+  - Authentication
+    - POST /auth/signup -> 200 with user, tokens
+    - POST /auth/login -> 200 with tokens
+    - POST /auth/logout -> 200
+    - POST /auth/refresh -> 200 with new access token
+    - GET /auth/me -> 200 with user profile
+  - Password & Email
+    - POST /auth/request-password-reset -> 200
+    - POST /auth/verify-reset-token -> 200
+    - POST /auth/reset-password -> 200
+    - GET /auth/verify-email/:token -> 200/400
+  - OAuth / SSO
+    - GET /auth/oauth/:provider -> redirects to provider
+    - GET /auth/oauth/:provider/callback -> process OAuth login
+    - GET /auth/sso/initiate -> start enterprise SSO flow
+    - GET /auth/sso/callback -> finish SSO
+  - Profile & Settings
+    - GET /profile -> 200
+    - PUT /profile -> 200
+    - POST /profile/api-keys -> 201
+    - DELETE /profile/api-keys/:id -> 204
+    - POST /profile/2fa/enable -> 200
+    - POST /profile/2fa/disable -> 200
+  - Billing & Integrations
+    - GET /billing/summary -> 200
+    - GET /integrations/connected -> 200
+  - Admin / RBAC
+    - GET /admin/roles -> 200
+    - POST /admin/roles -> 201
+    - PUT /admin/roles/:id -> 200
+  - Auditing
+    - POST /audits/log-auth-event -> 201
+    - GET /audits/events -> 200
+  - Security
+    - GET /healthz / readiness checks
+
+- Security & Validation
+  - Passwords stored with bcrypt (or Argon2) + per-user salt
+  - Email verification and password reset tokens are time-bound and single-use
+  - JWT access tokens short-lived (e.g., 15 minutes) with rotation via refresh tokens
+  - Secure HttpOnly cookies for tokens where appropriate; alternative safe storage with proper CSRF protection on SPAs
+  - Implement CSRF protection for state-changing requests when using cookies
+  - Role-based access control (RBAC) enforcement at API layer for resource access
+  - Audit logging for all auth events: login, logout, token refresh, password reset, email verify, 2FA changes, admin actions
+  - Rate limiting: per-IP and per-user, to protect login and sensitive endpoints
+  - Brute-force protection with account lockouts or progressive delays
+  - Input validation: strict schema validation on all inputs, with defaults to prevent undefined/null usage
+
+- Validation & Safety Rules (Runtime)
+  - Supabase-like results: use data ?? [] wherever a query returns potential null
+  - Guard array operations: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+  - Initialize React state for arrays: useState<Type[]>([])
+  - API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: use obj?.prop?.subprop when handling nested objects
+  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+  - All API data shaping must defensively handle null/undefined values
+
+- Integration & Flow
+  - Frontend <-> Backend
+    - Sign-up/login flows trigger token issuance; store access token in secure storage per platform considerations
+    - On successful login, fetch user profile and RBAC roles; enforce client-side route guards and server-side checks
+    - OAuth/SSO flows redirect back with authorization codes or tokens; server exchanges codes for user sessions
+  - Profile & Security
+    - Users can enable 2FA using TOTP (Google Authenticator/Authy) with QR codes
+    - API keys management tied to user accounts with revocation and auditing
+  - Audit & Observability
+    - Each auth event creates an audit log entry with userId, action, resource, timestamp, and details
+  - Data Privacy & Compliance
+    - Sensitive data token rotation and secure storage
+  - Accessibility
+    - All forms and controls labeled properly; keyboard accessible
+
+## Implementation Requirements
+
+### Frontend
+- Use React (or framework of choice) with TypeScript for strong typing
+- State Management
+  - Use useState/useEffect and context providers for auth state
+  - Initialize arrays as [] and ensure types are enforced
+- Components & UI
+  - UnifiedAuthEntry: orchestrates sign-up, login, onboarding wizard, and transitions
+  - LoginPage: email/password fields, social OAuth buttons, SSO link
+  - SignupPage: onboarding wizard steps, terms acceptance, validation
+  - PasswordResetPage: two-phase flow (request and set new password)
+  - EmailVerificationPage: verifies token and shows outcome
+  - UserProfilePage: profile editing, 2FA, API keys, billing, integrations, module preferences
+  - Dashboard Integration: ensure components receive user RBAC context to render appropriate UI
+- Data Handling
+  - Use data ?? [] when mapping over server-fetched arrays
+  - Validate API responses with Array.isArray(...) before .map()
+- Security UI
+  - Don’t expose raw tokens in UI
+  - Show password strength meter; enforce password rules (min length, complexity)
+  - Show 2FA status and setup flow clearly
+- Accessibility & UX
+  - Clear focus states, aria labels, and error messaging
+  - Onboarding wizard supports back/next, progress indicators, validation on each step
+- Error Handling
+  - Graceful error messages with actionable next steps
+  - Retry mechanisms for transient network errors
+- Localization
+  - Prepare for i18n if applicable (strings externalized)
+
+### Backend
+- Tech: Node.js/Express or NestJS (or equivalent) with TypeScript; or your preferred stack
+- Security
+  - Password hashing: bcrypt (or argon2) with proper salting
+  - Token management: JWTs with RS256 keys; rotate refresh tokens; store in secure, HttpOnly cookies or secure storage
+  - 2FA: TOTP with secret provisioning and recovery codes
+  - Email verification and password reset tokens: secure random tokens with expiration
+  - SSO/OAuth: implement OAuth2/OIDC flows for Google, GitHub, Microsoft; support enterprise SSO (SAML/OIDC)
+  - RBAC: roles, permissions, and resource-level scoping
+  - Audit logging: comprehensive events for auth actions and admin operations
+  - Rate limiting: middleware-based throttling (per IP and per user)
+  - Brute-force protection: exponential backoff, temporary account lockouts
+  - Input validation: strict DTOs/schemas (e.g., using zod/joi/validator)
+- Data Model
+  - Create schemas per above (User, Session, RefreshToken, 2FA, PasswordResetToken, EmailVerificationToken, AuditLog, ApiKey, Role, Permission)
+  - Use null-safe accessors and defaults when querying
+- Endpoints
+  - Implement the routes listed above with proper authentication guards
+  - Return validated shapes: ensure data ?? [] is used for array responses
+  - Implement error handling with standardized error payloads
+- Integrations
+  - OAuth providers configured with client IDs/secrets
+  - SSO endpoints and metadata retrieval
+- Testing
+  - Unit tests for token issuance/verification, password reset flows, 2FA, RBAC checks
+  - Integration tests for login, signup, OAuth callbacks, email verification
+  - Security tests: token theft, CSRF, rate limits, login attempt throttling
+- Observability
+  - Structured logging for auth events
+  - Metrics: login attempts/sec, success rate, token refresh frequency
+- Reliability
+  - Idempotent operations for verification flows
+  - Idempotent token creation and consumption
+  - Idempotent user provisioning from SSO
+
+### Integration
+
+- Authorization Workflow
+  - On app boot or session restoration, fetch current user and RBAC roles, then set global auth context
+  - All protected API routes enforce RBAC by validating user roles/permissions
+- Token Lifecycle
+  - Access Token: short-lived; used for API authorization
+  - Refresh Token: long-lived but stored securely; rotate on use
+  - Attempt to renew tokens via /auth/refresh; on failure, redirect to login
+- Email & Password Flows
+  - Signup triggers email verification if required
+  - Password reset triggers time-limited tokens and UI flows to reset
+- OAuth/SSO Flows
+  - OAuth callback handles code exchange, user provisioning, and session initialization
+  - Enterprise SSO flow allows provisioning or linking accounts with existing users
+- Auditing
+  - All auth events create audit logs with details; expose a UI panel for admins to review
+- RBAC
+  - Admins can view/manage roles and permissions; end-user actions limited by assigned roles
+- Data Integrity
+  - Guard against null/undefined in all data flows; use default values; ensure array operations are guarded
+
+## User Experience Flow
+
+1) Entry
+- User lands on UnifiedAuthEntry with options: Sign up, Sign in, Enterprise SSO, or Continue with Social (Google, GitHub, Microsoft)
+
+2) Sign-Up Path
+- User selects Sign Up
+- Onboarding Wizard: Step 1 (Profile basics), Step 2 (Security & RBAC scope selection), Step 3 (Permissions & Modules), Step 4 (Onboarding tasks), Step 5 (Review & Create)
+- User provides email, password (validated strength), accepts terms
+- System stores user with emailVerified=false; sends verification email
+- User verifies email via link; UI shows verification success or failure with guidance
+- User is signed in (session created) and navigated to UserProfilePage or first-time onboarding dashboard
+
+3) Sign-In Path
+- User chooses email/password or Social OAuth/SSO
+- If email/password:
+  - Validate credentials; on success, issue access/refresh tokens; set secure cookies or store tokens safely
+  - Load user profile, RBAC roles, and navigate to Home/Dashboard
+- If social OAuth:
+  - Redirect to provider; upon callback, link or create user; provision RBAC roles if needed
+  - Sign in and redirect to profile/dashboard
+- If Enterprise SSO:
+  - Redirect to IdP; after successful assertion, provision user account or link with existing one; sign in
+
+4) Password Reset
+- User requests reset via Email field
+- System sends time-limited link/token
+- User clicks link, lands on PasswordResetPage; enters new password with strength checks
+- Password updated; user logged in and redirected
+
+5) Email Verification
+- User receives verification email with token link
+- User clicks link; system marks email as verified
+- If verification fails (expired/used), show error state with retry guidance
+
+6) Profile & Security
+- User navigates to Profile: edit personal info, connect integrations
+- Enable/disable 2FA; scan QR code to set up TOTP
+- Manage API keys; create/revoke as needed
+- View billing summary and manage module preferences
+- Review active sessions; revoke any suspicious sessions
+
+7) Admin & Auditing
+- Admins access RBAC panels to adjust roles/permissions
+- All auth-related actions appear in AuditLog with details
+- Admins can review run artifacts and inter-agent traces if relevant
+
+8) Error States
+- Clear error messages with retry options
+- Guidance for 2FA backup codes, account recovery, or contacting support
+
+## Technical Specifications
+
+Data Models (Schema Details)
+- User: id: UUID, email, passwordHash, name, emailVerified boolean, locale, createdAt, updatedAt, lastSignInAt, active boolean
+- UserProfile: userId FK, phone, avatarUrl
+- Session: id, userId, jwtId, createdAt, expiresAt, lastUsedAt, userAgent, ip, deviceInfo
+- RefreshToken: id, token, userId, jwtId, createdAt, expiresAt, revoked boolean
+- 2FA: userId, secret, enabled boolean, recoveryCodes[]
+- PasswordResetToken: id, userId, token, expiresAt, used boolean
+- EmailVerificationToken: id, userId, token, expiresAt, used boolean
+- AuditLog: id, userId, action, resource, timestamp, details JSON
+- ApiKey: id, userId, key, name, createdAt, lastUsedAt, enabled boolean
+- Role: id, name, permissions string[], scope
+- Permission: id, name, resource
+
+API Endpoints (Routes & Methods)
+- POST /auth/signup
+- POST /auth/login
+- POST /auth/logout
+- POST /auth/refresh
+- GET /auth/me
+- POST /auth/request-password-reset
+- POST /auth/verify-reset-token
+- POST /auth/reset-password
+- GET /auth/verify-email/:token
+- GET /auth/oauth/:provider
+- GET /auth/oauth/:provider/callback
+- GET /auth/sso/initiate
+- GET /auth/sso/callback
+- GET /profile
+- PUT /profile
+- POST /profile/api-keys
+- DELETE /profile/api-keys/:id
+- POST /profile/2fa/enable
+- POST /profile/2fa/disable
+- GET /billing/summary
+- GET /integrations/connected
+- admin endpoints (/admin/roles, /admin/roles/:id, etc.)
+- POST /audits/log-auth-event
+- GET /audits/events
+
+Security
+- Password hashing: bcrypt (or Argon2)
+- Tokens: JWT (RS256); rotate refresh tokens
+- Secure cookies where applicable; HttpOnly, SameSiteLax/Strict
+- CSRF protection for cookie-based sessions
+- Rate limiting on login and token endpoints
+- Brute-force protections and account lockouts with safe UX
+- RBAC enforcement on all protected resources at server and guarded UI on frontend
+- Validation: use DTOs and strict schemas; ensure Array.isArray() checks and default values
+
+Validation Rules
+- Data fetch results guarded with data ?? []
+- All array operations guarded with (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+- API responses shaped via const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining usage throughout
+- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+
+Acceptance Criteria
+
+- [ ] Authentication flow handles email/password, Google, GitHub, Microsoft OAuth, and enterprise SSO with successful sign-in and session creation
+- [ ] JWT access/refresh token lifecycle implemented with rotation, secure storage, and token revocation on logout
+- [ ] RBAC is enforced on server endpoints; users can access only permitted resources; admin can manage roles/permissions
+- [ ] Password reset and email verification flows work end-to-end with tokens, expirations, and proper UI states
+- [ ] 2FA can be enabled/disabled; QR code provisioning works; recovery codes exist
+- [ ] Audit logging records all authentication events and administrative actions with traceable details
+- [ ] Rate limiting and brute-force protection are in effect on login endpoints
+- [ ] All API responses and client-side data handling guard against null/undefined values per runtime safety rules
+- [ ] Frontend pages render correctly with onboarding wizard steps, error states, and success confirmations
+- [ ] UserProfilePage supports personal info edits, 2FA status, API keys, billing summary, integrations, and module preferences
+- [ ] Email verification page gracefully handles verify success/failure with guidance
+
+UI/UX Guidelines (Apply the project's design system)
+- Follow the dark UI palette and layout guidelines described, with dense but readable typography
+- Use 8px baseline grid; card paddings 16–20px; side gutters 220–260px
+- Card design: rounded 8–12px, subtle borders and shadows, hover lift
+- Typography: Inter-like sans; headings 20–28px, weight 600–700; body 12–14px
+- Active states: accent pill (#FF3B30) for active elements, subtle borders, and elevated backgrounds
+- Form elements: dark controls with inner glow; focus rings in accent color
+- Contrast and accessibility: ensure WCAG-compliant color contrast and keyboard navigability
+- Data viz (optional in auth UI): subtle, low-contrast axes; status chips with teal/amber/purple sparingly
+
+Gradual Rollout Plan (if needed)
+- Phase 1: Core email/password + basic OAuth (Google) + JWT session management; minimal RBAC
+- Phase 2: Full OAuth providers (GitHub, Microsoft) + SSO; 2FA; API keys
+- Phase 3: RBAC hardening, audit logs, admin RBAC UI, rate limiting
+- Phase 4: Onboarding wizard, profile improvements, billing, integrations
+
+Notes on Compliance and Extensibility
+- Prepare for additional providers and enterprise IdPs
+- Maintain a pluggable auth strategy (local, OAuth, SSO) with consistent session handling
+- Ensure audit trails remain immutable and timestamped
+- Ensure code is modular to support future module-specific RBAC requirements
+
+Deliverables
+- End-to-end TypeScript codebase (frontend + backend) shaped around the described APIs and models
+- Detailed README with setup, configuration for OAuth providers, SSO, and migrations
+- Migration scripts for initial data models (User, Roles, Tokens, AuditLog)
+- Tests: unit/integration tests for auth flows, token rotation, RBAC enforcement, and password reset/email verify flows
+- Documentation of security decisions and token lifecycles
+- Example environment configuration for OAuth client IDs/secrets and SSO metadata
+
+Implementation Notes / Guardrails
+- Throughout all code, guard against null/undefined before calling array methods
+  - Example: const items = data ?? []; const mapped = items.map(...)
+  - Use Array.isArray checks where appropriate
+- Initialize all array state with useState<Type[]>([]) in React components
+- When consuming API responses, apply:
+  - const list = Array.isArray(response?.data) ? response.data : []
+  - const user = response?.data ?? {}
+- Use optional chaining and destructuring defaults to avoid runtime errors
+
+This prompt should guide the AI development tool to generate a complete, secure, and maintainable User Authentication feature set that meets the LifeOps project’s requirements, with explicit runtime safety patterns baked into code generation.
+
+=== SUCCESS CRITERIA ===
+# Success Criteria Checklist
+
+## Code Quality
+
+### TypeScript
+- [ ] No TypeScript errors (`tsc --noEmit` passes)
+- [ ] All functions and components have proper type definitions
+- [ ] No `any` types used (use `unknown` if type is truly unknown)
+- [ ] Props interfaces defined for all components
+- [ ] API responses have type definitions
+
+### Code Standards
+- [ ] All imports use path aliases (@/ prefix)
+- [ ] Components follow the established naming convention
+- [ ] Files are organized in correct directories
+- [ ] No unused imports or variables
+- [ ] Consistent code formatting
+
+## Component Implementation
+
+### UI Components
+- [ ] Use shadcn/ui components (Button, Card, Input, etc.) instead of building from scratch
+- [ ] All interactive elements have hover states
+- [ ] Components use the `cn()` utility for class merging
+- [ ] Proper TypeScript props interfaces defined
+- [ ] Components are responsive (mobile, tablet, desktop)
+
+### Animations
+- [ ] Motion library used for all animations (NOT framer-motion)
+- [ ] Page transitions implemented with fade/slide
+- [ ] Interactive elements have whileHover/whileTap animations
+- [ ] List items use stagger animations where appropriate
+- [ ] Animations respect `prefers-reduced-motion`
+
+### Icons
+- [ ] Lucide React icons used consistently
+- [ ] Icons have consistent sizing (h-4 w-4, h-5 w-5, h-6 w-6)
+- [ ] Icon colors match design system (text-primary, text-muted-foreground)
+
+## Data Management
+
+### React Query
+- [ ] All data fetching uses React Query hooks
+- [ ] Query keys follow the established pattern
+- [ ] Mutations invalidate related queries
+- [ ] Loading and error states handled
+- [ ] Optimistic updates implemented where appropriate
+
+### Forms
+- [ ] Forms use react-hook-form
+- [ ] Validation uses Zod schemas
+- [ ] Error messages display properly
+- [ ] Form submission shows loading state
+- [ ] Success/error feedback via toast notifications
+
+### API Layer
+- [ ] API functions in src/api/ directory
+- [ ] Axios used for HTTP requests
+- [ ] Proper error handling with try/catch
+- [ ] Auth tokens handled by interceptors
+- [ ] Type-safe API function signatures
+
+## User Experience
+
+### Notifications
+- [ ] Sonner toasts used for all notifications
+- [ ] Success actions show success toast
+- [ ] Errors show descriptive error messages
+- [ ] Loading states show toast.loading()
+
+### Loading States
+- [ ] Skeleton loaders shown during data fetch
+- [ ] Buttons show loading state during submission
+- [ ] Disabled state applied during async operations
+
+### Error Handling
+- [ ] Network errors caught and displayed
+- [ ] User-friendly error messages (no stack traces)
+- [ ] Fallback UI for error states
+- [ ] No unhandled promise rejections
+
+## Navigation
+
+### Route Accessibility
+- [ ] All pages have routes defined in router configuration
+- [ ] Every page is accessible through navigation (menu, sidebar, or direct URL)
+- [ ] Main pages (Dashboard, Home, Settings, etc.) accessible from primary navigation
+- [ ] Secondary pages accessible through contextual navigation or direct links
+- [ ] Deep-linked pages have breadcrumbs or back navigation
+- [ ] 404/Not Found page implemented for invalid routes
+- [ ] Protected routes have proper authentication checks
+- [ ] Navigation state persists across page refreshes where appropriate
+
+### Navigation UX
+- [ ] Active route highlighted in navigation menu
+- [ ] Clear visual hierarchy in navigation structure
+- [ ] Mobile navigation is accessible and usable
+- [ ] Navigation items have hover/focus states
+- [ ] Nested routes show parent-child relationships
+- [ ] User can always return to main areas (Dashboard/Home)
+
+## Styling
+
+### Tailwind CSS
+- [ ] Tailwind v3 classes used
+- [ ] HSL color variables from design system
+- [ ] Custom CSS properties used where defined
+- [ ] Responsive breakpoints: mobile-first approach
+- [ ] Dark mode support via CSS variables
+
+### Design System
+- [ ] Colors use theme variables (primary, secondary, accent)
+- [ ] Spacing uses Tailwind scale (p-4, gap-6, etc.)
+- [ ] Border radius uses theme values (rounded-lg)
+- [ ] Shadows use theme values (shadow-card)
+- [ ] Typography follows Inter font system
+
+## Accessibility
+
+- [ ] Semantic HTML elements used
+- [ ] Buttons have descriptive labels
+- [ ] Forms have proper labels
+- [ ] Focus states visible on interactive elements
+- [ ] Color contrast meets WCAG standards
+
+## Performance
+
+- [ ] No console.log statements in production code
+- [ ] No console errors in browser
+- [ ] Images optimized (WebP, lazy loading)
+- [ ] Large lists use virtualization if needed
+- [ ] React Query cache configured appropriately
+
+## Testing Readiness
+
+- [ ] Components structured for easy testing
+- [ ] Business logic separated from presentation
+- [ ] Mock-friendly API layer
+- [ ] No hardcoded values that should be configurable
+- [ ] Environment variables properly configured
+
+## Final Checks
+
+- [ ] Code builds without errors (`npm run build`)
+- [ ] Development server runs without errors (`npm run dev`)
+- [ ] No TypeScript errors in editor
+- [ ] Browser console is clean (no errors or warnings)
+- [ ] All functionality works as expected
+- [ ] Code follows existing project patterns
+- [ ] Changes are consistent with the rest of the codebase
+
+
+
+IMPORTANT: ALL styling and design decisions must follow the Design Reference section above EXACTLY. Do not make arbitrary design choices.
+
+Analyze the existing project structure and implement the task following the patterns already established. Ensure all success criteria are met.

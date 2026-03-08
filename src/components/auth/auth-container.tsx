@@ -27,6 +27,9 @@ export interface AuthContainerProps {
   className?: string;
 }
 
+const RATE_LIMIT_THRESHOLD = 5;
+const RATE_LIMIT_COOLDOWN_MS = 60_000;
+
 export function AuthContainer({
   defaultMode = "login",
   className,
@@ -37,6 +40,9 @@ export function AuthContainer({
   const [providers, setProviders] = React.useState<OAuthProvider[]>([]);
   const [onboardingOpen, setOnboardingOpen] = React.useState(false);
   const [onboardingSessionId, setOnboardingSessionId] = React.useState("");
+  const [failedAttempts, setFailedAttempts] = React.useState(0);
+  const [cooldownUntil, setCooldownUntil] = React.useState<number>(0);
+  const [cooldownRemaining, setCooldownRemaining] = React.useState(0);
 
   React.useEffect(() => {
     if (isAuthenticated && !onboardingOpen) {
@@ -48,12 +54,39 @@ export function AuthContainer({
     getProviders().then((p) => setProviders(p ?? []));
   }, []);
 
+  React.useEffect(() => {
+    if (cooldownUntil <= 0) return;
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      setCooldownRemaining(remaining);
+      if (remaining <= 0) {
+        setCooldownUntil(0);
+        setFailedAttempts(0);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownUntil]);
+
+  const isRateLimited = cooldownUntil > Date.now();
+
   const handleLoginSubmit = React.useCallback(
     async (values: LoginFormValues | SignupFormValues) => {
       if (mode === "login") {
+        if (isRateLimited) return;
         const v = values as LoginFormValues;
-        await login(v.email, v.password, v.rememberMe);
-        navigate("/dashboard", { replace: true });
+        try {
+          await login(v.email, v.password, v.rememberMe);
+          setFailedAttempts(0);
+          navigate("/dashboard", { replace: true });
+        } catch (err) {
+          const next = failedAttempts + 1;
+          setFailedAttempts(next);
+          if (next >= RATE_LIMIT_THRESHOLD) {
+            setCooldownUntil(Date.now() + RATE_LIMIT_COOLDOWN_MS);
+            setCooldownRemaining(Math.ceil(RATE_LIMIT_COOLDOWN_MS / 1000));
+          }
+          throw err;
+        }
       } else {
         const v = values as SignupFormValues;
         const response = await signup({
@@ -69,7 +102,7 @@ export function AuthContainer({
         setOnboardingOpen(true);
       }
     },
-    [mode, login, signup, navigate]
+    [mode, login, signup, navigate, failedAttempts, isRateLimited]
   );
 
   const handleOAuthInitiate = React.useCallback(async (providerId: string) => {
@@ -112,10 +145,19 @@ export function AuthContainer({
               <TabsTrigger value="signup">Sign up</TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="mt-4 space-y-4">
+              {isRateLimited && (
+                <div
+                  role="alert"
+                  className="rounded-md border border-amber/50 bg-amber/10 px-3 py-2 text-sm text-amber"
+                >
+                  Too many failed attempts. Try again in {cooldownRemaining} seconds.
+                </div>
+              )}
               <EmailAuthForm
                 mode="login"
                 onSubmit={handleLoginSubmit}
                 isLoading={isLoading}
+                disabled={isRateLimited}
               />
               <div className="flex items-center justify-between text-sm">
                 <ForgotPasswordLink />

@@ -40,7 +40,7 @@ export function PasswordResetPage() {
   // /auth/reset without token → redirect to request flow
   useEffect(() => {
     if (isResetRoute && !tokenFromUrl) {
-      navigate("/password-reset", { replace: true });
+      navigate("/auth/forgot", { replace: true });
     }
   }, [isResetRoute, tokenFromUrl, navigate]);
 
@@ -190,7 +190,7 @@ export function PasswordResetPage() {
               message={verifyError}
               action={
                 <Link
-                  to="/password-reset"
+                  to="/auth/forgot"
                   className="text-primary hover:underline font-medium"
                 >
                   Request a new link
