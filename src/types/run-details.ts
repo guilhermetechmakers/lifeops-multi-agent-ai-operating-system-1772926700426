@@ -21,15 +21,26 @@ export const RUN_STATUS_LABELS: Record<RunStatus, string> = {
   reverted: "Reverted",
 };
 
+/** Explainability metadata attached to messages and actions. */
+export interface ExplainabilityMetadata {
+  action?: string;
+  decision?: string;
+  rationale?: string;
+  artifactIds?: string[];
+}
+
 export interface TraceEvent {
   id: string;
   timestamp: string;
   sender: string;
   receiver: string;
   type: string;
+  version?: string;
+  ttl?: number;
   payloadExcerpt?: string;
   fullPayload?: Record<string, unknown>;
   outcome?: string;
+  explainability?: ExplainabilityMetadata;
 }
 
 export interface LogEvent {
@@ -93,6 +104,12 @@ export interface AuditEvent {
   details?: string | Record<string, unknown>;
 }
 
+export interface RunConstraints {
+  maxDurationMs?: number;
+  maxRetries?: number;
+  userOverrides?: Record<string, unknown>;
+}
+
 export interface RunDetail {
   id: string;
   cronjobId: string;
@@ -105,6 +122,8 @@ export interface RunDetail {
   effectiveInputs?: Record<string, unknown>;
   scope?: string[];
   permissions?: string[];
+  constraints?: RunConstraints;
+  target?: string;
   trace: TraceEvent[];
   logs: LogEvent[];
   diffs: DiffChunk[];
