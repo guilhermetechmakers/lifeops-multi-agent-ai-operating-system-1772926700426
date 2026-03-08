@@ -17,6 +17,7 @@ import {
   Search,
   Bell,
   HelpCircle,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ const SIDEBAR_COLLAPSED_WIDTH = 64;
 
 const navItems = [
   { to: "/dashboard", label: "Master", icon: LayoutDashboard },
+  { to: "/dashboard/admin", label: "Admin", icon: Shield },
   { to: "/dashboard/cronjobs", label: "Cronjobs", icon: Clock },
   { to: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },
   { to: "/dashboard/debug", label: "Agent Trace", icon: Bug },
@@ -182,7 +184,7 @@ export function DashboardLayout() {
                 <span
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
-                    location.pathname === to
+                    location.pathname === to || location.pathname.startsWith(to + "/")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}

@@ -46,6 +46,18 @@ import {
   PreferencesPanel,
 } from "@/components/profile";
 import AboutHelpPage from "@/pages/about-help";
+import {
+  AdminDashboardShell,
+  AdminOverview,
+  UserManagementPanel,
+  OrganizationsPanel,
+  RolesPanel,
+  IntegrationsPanel as AdminIntegrationsPanel,
+  CompliancePanel,
+  BillingPanel as AdminBillingPanel,
+  AdminCronjobsPanel,
+  ReportsPanel,
+} from "@/components/admin";
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
@@ -99,6 +111,17 @@ function App() {
             <Route path="runs/:runId" element={<RunDetailsPage />} />
             <Route path="cronjobs/:id/edit" element={<CronjobEditor />} />
             <Route path="approvals" element={<Approvals />} />
+            <Route path="admin" element={<AdminDashboardShell />}>
+              <Route index element={<AdminOverview />} />
+              <Route path="users" element={<UserManagementPanel />} />
+              <Route path="organizations" element={<OrganizationsPanel />} />
+              <Route path="roles" element={<RolesPanel />} />
+              <Route path="integrations" element={<AdminIntegrationsPanel />} />
+              <Route path="compliance" element={<CompliancePanel />} />
+              <Route path="billing" element={<AdminBillingPanel />} />
+              <Route path="cronjobs" element={<AdminCronjobsPanel />} />
+              <Route path="reports" element={<ReportsPanel />} />
+            </Route>
             <Route path="debug" element={<AgentTraceDebuggerPage />} />
             <Route path="projects" element={<Outlet />}>
               <Route index element={<ProjectsDashboardShell />} />
