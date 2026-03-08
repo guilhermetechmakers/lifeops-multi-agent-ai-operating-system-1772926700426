@@ -8,3 +8,5 @@ export { TimingPane } from "./timing-pane";
 export { ReversibilityPanel } from "./reversibility-panel";
 export { AuditTrailPanel } from "./audit-trail-panel";
 export { RelatedContextPanel } from "./related-context-panel";
+export { RunOverviewPanel } from "./run-overview-panel";
+export { HumanInputInjectModal } from "./human-input-inject-modal";

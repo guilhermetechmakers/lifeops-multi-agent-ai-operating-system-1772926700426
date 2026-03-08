@@ -14,6 +14,9 @@ import type {
   AuditEvent,
   RevertPayload,
   RevertResponse,
+  RunSchedule,
+  RunTarget,
+  RunTTLMetadata,
 } from "@/types/run-details";
 
 const now = new Date();
@@ -28,8 +31,11 @@ const MOCK_TRACE: TraceEvent[] = [
     sender: "orchestrator",
     receiver: "agent-pr-triage",
     type: "handoff",
+    version: "1.0",
+    ttl: 3600,
     payloadExcerpt: '{"task":"triage","repo":"acme"}',
     outcome: "accepted",
+    explainability: { action: "handoff", decision: "assign", rationale: "PR triage agent available" },
   },
   {
     id: "t2",
@@ -37,8 +43,10 @@ const MOCK_TRACE: TraceEvent[] = [
     sender: "agent-pr-triage",
     receiver: "orchestrator",
     type: "result",
+    version: "1.0",
     payloadExcerpt: '{"prCount":3,"recommendations":[]}',
     outcome: "success",
+    explainability: { action: "result", rationale: "Triage completed for 3 PRs" },
   },
   {
     id: "t3",
@@ -46,8 +54,11 @@ const MOCK_TRACE: TraceEvent[] = [
     sender: "orchestrator",
     receiver: "agent-notifier",
     type: "alert",
+    version: "1.0",
+    ttl: 1800,
     payloadExcerpt: '{"action":"notify","channel":"slack"}',
     outcome: "sent",
+    explainability: { action: "alert", decision: "notify", rationale: "Slack notification sent" },
   },
 ];
 
@@ -105,6 +116,20 @@ const MOCK_AUDIT: AuditEvent[] = [
   { id: "a2", timestamp: ended.toISOString(), userId: "system", action: "run_completed", details: "Success" },
 ];
 
+const MOCK_SCHEDULE: RunSchedule = {
+  cron: "0 9 * * 1-5",
+  timeZone: "UTC",
+  nextRunAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+};
+
+const MOCK_TARGET: RunTarget = { type: "workflow", id: "wf-pr-triage", name: "PR Triage" };
+
+const MOCK_TTL: RunTTLMetadata = {
+  memoryScope: 3600,
+  messageRetention: 86400,
+  artifactRetention: 604800,
+};
+
 function buildRunDetail(runId: string, cronjobId: string, cronjobName: string): RunDetail {
   return {
     id: runId,
@@ -114,10 +139,14 @@ function buildRunDetail(runId: string, cronjobId: string, cronjobName: string): 
     endedAt: ended.toISOString(),
     durationMs,
     status: "succeeded",
+    schedule: MOCK_SCHEDULE,
+    target: MOCK_TARGET,
     inputs: { template: "{}", variables: {} },
     effectiveInputs: { repo: "acme", branch: "main" },
+    constraints: { maxDurationMs: 300000, maxRetries: 3 },
     scope: ["repo:acme", "agent:pr-triage"],
     permissions: ["read", "write"],
+    ttlMetadata: MOCK_TTL,
     trace: MOCK_TRACE,
     logs: MOCK_LOGS,
     diffs: MOCK_DIFFS,
@@ -183,4 +212,35 @@ export async function mockRevertRun(runId: string, _payload: RevertPayload): Pro
     message: "Revert initiated",
     auditEntryId: `audit-revert-${runId}-${Date.now()}`,
   };
+}
+
+export async function mockPauseRun(runId: string): Promise<{ success: boolean; state?: string; message?: string }> {
+  await new Promise((r) => setTimeout(r, 300));
+  return { success: true, state: "paused", message: "Run paused" };
+}
+
+export async function mockResumeRun(runId: string): Promise<{ success: boolean; state?: string; message?: string }> {
+  await new Promise((r) => setTimeout(r, 300));
+  return { success: true, state: "running", message: "Run resumed" };
+}
+
+export async function mockHaltRun(runId: string): Promise<{ success: boolean; state?: string; message?: string }> {
+  await new Promise((r) => setTimeout(r, 300));
+  return { success: true, state: "aborted", message: "Run halted" };
+}
+
+export async function mockInjectHumanInput(
+  runId: string,
+  _payload: { input: Record<string, unknown>; checkpointId?: string; stepId?: string; agentId?: string; reason?: string }
+): Promise<{ success: boolean; state?: string; message?: string }> {
+  await new Promise((r) => setTimeout(r, 400));
+  return { success: true, message: "Human input injected" };
+}
+
+export async function mockInjectInput(
+  runId: string,
+  _payload: { stepId?: string; agentId?: string; input: Record<string, unknown>; reason?: string }
+): Promise<{ success: boolean }> {
+  await new Promise((r) => setTimeout(r, 400));
+  return { success: true };
 }

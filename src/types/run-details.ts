@@ -6,18 +6,22 @@
 export type RunStatus =
   | "queued"
   | "running"
+  | "paused"
   | "succeeded"
   | "failed"
   | "aborted"
+  | "halted"
   | "reverted";
 
 /** Human-readable status labels for Run Details UI. */
 export const RUN_STATUS_LABELS: Record<RunStatus, string> = {
   queued: "Scheduled",
   running: "Running",
+  paused: "Paused",
   succeeded: "Completed",
   failed: "Failed",
   aborted: "Aborted",
+  halted: "Halted",
   reverted: "Reverted",
 };
 
@@ -37,6 +41,7 @@ export interface TraceEvent {
   type: string;
   version?: string;
   ttl?: number;
+  state?: "pending" | "delivered" | "processed" | "failed";
   payloadExcerpt?: string;
   fullPayload?: Record<string, unknown>;
   outcome?: string;
@@ -108,6 +113,39 @@ export interface RunConstraints {
   maxDurationMs?: number;
   maxRetries?: number;
   userOverrides?: Record<string, unknown>;
+  userConstraints?: Record<string, unknown>;
+  safetyRails?: Record<string, unknown>;
+  deadline?: string;
+  roiThreshold?: number;
+}
+
+/** Run schedule info for orchestration. */
+export interface RunSchedule {
+  cron?: string;
+  timeZone?: string;
+  nextRunAt?: string;
+}
+
+/** Run target (agent/workflow identifier). */
+export interface RunTarget {
+  type?: string;
+  id?: string;
+  name?: string;
+}
+
+/** TTL metadata for run-scoped resources. */
+export interface RunTTLMetadata {
+  memoryScope?: number;
+  messageRetention?: number;
+  artifactRetention?: number;
+}
+
+/** Action requiring human approval. */
+export interface PendingApproval {
+  id: string;
+  actionType: string;
+  context?: Record<string, unknown>;
+  requestedAt: string;
 }
 
 export interface RunDetail {
@@ -118,12 +156,14 @@ export interface RunDetail {
   endedAt?: string;
   durationMs?: number;
   status: RunStatus;
+  schedule?: RunSchedule;
+  target?: RunTarget | string;
   inputs?: Record<string, unknown>;
   effectiveInputs?: Record<string, unknown>;
+  constraints?: RunConstraints;
   scope?: string[];
   permissions?: string[];
-  constraints?: RunConstraints;
-  target?: string;
+  ttlMetadata?: RunTTLMetadata;
   trace: TraceEvent[];
   logs: LogEvent[];
   diffs: DiffChunk[];
@@ -134,6 +174,7 @@ export interface RunDetail {
   auditTrail: AuditEvent[];
   relatedRuns?: { antecedent?: string[]; successor?: string[] };
   approvalId?: string;
+  pendingApprovals?: PendingApproval[];
 }
 
 export interface RevertPayload {

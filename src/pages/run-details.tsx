@@ -8,7 +8,14 @@ import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRunDetails, useRevertRun } from "@/hooks/use-run-details";
+import {
+  useRunDetails,
+  useRevertRun,
+  usePauseRun,
+  useResumeRun,
+  useHaltRun,
+  useInjectInput,
+} from "@/hooks/use-run-details";
 import {
   RunDetailsHeader,
   InputsPanel,
@@ -20,6 +27,8 @@ import {
   ReversibilityPanel,
   AuditTrailPanel,
   RelatedContextPanel,
+  RunOverviewPanel,
+  HumanInputInjectModal,
 } from "@/components/run-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -40,7 +49,12 @@ export default function RunDetailsPage() {
   const { run, trace, logs, diffs, artifacts, timing, reversibleActions, auditTrail, isLoading, error } =
     useRunDetails(runId ?? null, cronjobId);
   const revertMutation = useRevertRun(runId ?? null);
+  const pauseMutation = usePauseRun(runId ?? null);
+  const resumeMutation = useResumeRun(runId ?? null);
+  const haltMutation = useHaltRun(runId ?? null);
+  const injectMutation = useInjectInput(runId ?? null);
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
+  const [injectModalOpen, setInjectModalOpen] = useState(false);
 
   const canRevert =
     Boolean(run) &&
@@ -96,6 +110,35 @@ export default function RunDetailsPage() {
     toast.success("Artifacts exported");
   }, [artifacts, runId]);
 
+  const handleExportDebug = useCallback(() => {
+    const payload = {
+      run,
+      trace,
+      logs,
+      diffs,
+      artifacts,
+      timing,
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `run-${runId}-debug.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Debug trace exported");
+  }, [run, trace, logs, diffs, artifacts, timing, runId]);
+
+  const handleInjectInput = useCallback(
+    (payload: { stepId?: string; agentId?: string; input: Record<string, unknown>; reason?: string }) => {
+      injectMutation.mutate(payload);
+    },
+    [injectMutation]
+  );
+
   if (error) {
     return (
       <AnimatedPage>
@@ -140,7 +183,24 @@ export default function RunDetailsPage() {
         onRevert={handleRevert}
         onReRun={handleReRun}
         onExportArtifacts={handleExportArtifacts}
+        onExportDebug={handleExportDebug}
+        onPause={() => pauseMutation.mutate()}
+        onResume={() => resumeMutation.mutate()}
+        onHalt={() => haltMutation.mutate()}
+        onInjectInput={() => setInjectModalOpen(true)}
         isReverting={revertMutation.isPending}
+        isPausing={pauseMutation.isPending}
+        isResuming={resumeMutation.isPending}
+        isHalting={haltMutation.isPending}
+        isInjecting={injectMutation.isPending}
+      />
+
+      <HumanInputInjectModal
+        open={injectModalOpen}
+        onOpenChange={setInjectModalOpen}
+        onSubmit={handleInjectInput}
+        isSubmitting={injectMutation.isPending}
+        runId={run.id}
       />
 
       <Tabs defaultValue="inputs" className="space-y-4">
@@ -184,14 +244,17 @@ export default function RunDetailsPage() {
         </TabsList>
 
         <TabsContent value="inputs" className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <InputsPanel
-              inputs={run.inputs}
-              effectiveInputs={run.effectiveInputs}
-              scope={run.scope}
-              permissions={run.permissions}
-            />
-            <RelatedContextPanel run={run} />
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-4">
+              <InputsPanel
+                inputs={run.inputs}
+                effectiveInputs={run.effectiveInputs}
+                scope={run.scope}
+                permissions={run.permissions}
+              />
+              <RelatedContextPanel run={run} />
+            </div>
+            <RunOverviewPanel run={run} />
           </div>
         </TabsContent>
 

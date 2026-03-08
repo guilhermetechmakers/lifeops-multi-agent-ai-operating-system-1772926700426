@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { runsApi } from "@/api/runs";
 import * as mock from "@/api/runs-mock";
+import type { HumanInputPayload } from "@/types/orchestration";
 import { safeArray } from "@/lib/api";
 import type {
   TraceEvent,
@@ -81,5 +82,62 @@ export function useRevertRun(runId: string | undefined | null) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Revert failed");
     },
+  });
+}
+
+function invalidateRun(qc: ReturnType<typeof useQueryClient>, runId: string) {
+  qc.invalidateQueries({ queryKey: keys.detail(runId) });
+  qc.invalidateQueries({ queryKey: ["runs"] });
+}
+
+export function usePauseRun(runId: string | undefined | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      USE_MOCK ? mock.mockPauseRun(runId!) : runsApi.pause(runId!),
+    onSuccess: () => {
+      if (runId) invalidateRun(qc, runId);
+      toast.success("Run paused");
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Pause failed"),
+  });
+}
+
+export function useResumeRun(runId: string | undefined | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      USE_MOCK ? mock.mockResumeRun(runId!) : runsApi.resume(runId!),
+    onSuccess: () => {
+      if (runId) invalidateRun(qc, runId);
+      toast.success("Run resumed");
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Resume failed"),
+  });
+}
+
+export function useHaltRun(runId: string | undefined | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      USE_MOCK ? mock.mockHaltRun(runId!) : runsApi.halt(runId!),
+    onSuccess: () => {
+      if (runId) invalidateRun(qc, runId);
+      toast.success("Run halted");
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Halt failed"),
+  });
+}
+
+export function useInjectInput(runId: string | undefined | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: HumanInputPayload) =>
+      USE_MOCK ? mock.mockInjectInput(runId!, payload) : runsApi.injectInput(runId!, payload),
+    onSuccess: () => {
+      if (runId) invalidateRun(qc, runId);
+      toast.success("Human input injected");
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Inject failed"),
   });
 }

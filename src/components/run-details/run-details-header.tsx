@@ -14,6 +14,10 @@ import {
   Download,
   Copy,
   Check,
+  Pause,
+  Square,
+  Send,
+  FileJson,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -38,9 +42,11 @@ const STATUS_VARIANT: Record<
 > = {
   queued: "secondary",
   running: "warning",
+  paused: "secondary",
   succeeded: "success",
   failed: "destructive",
   aborted: "secondary",
+  halted: "destructive",
   reverted: "secondary",
 };
 
@@ -51,7 +57,16 @@ export interface RunDetailsHeaderProps {
   onRevert?: () => void;
   onReRun?: () => void;
   onExportArtifacts?: () => void;
+  onExportDebug?: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
+  onHalt?: () => void;
+  onInjectInput?: () => void;
   isReverting?: boolean;
+  isPausing?: boolean;
+  isResuming?: boolean;
+  isHalting?: boolean;
+  isInjecting?: boolean;
   className?: string;
 }
 
@@ -62,7 +77,16 @@ export function RunDetailsHeader({
   onRevert,
   onReRun,
   onExportArtifacts,
+  onExportDebug,
+  onPause,
+  onResume,
+  onHalt,
+  onInjectInput,
   isReverting = false,
+  isPausing = false,
+  isResuming = false,
+  isHalting = false,
+  isInjecting = false,
   className,
 }: RunDetailsHeaderProps) {
   const { id: cronjobId } = useParams<{ id?: string; runId?: string }>();
@@ -137,6 +161,62 @@ export function RunDetailsHeader({
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {(run.status === "running" || run.status === "paused") && (
+              <>
+                {run.status === "running" && onPause && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPause}
+                    disabled={isPausing}
+                    className="gap-2"
+                    aria-label="Pause run"
+                  >
+                    <Pause className="h-4 w-4" />
+                    {isPausing ? "Pausing…" : "Pause"}
+                  </Button>
+                )}
+                {run.status === "paused" && onResume && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onResume}
+                    disabled={isResuming}
+                    className="gap-2 text-teal focus-visible:ring-teal/50"
+                    aria-label="Resume run"
+                  >
+                    <Play className="h-4 w-4" />
+                    {isResuming ? "Resuming…" : "Resume"}
+                  </Button>
+                )}
+                {onHalt && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onHalt}
+                    disabled={isHalting}
+                    className="gap-2 text-destructive focus-visible:ring-destructive/50"
+                    aria-label="Halt run"
+                  >
+                    <Square className="h-4 w-4" />
+                    {isHalting ? "Halting…" : "Halt"}
+                  </Button>
+                )}
+                {onInjectInput && run.status === "paused" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onInjectInput}
+                    disabled={isInjecting}
+                    className="gap-2"
+                    aria-label="Inject human input"
+                  >
+                    <Send className="h-4 w-4" />
+                    {isInjecting ? "Injecting…" : "Inject Input"}
+                  </Button>
+                )}
+              </>
+            )}
             {onRevert && (
               <Button
                 variant="outline"
@@ -173,6 +253,18 @@ export function RunDetailsHeader({
               >
                 <Download className="h-4 w-4" />
                 Export
+              </Button>
+            )}
+            {onExportDebug && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onExportDebug}
+                className="gap-2"
+                aria-label="Export trace for debug"
+              >
+                <FileJson className="h-4 w-4" />
+                Debug Export
               </Button>
             )}
           </div>
