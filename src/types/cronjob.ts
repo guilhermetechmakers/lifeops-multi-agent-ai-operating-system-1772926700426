@@ -16,18 +16,36 @@ export interface CronjobConstraints {
   maxActions?: number;
   spendLimit?: number;
   allowedTools?: string[];
+  requiredConfirmations?: boolean;
+}
+
+export interface CronjobSafetyRails {
+  confirmations?: number;
+  manualReviewRequired?: boolean;
+}
+
+export interface CronjobAutomationBounds {
+  maxActions?: number;
+  spendLimit?: number;
+  allowedTools?: string[];
 }
 
 export interface CronjobRetryPolicy {
   maxRetries: number;
   backoffMs: number;
+  backoffBaseMs?: number;
+  backoffMultiplier?: number;
+  maxBackoffMs?: number;
   deadLetterTarget?: string;
+  deadLetterQueue?: boolean;
 }
 
 export interface CronjobOutputsConfig {
   artifacts?: string[];
   logs?: boolean;
   traceEnabled?: boolean;
+  runHistory?: boolean;
+  diffs?: boolean;
 }
 
 export interface CronjobLastRun {
