@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { debugTraceApi } from "@/api/debug-trace";
 import * as mock from "@/api/debug-trace-mock";
 import { safeArray } from "@/lib/api";
-import type { TraceResponse, MemorySnapshot, RunSummary, RevertPayload, ExportOptions } from "@/types/agent-trace";
+import type { Agent, Message, RunSummary, RevertPayload, ExportOptions } from "@/types/agent-trace";
 
 const USE_MOCK =
   !import.meta.env.VITE_API_URL || import.meta.env.VITE_USE_MOCK_DEBUG === "true";
@@ -30,8 +30,8 @@ export function useTrace(runId: string | null) {
 
   const data = query.data ?? null;
   const graph = data?.graph ?? { agents: [], messages: [] };
-  const agents = safeArray(graph.agents);
-  const messages = safeArray(graph.messages);
+  const agents = safeArray<Agent>(graph.agents);
+  const messages = safeArray<Message>(graph.messages);
   const steps = Array.isArray(data?.steps) ? data.steps : [];
   const artifacts = Array.isArray(data?.artifacts) ? data.artifacts : [];
 

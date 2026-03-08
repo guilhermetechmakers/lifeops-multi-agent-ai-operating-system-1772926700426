@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { CentralErrorProvider } from "@/contexts/error-context";
@@ -15,7 +15,8 @@ import VerifyEmailPage from "@/pages/verify-email";
 import DashboardMaster from "@/pages/dashboard-master";
 import CronjobsDashboard from "@/pages/cronjobs-dashboard";
 import Approvals from "@/pages/approvals";
-import DashboardProjects from "@/pages/dashboard-projects";
+import { ProjectsDashboardShell } from "@/components/projects-dashboard";
+import ProjectDetail from "@/pages/project-detail";
 import DashboardContent from "@/pages/dashboard-content";
 import ArtifactsPage from "@/pages/artifacts";
 import DashboardFinance from "@/pages/dashboard-finance";
@@ -33,6 +34,7 @@ import {
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
+import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
 import Docs from "@/pages/docs";
@@ -76,7 +78,12 @@ function App() {
             <Route path="runs/:runId" element={<RunDetailsPage />} />
             <Route path="cronjobs/:id/edit" element={<CronjobEditor />} />
             <Route path="approvals" element={<Approvals />} />
-            <Route path="projects" element={<DashboardProjects />} />
+            <Route path="debug" element={<AgentTraceDebuggerPage />} />
+            <Route path="projects" element={<Outlet />}>
+              <Route index element={<ProjectsDashboardShell />} />
+              <Route path=":projectId" element={<ProjectsDashboardShell />} />
+              <Route path=":projectId/detail" element={<ProjectDetail />} />
+            </Route>
             <Route path="content" element={<DashboardContent />} />
             <Route path="artifacts" element={<ArtifactsPage />} />
             <Route path="finance" element={<DashboardFinance />} />
