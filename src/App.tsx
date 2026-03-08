@@ -29,7 +29,13 @@ import ForecastingReportsPage from "@/pages/forecasting-reports";
 import { HealthDashboardShell, HealthDashboardOverview } from "@/components/health-dashboard";
 import HealthHabitsPage from "@/pages/health-habits";
 import HealthTrainingMealsPage from "@/pages/health-training-meals";
-import DashboardSettings from "@/pages/dashboard-settings";
+import { SettingsDashboardShell } from "@/components/settings";
+import SettingsGlobalPage from "@/pages/settings-global";
+import SettingsIntegrationsPage from "@/pages/settings-integrations";
+import SettingsDataSecurityPage from "@/pages/settings-data-security";
+import SettingsBillingPage from "@/pages/settings-billing";
+import SettingsExportsPage from "@/pages/settings-exports";
+import SettingsProfileRedirectPage from "@/pages/settings-profile-redirect";
 import { UserProfileLayout } from "@/components/profile";
 import {
   PersonalInfoPanel,
@@ -115,7 +121,14 @@ function App() {
               <Route path="habits" element={<HealthHabitsPage />} />
               <Route path="training-meals" element={<HealthTrainingMealsPage />} />
             </Route>
-            <Route path="settings" element={<DashboardSettings />} />
+            <Route path="settings" element={<SettingsDashboardShell />}>
+              <Route index element={<SettingsGlobalPage />} />
+              <Route path="profile" element={<SettingsProfileRedirectPage />} />
+              <Route path="integrations" element={<SettingsIntegrationsPage />} />
+              <Route path="data-security" element={<SettingsDataSecurityPage />} />
+              <Route path="billing" element={<SettingsBillingPage />} />
+              <Route path="exports" element={<SettingsExportsPage />} />
+            </Route>
             <Route path="profile" element={<UserProfileLayout />}>
               <Route index element={<Navigate to="personal" replace />} />
               <Route path="personal" element={<PersonalInfoPanel />} />
