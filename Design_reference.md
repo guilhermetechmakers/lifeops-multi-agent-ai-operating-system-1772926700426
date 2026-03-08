@@ -326,417 +326,201 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-# Health Dashboard Prompt for AI Development Tool
-
-Below is a comprehensive, actionable prompt you can feed into an AI development assistant to build the Health Dashboard feature set described. The prompt enforces runtime safety rules (null/undefined guards, Supabase data handling, proper React state initialization) and aligns with the provided visual, architectural, and behavioral requirements.
-
----
-
-## Health Dashboard
+# Cookie Policy
 
 ## Overview
-Build the LifeOps Health Dashboard module: a unified command center for personal health and workload balance. It surfaces a holistic view of habits, training and meal plans, recovery score, and workload recommendations derived from personal health data, calendar events, and project timelines. The page integrates Health Automation features (habit tracking, plan generation, recovery monitoring, and workload balancing) and connects to supporting pages (Habits Tracker and Training & Meal Planner) to enable end-to-end workflows, scheduling, and agent-enabled coaching interventions.
-
----
+Create a self-contained Cookie Policy page that clearly explains cookie categories, data usage, and provides a robust consent management experience. The page should be accessible, privacy-forward, and integrate with the project’s UI system and runtime safety standards. It must require minimal friction for users to understand cookies and to grant or modify consent, while preserving a clear audit trail for actions and run artifacts.
 
 ## Page Description (Full Detail)
-
 What this page is:
-- The Health Dashboard is the central, do-it-all view for personal health optimization and workload balance. It aggregates data across habits, training plans, meal plans, recovery metrics, and project/calendar-driven workload signals.
+- A dedicated Cookie Policy page that educates users about cookies and provides a consent management UI to enable/disable categories.
 
 Goals:
-- Give users a concise yet actionable snapshot of health status, progress on habits, and preparedness for upcoming work loads.
-- Automatically propose workload adjustments to optimize recovery versus deadlines.
-- Coordinate with Habit Tracking (habits and streaks with agent interventions) and Training/Meal Planner (personalized routines and nutrition) and reflect changes in a unified UI.
-- Provide a traceable audit trail of agent actions, user approvals, and run artifacts, with reversible actions where applicable.
+- Educate users about cookie categories (necessary, analytics, marketing).
+- Provide a clear, accessible consent management experience with granular controls for each category.
+- Persist user consent selections, reflect them in the UI, and expose consent state to downstream modules if needed.
+- Ensure all actions are reversible and auditable, with explicit user confirmations where appropriate.
 
-Features connected:
-- Health Automation: Habit tracking and coaching interventions, generation of training/meal plans, recovery monitoring, and workload balancing using personal data and calendar syncing.
-- Habits Tracker page: Create, track, and receive reminders; display streaks and coaching interventions.
-- Training & Meal Planner page: Configure schedules, generate nutrition plans, provide nutrition summaries, and generate grocery lists.
-- Workload Balancer: Recommended schedule changes derived from project timelines, calendar events, and recovery signals.
+Connected features:
+- Consent state persisted to user preferences (localStorage/session or backend if user is authenticated).
+- Optional integration hooks for analytics and marketing tooling to respect user consent.
+- No external APIs required for this task, but the design should accommodate API-based persistence if needed later.
 
-UI elements and how they should look:
-- Health Snapshot: shows Sleep, Recovery Score, Weekly Training Load, and a compact daily/weekly view.
-- Habits Panel: displays tracked habits, current streaks, next reminders, and agent coaching interventions.
-- Training & Meal Plans: shows upcoming training sessions, planned meals, nutrition summary (calories/macros), and links to grocery list generation.
-- Workload Balancer: presents recommended schedule shifts to balance work deadlines with recovery windows; supports one-click adjustment proposal and approval flow.
-- Visual guidance: dark UI with high-contrast typography, clear card hierarchy, and data-driven charts using the accent palette (teal, amber, purple) for data viz.
+UI elements and visuals:
+- Header with page title and brief description.
+- Cookie categories section:
+  - Category pills or cards for: Necessary, Analytics, Marketing.
+  - Each category shows a short explanation, data usage notes, and a toggle/checkbox control.
+  - Analytics and Marketing categories should be disabled by default unless user consents to necessary cookies enabling them, depending on policy.
+- Consent controls:
+  - “Accept All” and “Reject All” primary actions.
+  - Per-category toggles with clear on/off states.
+  - A compact “Save Preferences” button to persist changes.
+  - Optional “Audit trail” indicator showing when consent was last updated.
+- Accessibility:
+  - Keyboard navigable, screen-reader friendly, and proper ARIA roles.
+- Feedback:
+  - Toast or inline confirmation after saving preferences.
+  - Visual cues for required/active/inactive states.
+- Visual guidance:
+  - Dark UI with high-contrast typography per project style.
+  - Card-based layout for category explanations with subtle elevation.
+  - Persisted state reflected immediately in the UI and in the save feedback.
 
-Connected Pages:
-- Habits Tracker: independent page for creating, tracking, and coaching interventions.
-- Training & Meal Planner: page for configuring and managing personal training and meal plans.
-
-Connected Features:
-- Health Automation: data-driven generation, monitoring, and balancing across habits, training, meals, and workload.
-
-API Integrations:
-- No external APIs required for this implementation according to the provided context. All data interactions will be simulated or mocked within the app context unless otherwise specified.
-
----
+API integrations:
+- No external APIs required for this prompt. The design must accommodate future API-backed persistence, but for now the cookie policy page should:
+  - Use a local persistence approach (e.g., localStorage) to store consent state.
+  - Respect the runtime safety rules for array handling and nullish values if lists are populated.
 
 ## Components to Build
-
-1) HealthDashboardShell
-- Purpose: Master container for the Health Dashboard with header, left navigation, and content grid.
-- Data flow: Pulls from client-side stores or API stubs; uses safe guards for data.
-- Props: none required; relies on global state.
-- State: local UI state for tab/panel expansion.
-
-2) HealthSnapshotCard
-- Purpose: Quick snapshot row: Sleep, Recovery Score, Weekly Training Load, and next 7 days overview.
-- Data inputs: user health data (sleep, recovery, training load) and calendar signals.
-- UI: Card with gradient background, top icon, title, numeric value, trend indicator.
-- Interactions: Hover lift, show micro-details on hover or click.
-
-3) HabitsPanel
-- Purpose: Display active habits, streaks, upcoming reminders, and coaching interventions.
-- Data inputs: habits array with properties {id, name, streak, nextReminder, coachInterventions}
-- Interactions: Start/stop reminders, manual update, view coach note.
-- Safety: Guard maps for null data; use (habits ?? []) and safe map.
-
-4) TrainingMealPanel
-- Purpose: Show upcoming training sessions, meal plans, nutrition summaries, and groceries list actions.
-- Data inputs: trainingPlans, mealPlans, nutritionSummary, groceriesList
-- Interactions: Sync calendar, generate grocery list, adjust plan.
-- Safety: Guard all arrays as (plans ?? []).
-
-5) RecoveryAndWorkloadPanel
-- Purpose: Display Recovery Score trend and workload balancing recommendations based on projects and calendar.
-- Data inputs: recoveryScore, workloadRecommendations (list), calendarIntents
-- Interactions: Accept/reject adjustments, preview schedule changes.
-
-6) WorkloadRecommendationList
-- Purpose: List of recommended schedule changes with impact and confidence.
-- Data inputs: recommendations array with {id, changeDescription, impact, confidence}
-- Interactions: One-click apply, or route through approvals.
-
-7) ScheduleAdjustmentModal
-- Purpose: Modal/dialog to apply suggested schedule changes with rationale.
-- Interactions: Confirm, cancel; track approval state.
-
-8) DataVizChart
-- Purpose: Reusable chart component for lines/bars using minimal, high-contrast styling.
-- Data inputs: series data, categories.
-- Visuals: Use teal/amber/purple accents; gridlines subtle; tooltips enabled.
-
-9) NotificationsTray
-- Purpose: Show agent coaching interventions and important health prompts.
-- Data inputs: interventions[], alerts[]
-- Interactions: Acknowledge, snooze.
-
-10) GroceryListPanel
-- Purpose: Display generated grocery list associated with meal plans.
-- Data inputs: groceries[]
-- Interactions: Export, check-off items.
-
-Note: Ensure every component guards against null/undefined values and uses the runtime safety patterns described in the "Mandatory Coding Standards".
-
----
+- CookiePolicyPage
+  - Layout: header, description, category grid, action bar.
+  - State management: per-category consent state, overall saved state, and a “dirty” flag for unsaved changes.
+  - Persistence: save to and load from localStorage with safe guards.
+  - Accessibility: ARIA labels, roles, and keyboard focus management.
+- CookieCategoryCard
+  - Props: id, title, description, dataUsageNotes, defaultConsent, disabled (for necessary cookies).
+  - UI: explanatory copy, toggle control, and status badge.
+  - Behavior: toggling updates parent state, enforces that Necessary category cannot be turned off if policy requires it.
+- ConsentControls
+  - Controls: Accept All, Reject All, Save Preferences.
+  - Behavior: update all category states, reset to defaults, show confirmation.
+- AuditTrailPreview (optional)
+  - Lightweight readout showing last consent update timestamp and changes (read-only display).
+- PersistenceService (utility)
+  - Methods: loadConsent(), saveConsent(payload), resetConsent().
+  - Safeguards: use data ?? [] patterns, ensure arrays are valid before mapping.
+- UIToast (optional)
+  - Simple toast for saving confirmations.
+- Accessibility helpers
+  - FocusTrap or proper focus management when modal/section expands.
 
 ## Implementation Requirements
 
 ### Frontend
-
-- Architecture:
-  - Use React with hooks. Prefer functional components with clear separation of concerns.
-  - Use TypeScript for type-safety and explicit interfaces.
-  - Maintain a consistent component API surface with prop-types/interfaces where data is consumed.
-
-- UI Components and Interactions:
-  - Implement Event Handlers with robust guards. Any data access from API-like sources must use nullish coalescing and Array.isArray checks.
-  - Initialize all useState calls with correct defaults, e.g., useState<HabitsItem[]>([]) for habit items, useState<TrainingPlan[]>([]) for training plans, etc.
-  - All array operations must guard against non-arrays: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
-  - Ensure all API response shapes are validated: const list = Array.isArray(response?.data) ? response.data : [].
-
-- Layout and Styling:
-  - Implement the visual style and color palette exactly as described, with the specified typography, spacing (8px baseline grid), and layout guidelines.
-  - Cards: rounded 8–12px, inner gradient background, subtle borders, hover lift.
-  - Left navigation: vertical, with active state pill accent in #FF3B30.
-  - Data Viz: charts using the provided accent colors; tooltips with dark panels, rounded corners, and shadows.
-
-- Accessibility:
-  - All interactive elements must be keyboard accessible.
-  - Use aria-labels and roles for chart areas and controls.
-  - Ensure color contrast meets WCAG guidelines for text on dark backgrounds.
-
+- State initialization:
+  - useState with explicit array types for category states, e.g., useState<{ id: string; enabled: boolean }[]>([]).
+  - Initialize consent categories as an array with three entries: Necessary (must be enabled and non-toggleable by policy), Analytics, Marketing.
+- Data handling and safety:
+  - Always guard array operations:
+    - const categories = (consent?.categories ?? []) as Array<{ id: string; enabled: boolean }>;
+    - categories?.map(...) should be used safely with Array.isArray checks.
+  - Persist consent state to localStorage with a stable key (e.g., "lifeops_cookie_consent_v1"). When loading, ensure shape validity: Array.isArray(data?.categories) ? data.categories : [].
+  - Ensure null safety for any API-esque responses (even if not used) with data ?? [] and Array.isArray checks.
+- UI behavior:
+  - Necessary category cannot be disabled. If user attempts to toggle analytics/marketing off, allow but reflect caveat in UI and validation.
+  - Per-category toggles update state immutably.
+  - Save button is disabled if nothing has changed since last save (use a dirty flag).
+  - On save, show a small inline confirmation or toast and update lastSavedAt in AuditTrailPreview.
+- Accessibility and semantics:
+  - Use semantic HTML (section, header, main, nav, etc.).
+  - ARIA attributes for the cookie category toggles (aria-checked, role="switch" or input type="checkbox" with proper labeling).
+  - Keyboard accessible: allow toggle via Space/Enter; provide visible focus states.
+- Styling:
+  - Implement per the provided visual style tokens: use the color palette and typography guidelines. Cards with rounded corners, subtle borders, and a soft elevation. Use the dark background gradient described for depth.
+  - Spacing and rhythm follow the 8px baseline grid with 16/24/32 spacings as described.
 - Performance:
-  - Memoize heavy chart components if needed.
-  - Debounce or throttle high-frequency interactions where appropriate (e.g., live search within panels, responsive resizing).
-
-- Data Handling (Runtime Safety):
-  - Supabase results: if you mock or simulate, still follow:
-    - const items = data ?? [] when reading lists from responses.
-  - Array operations guarded:
-    - (array ?? []).map(...)
-    - Array.isArray(array) ? array.map(...) : []
-  - useState defaults for arrays/objects:
-    - useState<Type[]>([]) for arrays
-  - Validation:
-    - const list = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining: safe access to nested data like user?.profile?.name
-  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
-
-- API Design (if needed for local interactions):
-  - Endpoints (mocked): 
-    - GET /health/habits
-    - GET /health/plans/training
-    - GET /health/plans/meals
-    - GET /health/recovery
-    - POST /health/workload/apply
-  - Return shapes should be validated and typed.
-
-- State Management:
-  - Centralize user health state in a HealthDashboardContext or a dedicated hook useHealthDashboard.
-  - Persist user adjustments in local storage or a mock backend for audit trail.
-
-- Security:
-  - If extending to real authentication, ensure endpoints require authentication tokens and proper authorization for health data.
+  - Lightweight; no heavy computations or rerenders beyond necessary state updates.
+  - Avoid memory leaks by cleaning up effects if used.
 
 ### Backend
-
-- Data Handling:
-  - If a real backend is introduced, implement endpoints to fetch and mutate:
-    - habits, training plans, meal plans, recovery metrics, workload recommendations.
-  - Ensure all endpoints return data shapes that match the frontend types and that null/undefined values are handled gracefully.
-
-- Validation:
-  - Validate inputs for POST requests (e.g., new habit creation, schedule adjustments) using schema validation.
-  - Implement an audit trail: log actions with timestamps, user, and action type.
-
-- Database Tables (conceptual):
-  - habits(id, userId, name, streak, nextReminder, coachInterventions JSON)
-  - training_plans(id, userId, goal, sessions JSON, calendarSync boolean)
-  - meal_plans(id, userId, goal, meals JSON, nutritionSummary JSON)
-  - recovery_metrics(id, userId, score, timestamp)
-  - workload_recommendations(id, userId, recommendations JSON, createdAt)
-  - groceries(id, userId, items JSON)
+- No APIs required for this task. Prepare the code to be API-ready:
+  - Provide an API-agnostic persistence layer (ConsentStorage) that can be swapped to API calls later without changing core components.
+  - If you implement a mock API layer, ensure responses align with the runtime safety rules (data ?? [], Array.isArray checks).
 
 ### Integration
-
-- Data Flow:
-  - HealthDashboard reads data from multiple panels, and actions from Workspace (habits, plans, recovery) flow back to a unified audit log.
-  - User changes in WorkloadBalancer trigger ScheduleAdjustmentModal, which upon confirmation posts an adjustment, updates the plan, and logs an artifact.
-
-- Data Consistency:
-  - Implement a read-through guard layer to normalize API results: always coerce arrays to [], objects to defaults, and validate nested fields.
-
-- Synchronization:
-  - Calendar Sync: mock ability to read/write to calendar events from training plans; ensure idempotent operations and safe fallbacks.
-
----
+- The CookiePolicyPage should be a standalone route/component that can be mounted within LifeOps Master Dashboard.
+- If there is a global theme or design system, ensure the component uses that system for colors, typography, and spacing.
+- The Consent state must be available to child modules if needed; expose via props or a simple context (e.g., ConsentContext) with safe defaults.
 
 ## User Experience Flow
-
-1) User lands on Health Dashboard.
-   - Sees Health Snapshot (Sleep, Recovery, Weekly Load) and a quick trend view.
-   - Habits Panel shows current habits with streaks and next reminders; coaching interventions are surfaced.
-   - Training & Meal Plans panel shows upcoming sessions, meals, nutrition summary, and grocery list action.
-   - Recovery/Workload panel presents recovery score and personalized workload recommendations.
-   - Left navigation allows jumping to Habits Tracker or Training & Meal Planner pages.
-
-2) User interacts with Habits Panel.
-   - Create or edit a habit; set frequency/reminders.
-   - System updates streaks and may surface agent coaching interventions.
-   - Reminders trigger at scheduled times.
-
-3) User interacts with Training & Meal Plans.
-   - Configure training schedule aligned with goals.
-   - Generate or adjust meal plans; view nutrition summaries.
-   - Sync to calendar; generate or export grocery list.
-
-4) User reviews Workload Recommendations.
-   - See suggested schedule changes with impact.
-   - Accept or modify proposed changes; apply or route through approvals.
-   - Changes appear in the corresponding plans and are logged.
-
-5) All actions create artifacts for audit trail.
-   - Each action is associated with a run artifact, logs, and inter-agent trace when applicable.
-
-6) User navigates to Habits Tracker or Training & Meal Planner pages for deeper workflows or to adjust settings.
-
----
+- User lands on Cookie Policy page.
+- Page loads with three categories:
+  - Necessary: enabled and non-toggleable, with a short explanation.
+  - Analytics: default off; description provided; user can toggle on/off.
+  - Marketing: default off; description provided; user can toggle on/off.
+- User reviews explanations and toggles analytics/marketing as desired.
+- User clicks Save Preferences.
+  - If successfully saved, a confirmation appears (toast or inline).
+  - Audit trail shows the timestamp and changes.
+- User can click Accept All to enable all categories (subject to Necessary constraints) and Save Preferences, then confirmation appears.
+- User can click Reject All to disable Analytics and Marketing, then Save Preferences, with confirmation.
+- All interactions gracefully handle null/undefined data and guard array operations as described.
 
 ## Technical Specifications
 
-- Data Models: see below for schemas.
+Data Models:
+- ConsentCategory
+  - id: string ("necessary" | "analytics" | "marketing")
+  - enabled: boolean
+  - description: string
+  - required?: boolean (true for necessary)
+- CookieConsentState
+  - categories: ConsentCategory[]
+  - lastUpdated?: string (ISO timestamp)
+  - auditTrail?: Array<{ timestamp: string, changes: string[] }>
 
-- API Endpoints (Routes and Methods):
-  - GET /health/habits
-  - POST /health/habits
-  - GET /health/plans/training
-  - POST /health/plans/training
-  - GET /health/plans/meals
-  - POST /health/plans/meals
-  - GET /health/recovery
-  - GET /health/workload/recommendations
-  - POST /health/workload/apply
-  - GET /health/groceries
-  - POST /health/calendar/sync
-  - GET /health/audit/logs
+API Endpoints (Design-Only for now; implement later):
+- GET /consent-cookie
+  - Returns CookieConsentState
+- POST /consent-cookie
+  - Payload: CookieConsentState
+  - Persists consent and returns updated state
+- DELETE /consent-cookie
+  - Clears stored consent
 
-- Security:
-  - Token-based authentication (JWT or OAuth2 as applicable).
-  - Ensure endpoints validate user scope and permission for health data.
+Security:
+- Since this is a client-side page, implement no sensitive data handling. When integrating with backend later, ensure authentication checks and proper authorization for retrieving/updating consent.
 
-- Validation:
-  - Input validation for all POST endpoints.
-  - Server should sanitize and default missing fields, returning empty arrays/objects as needed.
+Validation:
+- Ensure categories is an array.
+- Ensure each category item has id and enabled properties with correct types.
+- For saving, ensure at least necessary category is enabled; otherwise show validation error.
 
----
+Destructuring with defaults and null-safety patterns:
+- const { categories = [], lastUpdated = new Date().toISOString() } = response ?? {}
+- Always guard array methods: (categories ?? []).map(...)
+
+Optional chaining:
+- const firstCat = consent?.categories?.[0]
+- Use obj?.property?.nested for nested API responses.
 
 ## Acceptance Criteria
+- [ ] Three categories render with correct default states (Necessary enabled and non-toggleable; Analytics and Marketing toggles off by default).
+- [ ] Toggling Analytics/Marketing updates state immutably and preserves accessibility semantics.
+- [ ] Save Preferences persists to localStorage and reloads correctly on page refresh.
+- [ ] Accept All and Reject All actions behave as expected, with Necessary always enabled and a confirmation shown after save.
+- [ ] Audit trail displays last updated timestamp and the changed categories upon save.
+- [ ] All array operations guarded with (array ?? []).map(...) or Array.isArray checks.
+- [ ] useState initializations for arrays use correct defaults: useState<CookieConsentState["categories"]>([]) and consistent typing.
 
-- Data Safety:
-  - All array operations guard against null/undefined: (data ?? []).map(...); Array.isArray(data) ? data.map(...) : [].
-  - All useState initializations for arrays use correct defaults: useState<Type[]>([]).
+UI/UX Guidelines
+- Adhere to the project’s visual style: dark UI, elevated cards, subtle borders, and a restrained accent color usage (red for critical alerts if any).
+- Maintain consistent typography, spacing, and alignment with the LifeOps dashboard.
+- Provide clear affordances for interactions, with smooth micro-interactions (200ms transitions) and accessible focus states.
 
-- UI/UX:
-  - The Health Dashboard renders without errors with sample data.
-  - Cards render with proper spacing, typography, and color palette.
-  - Data visualizations use the provided accent colors and have accessible tooltips.
+Visual Style (as provided)
+- Follow the exact color palette and typography guidance:
+  - Backgrounds, surfaces, text, borders, and accent colors as specified.
+  - Elevation, border radii, padding, and spacing tuned to the 8px grid.
+  - Card, navigation, and data-visual design patterns consistent with LifeOps style.
 
-- Functionality:
-  - Habits panel displays streaks and upcoming reminders; coaching interventions visible.
-  - Training & Meal Plans panel shows upcoming items and nutrition summaries.
-  - Recovery and Workload panel shows a plausible recovery score and a set of workload recommendations that can be applied.
-  - Schedule adjustments are applied correctly and logged in the audit trail.
+Mandatory Coding Standards — Runtime Safety
+- Supabase or API results guard:
+  - Not applicable here, but apply: data ?? [] when dealing with results.
+- Array methods safety:
+  - (categories ?? []).map(...)
+  - Array.isArray(categories) ? categories.map(...) : []
+- React useState for arrays:
+  - useState<ConsentCategory[]>([]) or equivalent type-safe initialization.
+- API response shapes:
+  - const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining:
+  - Use obj?.property?.nested throughout.
+- Destructuring with defaults:
+  - const { categories = [], lastUpdated = "" } = response ?? {}
 
-- Performance:
-  - Rendering performance is acceptable for a dense dashboard (no unnecessary re-renders; memoized charts if necessary).
-
-- Accessibility:
-  - All interactive controls focusable; aria-labels provided for charts and panels.
-  - Color contrast adheres to accessibility standards.
-
-- Security/Integrity:
-  - All endpoints validated; invalid inputs rejected; outcomes logged for audit trail.
-
----
-
-## UI/UX Guidelines (Applied to all components)
-
-Apply the project's design system faithfully:
-- Colors, typography, spacing, elevations, and responsive behaviors align with the Visual Style and Color Palette provided.
-- Card surfaces: gradients from #0B0B0C to #151718, soft inner highlights, 1px borders with rgba(255,255,255,0.03), elevated shadows.
-- Navigation: left bar with active state pill in #FF3B30; breadcrumbs and top nav styling.
-- Data Viz: minimalism with a dark theme; use teal #00C2A8, amber #FFB020, purple #8B5CF6 for series accents.
-- UI Elements: consistent button styles, toggles, pills, badges; micro-interactions with 120–200ms transitions.
-- Typography: Inter-like sans font with the specified weights and sizes; sentence case with restrained capitalization.
-- Layout Rhythm: 8px baseline grid, 16–20px card padding, 24–32px card gaps, 220–260px sidebar.
-
----
-
-## Visual Style (Reaffirmed)
-
-- Color Palette, Typography, Spacing, and Key Design Elements are exactly as described in the provided Visual Style section.
-- Ensure a cohesive feel across Health Dashboard, Habits Tracker, and Training & Meal Planner connections.
-
----
-
-## Mandatory Coding Standards — Runtime Safety (CRITICAL)
-
-1) Supabase query results:
-   - Always use nullish coalescing: const items = data ?? [].
-
-2) Array methods:
-   - Never call on a potentially null/undefined value.
-   - Guarded patterns: (items ?? []).map(...); Array.isArray(items) ? items.map(...) : [].
-
-3) React useState for arrays/objects:
-   - Initialize arrays correctly: useState<Type[]>([]).
-
-4) API response shapes:
-   - Validate: const list = Array.isArray(response?.data) ? response.data : [].
-
-5) Optional chaining:
-   - Use safe access: obj?.property?.nested.
-
-6) Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {}.
-
----
-
-## Data Models (Schema Details)
-
-- Habit
-  - id: string
-  - userId: string
-  - name: string
-  - frequency: string (e.g., "daily", "weekly")
-  - streak: number
-  - nextReminder: string (ISO date)
-  - coachInterventions?: string[] // coaching notes or prompts
-
-- TrainingPlan
-  - id: string
-  - userId: string
-  - goal: string
-  - sessions: Array<{ date: string, type: string, durationMin: number }>
-  - calendarSync: boolean
-
-- MealPlan
-  - id: string
-  - userId: string
-  - goal: string
-  - meals: Array<{ date: string, items: string[] }>
-  - nutritionSummary: { calories: number, protein: number, carbs: number, fats: number }
-
-- RecoveryMetric
-  - id: string
-  - userId: string
-  - score: number (0-100)
-  - timestamp: string
-
-- WorkloadRecommendation
-  - id: string
-  - userId: string
-  - recommendations: Array<{ id: string, changeDescription: string, impact: string, confidence: number }>
-  - createdAt: string
-
-- GroceryItem
-  - id: string
-  - name: string
-  - quantity: string
-  - checked?: boolean
-
-- AuditLog
-  - id: string
-  - userId: string
-  - action: string
-  - timestamp: string
-  - artifactRef?: string
-
----
-
-## API Endpoints (Optional for Real Backend)
-
-- GET /health/habits
-- POST /health/habits
-- GET /health/plans/training
-- POST /health/plans/training
-- GET /health/plans/meals
-- POST /health/plans/meals
-- GET /health/recovery
-- GET /health/workload/recommendations
-- POST /health/workload/apply
-- GET /health/groceries
-- POST /health/calendar/sync
-- GET /health/audit/logs
-
-All responses must be validated on the frontend as described, and nulls should default to empty arrays or objects where appropriate.
-
----
-
-## Deliverables
-
-- A fully wired Health Dashboard with the described components, interconnections, and data flows.
-- All code guarded against null/undefined values as per the runtime safety rules.
-- TypeScript types/interfaces for all data models.
-- Mock data or APIs to demonstrate behavior if a real backend is not available.
-- Documentation in code comments detailing data flows, guard practices, and state management decisions.
-
-If you need me to provide starter code scaffolding (React + TypeScript) with example components, hooks, and mock data adhering to these constraints, I can generate that next.
+Generate the complete, detailed prompt now so the AI development tool can build this feature.
 
 ## Implementation Notes
 

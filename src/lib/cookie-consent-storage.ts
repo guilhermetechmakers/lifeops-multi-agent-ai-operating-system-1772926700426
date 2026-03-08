@@ -4,33 +4,13 @@
  * Data flow: loadConsent → validate → saveConsent; guards all array operations.
  */
 
-import type { CookieConsentState, ConsentCategory } from "@/types/cookie-policy";
+import {
+  DEFAULT_CATEGORIES,
+  type CookieConsentState,
+  type ConsentCategory,
+} from "@/types/cookie-policy";
 
 const STORAGE_KEY = "lifeops_cookie_consent_v1";
-
-const DEFAULT_CATEGORIES: ConsentCategory[] = [
-  {
-    id: "necessary",
-    enabled: true,
-    description: "Essential for the site to function. Cannot be disabled.",
-    dataUsageNotes: "Session, authentication, security preferences.",
-    required: true,
-  },
-  {
-    id: "analytics",
-    enabled: false,
-    description: "Help us understand how you use the site.",
-    dataUsageNotes: "Page views, interactions, performance metrics.",
-    required: false,
-  },
-  {
-    id: "marketing",
-    enabled: false,
-    description: "Used to personalize content and ads.",
-    dataUsageNotes: "Ad targeting, retargeting, conversion tracking.",
-    required: false,
-  },
-];
 
 function isValidCategory(cat: unknown): cat is ConsentCategory {
   if (!cat || typeof cat !== "object") return false;
@@ -59,12 +39,12 @@ function validateAndNormalize(data: unknown): CookieConsentState {
         }))
     : [];
 
-  // Ensure we have all three categories with correct defaults
-  const ids = new Set<string>((categories ?? []).map((c) => c.id));
-  const missing = DEFAULT_CATEGORIES.filter((d) => !ids.has(d.id));
-  const merged = [...categories, ...missing].map((c) => {
-    const def = DEFAULT_CATEGORIES.find((d) => d.id === c.id);
-    return def ? { ...def, ...c, required: def.required } : c;
+  // Ensure we have all three categories in canonical order (Necessary, Analytics, Marketing)
+  const merged = DEFAULT_CATEGORIES.map((def) => {
+    const existing = (categories ?? []).find((c) => c.id === def.id);
+    return existing
+      ? { ...def, ...existing, required: def.required }
+      : { ...def };
   });
 
   return {
@@ -76,6 +56,7 @@ function validateAndNormalize(data: unknown): CookieConsentState {
 
 export function loadConsent(): CookieConsentState {
   try {
+    if (typeof window === "undefined") return { categories: [...DEFAULT_CATEGORIES] };
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { categories: [...DEFAULT_CATEGORIES] };
     const parsed = JSON.parse(raw) as unknown;
@@ -85,13 +66,22 @@ export function loadConsent(): CookieConsentState {
   }
 }
 
-export function saveConsent(payload: CookieConsentState): CookieConsentState {
-  const categories = Array.isArray(payload?.categories) ? payload.categories : []; // guard
+export function saveConsent(
+  payload: CookieConsentState,
+  changes?: string[]
+): CookieConsentState {
+  const categories = Array.isArray(payload?.categories) ? payload.categories : [];
   const necessary = categories.find((c) => c.id === "necessary");
+  const existingTrail = Array.isArray(payload?.auditTrail) ? payload.auditTrail : [];
+  const now = new Date().toISOString();
+  const newEntry =
+    Array.isArray(changes) && changes.length > 0 ? { timestamp: now, changes } : null;
+  const auditTrail = newEntry ? [...existingTrail, newEntry].slice(-50) : existingTrail;
+
   const safePayload: CookieConsentState = {
     categories: categories.length > 0 ? categories : [...DEFAULT_CATEGORIES],
-    lastUpdated: new Date().toISOString(),
-    auditTrail: Array.isArray(payload?.auditTrail) ? payload.auditTrail : [],
+    lastUpdated: now,
+    auditTrail,
   };
   if (necessary && !necessary.enabled) {
     safePayload.categories = safePayload.categories.map((c) =>
@@ -99,7 +89,9 @@ export function saveConsent(payload: CookieConsentState): CookieConsentState {
     );
   }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safePayload));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safePayload));
+    }
   } catch {
     // Storage full or unavailable
   }
@@ -108,11 +100,11 @@ export function saveConsent(payload: CookieConsentState): CookieConsentState {
 
 export function resetConsent(): CookieConsentState {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   } catch {
     // ignore
   }
   return { categories: [...DEFAULT_CATEGORIES] };
 }
-
-export { DEFAULT_CATEGORIES };

@@ -34,7 +34,7 @@ const defaultSections: FooterSection[] = [
     links: [
       { label: "Privacy", href: "/privacy-policy" },
       { label: "Terms", href: "/terms" },
-      { label: "Cookies", href: "/cookies" },
+      { label: "Cookies", href: "/cookie-policy" },
     ],
   },
 ];

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { CentralErrorProvider } from "@/contexts/error-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ConsentProvider } from "@/contexts/consent-context";
 import { CommandPaletteProvider } from "@/contexts/command-palette-context";
 import { ErrorBoundary } from "@/components/error";
 import { SessionGuard } from "@/components/auth/session-guard";
@@ -68,6 +69,7 @@ import CIIntegrationsPage from "@/pages/ci-integrations";
 import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
 import { AnalyticsDashboardShell, AnalyticsReportsOverview } from "@/components/analytics-reports";
 import PrivacyPolicyPage from "@/pages/privacy-policy";
+import CookiePolicyPage from "@/pages/cookie-policy";
 import TermsOfServicePage from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
@@ -97,6 +99,7 @@ function App() {
         <CentralErrorProvider>
         <AuthProvider>
         <BrowserRouter>
+          <ConsentProvider>
           <ErrorBoundary>
             <Routes>
           <Route path="/" element={<Landing />} />
@@ -117,6 +120,8 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+          <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+          <Route path="/cookies" element={<Navigate to="/cookie-policy" replace />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
           <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
@@ -200,6 +205,7 @@ function App() {
           <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </ErrorBoundary>
+          </ConsentProvider>
         </BrowserRouter>
         </AuthProvider>
       </CentralErrorProvider>

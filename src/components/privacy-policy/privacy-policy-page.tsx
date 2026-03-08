@@ -69,10 +69,13 @@ export function PrivacyPolicyPage({
                 Manage your preferences
               </TypographyBlock>
               <TypographyBlock variant="meta" className="mt-1">
-                Control data retention, export, and deletion from your account settings.
+                Control data retention, export, deletion, and cookie consent from your account settings.
               </TypographyBlock>
             </div>
-            <ConsentControlsLink variant="button" className="shrink-0" />
+            <div className="flex flex-wrap gap-3 shrink-0">
+              <ConsentControlsLink variant="button" target="privacy" />
+              <ConsentControlsLink variant="button" target="cookies" />
+            </div>
           </section>
         </article>
 
