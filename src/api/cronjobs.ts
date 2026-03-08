@@ -90,4 +90,17 @@ export const cronjobsApi = {
     api
       .get<{ items: unknown[] }>(`${BASE}/alerts`)
       .then((r) => (Array.isArray((r as { items?: unknown[] })?.items) ? (r as { items: unknown[] }).items : [])),
+
+  validate: (id: string, payload?: Record<string, unknown>) =>
+    api.post<{ valid: boolean; errors?: string[] }>(`${BASE}/${id}/validate`, payload ?? {}),
+
+  preview: (payload: Record<string, unknown>) =>
+    api.post<{
+      valid: boolean;
+      estimatedCost?: number;
+      estimatedDurationMs?: number;
+      conflicts?: string[];
+      errors?: string[];
+      nextRunPreview?: string;
+    }>(`${BASE}/preview`, payload),
 };

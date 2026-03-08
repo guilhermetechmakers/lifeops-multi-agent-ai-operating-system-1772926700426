@@ -37,6 +37,22 @@ export function presetToCron(preset: CronPreset, state: ScheduleBuilderState): s
   }
 }
 
+/** Convert builder config to cron expression. */
+export function builderToCron(builder: {
+  minute?: number;
+  hour?: number;
+  dayOfMonth?: number;
+  month?: number;
+  dayOfWeek?: number;
+}): string {
+  const m = builder?.minute ?? 0;
+  const h = builder?.hour ?? 9;
+  const dom = builder?.dayOfMonth ?? 1;
+  const mo = builder?.month ?? 1;
+  const dow = builder?.dayOfWeek ?? 1;
+  return `${m} ${h} ${dom} ${mo} ${dow}`;
+}
+
 export function humanizeCron(expr: string): string {
   if (!expr?.trim()) return "—";
   const parts = expr.trim().split(/\s+/);

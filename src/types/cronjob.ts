@@ -46,6 +46,7 @@ export interface CronjobOutputsConfig {
   traceEnabled?: boolean;
   runHistory?: boolean;
   diffs?: boolean;
+  trace?: boolean;
 }
 
 export interface CronjobLastRun {
@@ -106,6 +107,13 @@ export interface CronjobListFilters {
   lastRunBefore?: string;
 }
 
+/** Editor: target for agent or workflow. */
+export interface CronjobTarget {
+  kind: "agent" | "workflow";
+  id: string;
+  name: string;
+}
+
 /** Alias for filter bar and dashboard. */
 export type CronjobFilters = CronjobListFilters;
 
@@ -123,6 +131,45 @@ export interface CronjobListResponse {
   pageSize: number;
 }
 
+/** Schedule config for builder UI (expression or builder fields). */
+export interface CronjobScheduleConfig {
+  type: "expression" | "builder";
+  expression?: string;
+  builder?: {
+    minute?: number;
+    hour?: number;
+    dayOfMonth?: number;
+    month?: number;
+    dayOfWeek?: number;
+    preset?: string;
+  };
+}
+
+/** Extended cronjob draft for editor - full schema with all optional fields. */
+export interface CronjobDraft {
+  id?: string;
+  name: string;
+  enabled: boolean;
+  schedule: CronjobScheduleConfig;
+  timezone: string;
+  triggerType: TriggerType;
+  target: CronjobTarget | null;
+  inputPayloadTemplate: string;
+  scope?: string[];
+  permissionsLevel: PermissionsLevel;
+  automationLevel: AutomationLevel;
+  automationBounds?: CronjobAutomationBounds;
+  constraints?: CronjobConstraints;
+  safetyRails?: string[];
+  safetyRailsConfig?: CronjobSafetyRails;
+  retryPolicy?: Partial<CronjobRetryPolicy>;
+  outputsConfig?: Partial<CronjobOutputsConfig>;
+  module?: string;
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CreateCronjobInput {
   name: string;
   enabled?: boolean;
@@ -137,6 +184,8 @@ export interface CreateCronjobInput {
   automationLevel?: AutomationLevel;
   constraints?: CronjobConstraints;
   safetyRails?: string[];
+  safetyRailsConfig?: CronjobSafetyRails;
+  automationBounds?: CronjobAutomationBounds;
   retryPolicy?: Partial<CronjobRetryPolicy>;
   outputsConfig?: Partial<CronjobOutputsConfig>;
   ownerId?: string;

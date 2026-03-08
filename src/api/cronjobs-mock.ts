@@ -345,3 +345,35 @@ export async function mockGetCronjobAlerts(): Promise<unknown[]> {
     },
   ];
 }
+
+export async function mockValidateCronjob(
+  _id: string,
+  _payload?: Record<string, unknown>
+): Promise<{ valid: boolean; errors?: string[] }> {
+  return { valid: true };
+}
+
+export async function mockPreviewCronjob(
+  payload: Record<string, unknown>
+): Promise<{
+  valid: boolean;
+  estimatedCost?: number;
+  estimatedDurationMs?: number;
+  conflicts?: string[];
+  errors?: string[];
+  nextRunPreview?: string;
+}> {
+  const name = (payload?.name as string) ?? "";
+  const expr = (payload?.scheduleExpression as string) ?? "";
+  const errors: string[] = [];
+  if (!name?.trim()) errors.push("Name is required");
+  if (!expr?.trim()) errors.push("Schedule expression is required");
+  const valid = errors.length === 0;
+  return {
+    valid,
+    errors: valid ? undefined : errors,
+    estimatedCost: 0.05,
+    estimatedDurationMs: 5000,
+    nextRunPreview: valid ? new Date(Date.now() + 60 * 60 * 1000).toISOString() : undefined,
+  };
+}

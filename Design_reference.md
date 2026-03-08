@@ -326,67 +326,65 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-- Maintain the dark UI aesthetic, high-contrast typography, and careful use of accent colors
-- Use 8px baseline grid with multiples; ensure 220–260px sidebar/content rhythm for any potential admin/editor components (though public page should optimally be full-width on large viewports)
-- Implement card-based layout with rounded corners and subtle borders; hover interactions should be mindful and subtle
-- Ensure readability and scannability for marketing content, with clear visual hierarchy and digestible copy blocks
-- Favor accessibility, performance, and maintainability in code organization and theming
+- Follow the Visual Style, Color Palette, Typography, and Layout guidelines provided.
+- Use dark elevated cards with rounded corners, subtle borders, and soft shadows.
+- Use accent red (#FF3B30) sparingly for critical actions or alerts.
+- Maintain high contrast for primary text and controls; secondary text uses muted color.
+- Ensure consistent spacing with 8px baseline grid and 16–20px card paddings.
+- Provide clear affordances for reversible actions and auditability with explicit confirmation steps and visible run histories.
 
 ---
 
 ## Visual Style
 
-Color Palette (as defined in PROJECT CONTEXT)
+### Color Palette
 - Primary background: #0B0B0C
 - Secondary surface: #151718
 - Tertiary surface / panel outline: #1F1F20
-- Primary text: #FFFFFF
-- Secondary text: #9DA3A6
-- Subtle text: #56595B
-- Accent: #FF3B30
-- Neutral highlight: #CFCFCF
-- Soft highlight: #E6E7E8
-- Supporting accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
-- Borders: rgba(255,255,255,0.03)
+- Primary text / headings: #FFFFFF
+- Secondary text / meta: #9DA3A6
+- Subtle text / disabled: #56595B
+- Accent (action / alert): #FF3B30
+- Neutral highlight / icon fill: #CFCFCF
+- Soft highlight / gloss: #E6E7E8
+- Chart/status accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
+- Borders / dividers: rgba(255,255,255,0.03)
 - Gradients: #111213 → #1A1A1B
 
-Typography & Layout
-- Font: Inter (or SF Pro Display / Roboto fallback)
-- Hierarchy
-  - Headings: 600–700, 20–28px
-  - Card titles: 500–600, 14–16px
-  - Body: 400, 12–14px
-  - Microcopy: 300–400, 11–12px
-- Spacing: 8px baseline grid
-- Layout: Responsive grid; hero + features + 3-step + pricing + testimonials + integrations + footer
-- Alignment: Left-aligned lists; card grids center/left as appropriate
+### Typography & Layout
+- Font family: Inter (or SF Pro Display / Roboto fallback)
+- Weights: 600–700 for headings, 500–600 for titles, 400 for body, 300–400 for captions
+- Spacing: 8px baseline grid; gutters 220–260px for sidebar
+- Header: 56–64px height
+- Card padding: 16–20px
 
-Key Design Elements
-- Card: dark elevated cards with 8–12px radius; gradient background, subtle borders, hover lift
-- Navigation: left sidebar (if used in editor) with accent pills; top breadcrumb bar on internal docs
-- Data Visualization: minimal charts or no charts on Landing Page; if present, use low-contrast axes and colored series
-- Interactive Elements: primary actions with strong visual emphasis; secondary actions subdued
+### Key Design Elements
+- Card Design: dark, elevated, rounded corners; hover/focus lift; top icon area; title; subtitle/metadata
+- Navigation: left vertical bar with active accent; expandable sections
+- Data Visualization: minimal charts with low-contrast axes and colored series
+- Interactive Elements: accessible controls with tactile hover/focus states; consistent button styles
+- Badges: counts and alerts using grey or accent colors
 
-Design Philosophy
-- Modern, dense, and developer-friendly marketing UI
-- Clarity, control, and trust through consistent visuals and subtle depth
-- Reusability and component-driven architecture to support future pages (docs, dashboards)
+### Design Philosophy
+- Modern, dense but legible dark UI; emphasis on clarity, traceability, and reversible actions; density favored for power users; consistent visual language across editor, dashboard, and run-details.
 
 ---
 
 ## Mandatory Coding Standards — Runtime Safety
 
-CRITICAL: Apply these rules in ALL generated code
-1. Supabase-like results or mocked data: use nullish coalescing data ?? [] where appropriate
-2. Array methods safety: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
-3. React useState defaults for arrays: useState<Type[]>([])
-4. API response shapes: const list = Array.isArray(response?.data) ? response.data : []
-5. Optional chaining: use obj?.prop?.nested
-6. Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+CRITICAL: Follow these rules in ALL generated code to prevent runtime crashes.
+
+1. Supabase query results: Always use nullish coalescing — const items = data ?? [].
+2. Array methods: Never call on a value that could be null/undefined/non-array. Guard:
+   - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+3. React useState for arrays/objects: Always initialize with the correct type — useState<Type[]>([]).
+4. API response shapes: Always validate — const list = Array.isArray(response?.data) ? response.data : [].
+5. Optional chaining: Use obj?.property?.nested
+6. Destructuring with defaults: const { items = [], count = 0 } = response ?? {}.
 
 ---
 
-This prompt provides a complete blueprint for building the Landing Page and the Documentation page in LifeOps, with detailed component specifications, data safety rules, visual guidelines, and acceptance criteria. It emphasizes null-safety, type-safe data handling, and alignment with the requested design system. If you’d like, I can tailor content placeholders (hero text, feature copy, pricing tiers, testimonials) to your brand voice or export-ready JSON structures for CMS ingestion.
+This prompt provides a complete, actionable blueprint for building the Cronjob Editor, with clear runtime safety requirements, UI/UX guidelines, data models, and integration points. It is designed for AI development tooling to generate components, ensure robust type-safety, and align with the LifeOps design system.
 
 ## Implementation Notes
 
