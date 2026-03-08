@@ -7,3 +7,4 @@ export { OverviewWidgetsGrid } from "./overview-widgets-grid";
 export { CronjobsDashboardLink } from "./cronjobs-dashboard-link";
 export { ChartPanel } from "./chart-panel";
 export { ApprovalsQueueWidget } from "./approvals-queue-widget";
+export { AuditReversibilityWidget } from "./audit-reversibility-widget";

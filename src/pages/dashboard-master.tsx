@@ -25,6 +25,7 @@ import {
   CronjobsDashboardLink,
   ChartPanel,
   ApprovalsQueueWidget,
+  AuditReversibilityWidget,
 } from "@/components/master-dashboard";
 import { CREnginePanel } from "@/components/conflict-resolution";
 import {
@@ -177,6 +178,7 @@ export default function DashboardMaster() {
                 </div>
               </CardContent>
             </Card>
+            <AuditReversibilityWidget />
           </div>
 
           <CronjobsDashboardLink />

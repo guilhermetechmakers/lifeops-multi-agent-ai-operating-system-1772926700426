@@ -64,6 +64,7 @@ import {
   AdminCronjobsPanel,
   ReportsPanel,
 } from "@/components/admin";
+import AuditDashboardPage from "@/pages/audit-dashboard";
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
 import ConflictResolutionPage from "@/pages/conflict-resolution";
@@ -152,6 +153,7 @@ function App() {
               <Route path="roles" element={<RolesPanel />} />
               <Route path="integrations" element={<AdminIntegrationsPanel />} />
               <Route path="compliance" element={<CompliancePanel />} />
+              <Route path="audit" element={<AuditDashboardPage />} />
               <Route path="billing" element={<AdminBillingPanel />} />
               <Route path="cronjobs" element={<AdminCronjobsPanel />} />
               <Route path="reports" element={<ReportsPanel />} />

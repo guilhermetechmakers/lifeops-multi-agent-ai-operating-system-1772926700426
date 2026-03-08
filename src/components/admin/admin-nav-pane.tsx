@@ -14,6 +14,7 @@ import {
   CreditCard,
   Clock,
   BarChart3,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ const ADMIN_SECTIONS = [
   { to: "/dashboard/admin/roles", label: "Roles & access", icon: Shield, end: false },
   { to: "/dashboard/admin/integrations", label: "Integrations", icon: Plug, end: false },
   { to: "/dashboard/admin/compliance", label: "Compliance", icon: FileCheck, end: false },
+  { to: "/dashboard/admin/audit", label: "Audit & Reversibility", icon: History, end: false },
   { to: "/dashboard/admin/billing", label: "Billing", icon: CreditCard, end: false },
   { to: "/dashboard/admin/cronjobs", label: "Cronjobs", icon: Clock, end: false },
   { to: "/dashboard/admin/reports", label: "Reports", icon: BarChart3, end: false },
