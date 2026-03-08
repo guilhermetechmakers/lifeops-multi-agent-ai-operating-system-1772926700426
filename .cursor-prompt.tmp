@@ -847,399 +847,402 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Finance Dashboard Prompt
+ for bestpractices and # Content Calendar Prompt for AI Development Tool
 
-Create a comprehensive, production-ready implementation plan for building the Finance Dashboard in the LifeOps platform. This task encompasses a central Finance hub with categorized transactions, subscription management, anomalies, forecasting, monthly close checklist, and agent recommendations for optimizing spend, plus two connected pages: Subscriptions & Billing and Transactions & Categorization. All code and architecture must be resilient to null/undefined data and guarded against common runtime errors as specified in the project’s mandatory coding standards.
+This prompt is designed to guide an AI development tool to build a robust, production-ready Content Calendar feature within the LifeOps system. It covers the page, components, frontend/backend/integration requirements, UX flows, data models, security, validation, acceptance criteria, and UI/UX guidelines, all aligned with the project context and strict runtime safety rules.
 
 ---
 
-## Overview
-You will develop a modular, scalable Finance Dashboard composed of a central Finance Hub page and two connected pages (Subscriptions & Billing and Transactions & Categorization). The system integrates with Finance Automation workflows (ingestion, categorization, anomaly detection, forecasting, and monthly close), and supports agent-driven spend optimization recommendations. The UI should be dense, dark-themed, enterprise-grade, highly navigable for power users, and adhere to the provided design system and runtime safety rules.
+## Content Calendar
+
+### Overview
+Build a calendar-based scheduling UI for content items that supports publishing slots, drag-to-schedule, and conflict detection. This page sits at the nexus of Content Pipeline Automation (idea → research → drafting → editing → scheduling → publishing with LLM-assisted workflows and publishing connectors) and the Content Editor workflow (end-to-end editor with collaboration, versioning, and publishing integrations). The UI must be fast, keyboard-friendly, accessible, and highly responsive, with a dark, dense, power-user aesthetic consistent with LifeOps design language.
 
 ---
 
 ## Page Description (Full Detail)
+
 What this page is:
-- The Finance Dashboard is the Finance hub for LifeOps, delivering a consolidated view into categorized transactions, active and tracked subscriptions, anomaly alerts, forecasting, and monthly close readiness. It also surfaces agent recommendations to optimize spend and allocate resources efficiently.
+- A central Content Calendar that visualizes content items across time (month/week/day views) and channels, enabling drag-and-drop scheduling of publish slots, rescheduling, and conflict detection (team capacity, slot overlaps, channel restrictions).
 
 Goals:
-- Provide a single command center for financial operations, with fast access to:
-  - Categorized transactions: search, filter, bulk actions, and rule-based auto-categorization
-  - Subscriptions management: user-owned and tracked subscriptions, churn risk indicators, spend limits, and billing processor integrations
-  - Anomaly detection: real-time flags with agent rationale and remediation actions
-  - Forecasting: revenue/expense forecast visuals with scenario toggles
-  - Monthly close checklist: reconciliations, approvals, and audit trails
-  - Agent recommendations: explainable, traceable actions for optimizing spend
-- Ensure cohesive navigation with Subscriptions & Billing and Transactions & Categorization as connected pages. All interactions are captured with an audit trail and reversible where appropriate.
+- Provide an at-a-glance calendar with scalable views (Month, Week, Day) that render content cards as scheduled items.
+- Support drag-and-drop of content cards between slots, days, or channels, with live conflict detection and automated suggestions.
+- Show a Conflicts Panel listing overlapping slots, capacity warnings, and actionable next steps.
+- Include a Quick Create flow to rapidly add a content card with essential metadata (title, type, target channel, tentative publish window).
+- Connect with Content Pipeline Automation to automatically seed ideas, research tasks, drafts, edits, and scheduling where appropriate.
+- Integrate with the Content Editor for deeper editing, versioning, and publishing connectors.
+- Ensure all actions are logged, reversible, and traceable with an audit trail.
 
-UI elements and visual guidance:
-- Snapshot Tiles: at-a-glance balances, monthly spend, forecast, and savings opportunities
-- Transaction Feed: categorized lines, live search, tagging, and rule-based auto-categorization hints
-- Subscriptions Panel: recurring payments, churn risk indicators, spend-limit warnings, and processor connections
-- Anomaly Alerts: flags with agent-provided rationale and recommended actions
-- Monthly Close Checklist: items with status indicators, owner, due dates, and approvals
-- Agent Recommendations: contextual prompts with confidence scores and potential ROI impact
-- Global chrome: consistent dark UI with the specified color palette, typography, and spacing. Ensure responsive layout that preserves information density on large screens and scales gracefully to smaller viewports.
+UI elements and how they need to look:
+- Month/Week/Day Views: horizontally laid-out timeline with days/weeks and vertical lanes per publishing channel or team.
+- Drag & Drop Scheduling: draggable content cards that snap to slots; when dragged over a slot, show live slot feasibility and conflict indicators.
+- Conflicts Panel: side panel listing conflicts with severity badges, suggested resolutions, and one-click actions (reschedule, reassign, escalate).
+- Quick Create: modal or in-view inline form to create content items with minimal metadata, auto-populating from templates when possible.
+- Visual guidance: high-contrast white typography on near-black background; subtle card elevation, gradient card backs, and accent pills for statuses.
 
-Connected APIs and data flows:
-- Finance Automation services: ingestion, categorization, anomaly detection, forecasting, and monthly close orchestration
-- Subscriptions service: manage user-owned and tracked subscriptions, churn analytics, spend limit enforcement, and billing processor integrations
-- Transactions service: provide categorized transactions and rules engine
-- Agents orchestrator: deliver explainable recommendations and run artifacts
-- All API responses must be validated and guarded against null/undefined values (see runtime safety rules)
+Connected Pages:
+- Content Editor: Full workflow from ideation to publish with LLM-assisted writing, versioning, and publishing integrations.
+- Content Pipeline Automation: End-to-end automation spanning ideation → research → drafting → editing → scheduling → publishing with LLM assistance and publishing connectors.
+
+UI guidance and constraints:
+- Dense, keyboard-navigable, accessible controls.
+- Drag-and-drop must be robust with proper aria attributes and keyboard equivalents.
+- Conflicts should be detectable in real time with clear visual indicators and accessible messaging.
 
 ---
 
 ## Components to Build
-- FinanceDashboardShell
-  - Layout container with left navigation, top bar, and content region
-  - Persisted UI state (collapsed sidebar, active tab, user preferences)
 
-- SnapshotTiles
-  - Cards showing Balance, Monthly Spend, Forecast, and Savings Opportunities
-  - Data-driven with currency formatting, growth indicators, and drill-through actions
+1. CalendarView (Main Page)
+   - Props: timeRange (Month/Week/Day), channels[], items[], viewDate
+   - State: selectedSlot, draggingItem, viewMode, filters
+   - Features: render calendar grid, render content cards, drag-and-drop support, conflict detection overlays, responsive layout
+   - Data handling: consume sanitized items via API; ensure data ?? [] usage; guard array operations
 
-- TransactionsOverview
-  - Transaction Feed with: search, filter, categorized grouping, tag chips
-  - Manual Categorization UI (drag/assign or select)
-  - Create Categorization Rules modal
-  - Exceptions marking (unmatched or review-needed)
+2. ContentCard
+   - Props: item { id, title, type, status, channel, publishAt, duration, assignees, priority, metadata }
+   - UI: icon/thumbnail, title, channel badge, publish time, status pill, assignees
+   - Interactions: click to open in Content Editor, drag handle, quick actions (reschedule, reassign)
 
-- SubscriptionsPanel
-  - List of user-owned and tracked subscriptions
-  - Churn risk indicators, spend limit warnings
-  - Connect Billing Processors UI (add/remove connectors, OAuth flows)
+3. ChannelLane
+   - Props: channel, items[]
+   - UI: vertical lane for each channel, slot grid within lane
+   - Features: drop target for ContentCard, slot locking/availability states
 
-- AnomaliesPanel
-  - Real-time/near-real-time anomaly alerts with severity
-  - Agent-provided rationale, suggested remediation, and acknowledgement actions
+4. ConflictsPanel
+   - Props: conflicts[] (each with type: overlap, capacity, channel, items[])
+   - UI: list with severity badges, concise details, actions (suggested reschedule, reassign, approve)
+   - Behavior: filterable by severity, prioritized stacking, accessible via keyboard
 
-- ForecastingPanel
-  - Time-series charts with selectable horizons and scenarios
-  - ROI/impact indicators and scenario comparison
+5. QuickCreateModal
+   - Props: onCreate
+   - Fields: title, type, channel, tentativePublishAt, duration
+   - Validation: required fields, sensible defaults, auto-suggestion for templates
 
-- MonthlyClosePanel
-  - Checklists, reconciliations, auto-generated tasks
-  - Approval queue integration and audit trails
+6. Drag-and-Drop Engine
+   - Libraries: react-dnd or native pointer-based system with accessible fallbacks
+   - Requirements: snapshot of drag state, collision detection with slots, live feedback
 
-- AgentRecommendationsPanel
-  - Contextual recommendations with confidence scores
-  - Actionable steps, expected ROI, and reversible actions
+7. ConflictDetector
+   - Inputs: items, slots, channelCapacity
+   - Outputs: conflicts list with reason codes (overlap, capacity, tool restriction)
+   - Real-time updates as item positions change
 
-- FinanceAutomationBridge
-  - Orchestrates ingestion, categorization, anomaly detection, forecasting, and monthly close workflows
-  - Exposes status and traces for each workflow run
+8. API Bridge (Frontend Services)
+   - fetchCalendarItems(query): GET calendar items within range
+   - createCalendarItem(payload): POST new item
+   - updateCalendarItem(id, payload): PATCH/PUT
+   - bulkReschedule(ids, newSlot): POST
+   - fetchChannelCapacity(): GET capacity per channel and time slot
+   - logAudit(action, details): POST audit trail
 
-- NavPane (Left Sidebar)
-  - Sections for Finance Dashboard, Subscriptions & Billing, Transactions & Categorization
-  - Expandable trees, active state pill with accent color
+9. AuditTrail & RunArtifactsPanel
+   - Show per-action logs, diffs, and artifacts related to scheduling actions
 
-- DataVizPanel
-  - Lightweight charts for forecast, spend vs. baseline, anomalies
-  - Tooltips, legends, and accessible contrast
-
-- Modals & Forms
-  - Create/Edit Categorization Rule
-  - Connect Billing Processor
-  - Approvals and confirmations for critical actions
-
-- AuditTrailPane
-  - Global or per-item run history with logs, diffs, traces, and artifacts
-
-Note: All components must guard against null/undefined before calling array methods, and must initialize state with appropriate defaults as per the runtime safety rules.
+10. Tooltip/Popovers
+    - Contextual hints for drag targets, conflicts, and quick actions
 
 ---
 
 ## Implementation Requirements
 
 ### Frontend
-- Framework and Architecture
-  - React 18+ with TypeScript
-  - Component-driven architecture with a clear separation of concerns
-  - Use React Query or SWR for data fetching with safe data handling and caching
-  - Centralized state management for dashboards (e.g., Zustand or Redux Toolkit) with selectors
-- UI Components
-  - Reusable Card, Button, Input, Select, Toggle, Badge, Tooltip, Modal, ChartCard, and List components
-  - Cards must implement hover/focus states per design guidelines
-  - Tables or dense lists with accessible semantics (aria-labels, proper headers)
-- Accessibility
-  - Keyboard navigable, screen-reader friendly, high contrast modes
-  - Focus ring visibility and descriptive aria attributes
-- Data Handling and Safety
-  - All arrays treated as data ?? [] before mapping, filtering, reducing
-  - Array.isArray checks when operating on dynamic API results
-  - Initialize all array states with useState<Type[]>([])
-  - Validate API shapes: ensure data is an array: const items = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining for nested objects: obj?.prop?.nested
-  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
-- Routing and Pages
-  - FinanceDashboard page as root with sub-sections as tabs or cards
-  - Subscriptions & Billing page
-  - Transactions & Categorization page
-- Performance and Security
-  - Debounced search, pagination, and virtualization for long lists
-  - Client-side input validation and error boundaries
-  - Ensure sensitive data is not logged; implement proper error handling
+
+- Architecture:
+  - Component-driven with clear separation: CalendarView composed of ChannelLane, ContentCard, ConflictsPanel, and QuickCreateModal.
+  - State management: local UI state for drag/drop, plus global state for calendar data via a lightweight store (e.g., React Context or Zustand) to facilitate cross-component updates.
+  - Data safety: use data ?? [] for any API results; verify Array.isArray(results) before mapping; default useState<Type[]>([]) for array states.
+
+- UI/UX:
+  - Implement Month/Week/Day views with responsive breakpoints. Ensure layout gracefully degrades to a stacked vertical list on narrow viewports.
+  - Drag-and-drop: smooth drag visuals, snap to grid, and live conflict feedback. Ensure keyboard alternative: arrow keys to nudge, Enter to drop.
+  - Conflict indicators: inline indicators on slots and a dedicated ConflictsPanel with searchable/sortable conflicts by severity.
+  - Quick Create: accessible modal with focus trapping; form validation and inline hints.
+
+- Accessibility:
+  - ARIA roles for calendar regions, drag-and-drop, and modal dialogs.
+  - Keyboard focus management during drag, drop, and modal open.
+  - Color contrast checks comply with WCAG AA for text on backgrounds.
+
+- Performance:
+  - Virtualization for large calendars (only render visible rows/slots).
+  - Debounce rapid updates; batch API calls for consecutive edits.
+  - Efficient re-renders: use memoization where appropriate.
+
+- Runtime Safety:
+  - All API results accessed with nullish coalescing and guards:
+    - const items = data ?? [];
+    - Array.isArray(items) ? items.map(...) : []
+  - Initialize React state with correct types:
+    - const [items, setItems] = useState<Item[]>([]);
+  - Access nested API responses with optional chaining:
+    - response?.data?.items ?? []
+  - Destructure with defaults:
+    - const { items = [], conflicts = [] } = response ?? {};
+
+- Data flows:
+  - On load: fetchCalendarItems for the visible range; render items per channel lane.
+  - On drag: compute potential drop slot; if conflict detected, show warning and disable drop if critical.
+  - On drop/confirm: call updateCalendarItem or createCalendarItem; push audit trail entry.
+  - When a conflict is detected, update ConflictsPanel in real-time.
 
 ### Backend
-- API Design
-  - Endpoints to fetch categorized transactions, subscription data, anomalies, forecasts, monthly close tasks, and agent recommendations
-  - Endpoints to ingest transactions, categorize, and apply rules
-  - Endpoints to connect billing processors and manage subscriptions
-  - Endpoints to retrieve and mutate monthly close checklists and approvals
-  - Endpoints to fetch cronjob runs, permissions, and run artifacts
-- Data Models (Database)
-  - Transactions: id, date, amount, currency, category_id, status, notes, user_id, merchant, metadata
-  - Categories: id, name, parent_id, color
-  - Subscriptions: id, user_id, provider, plan, amount, currency, next_billing_date, status, churn_risk_score, is_tracked
-  - Anomalies: id, transaction_id, detected_by, severity, rationale, status
-  - Forecasts: id, horizon, series, value, confidence
-  - MonthlyCloseTasks: id, name, due_date, owner_id, status, related_runs
-  - AgentRecommendations: id, context, action, expected_roi, confidence
-  - CronJobs: id, name, schedule, timezone, target, input_payload, permissions, constraints, safety_rails, retry_policy, outputs
-- Business Logic
-  - Validation of inputs, idempotent operations, audit trails for all mutating actions
-  - Real-time or near-real-time anomaly detection triggers
-  - Categorization rules engine with allow-list/deny-list and user-configurable mappings
-  - Forecasting engine integration (historical data, seasonality, scenario modeling)
-  - Monthly close workflow orchestration with approvals
-- Security
-  - Authentication (JWT/OAuth as per project standards)
-  - Authorization roles: admin, finance_agent, analyst, user
-  - Input validation and server-side guards
-  - Rate limiting and auditing
+
+- Data models (schemata):
+  - ContentItem
+    - id: string
+    - title: string
+    - type: string (ideation, research, draft, edit, schedule, publish)
+    - channelId: string
+    - publishAt: string (ISO datetime)
+    - durationMinutes: number
+    - status: string (planned, in-progress, published, blocked)
+    - assignees: string[]
+    - version: number
+    - metadata: object
+    - createdAt: string
+    - updatedAt: string
+  - Channel
+    - id: string
+    - name: string
+    - capacityPerSlot: number
+    - color: string
+  - Conflict
+    - id: string
+    - channelId: string
+    - slotStart: string
+    - slotEnd: string
+    - reason: string
+    - severity: string (low|medium|high)
+    - itemIds: string[]
+  - AuditLog
+    - id: string
+    - action: string
+    - actorId: string
+    - targetItemId: string
+    - details: string
+    - createdAt: string
+
+- API endpoints:
+  - GET /api/calendar/items?start=...&end=...&channels=...
+    - Returns: { data: ContentItem[], meta: { total } }
+  - POST /api/calendar/items
+    - Body: { title, type, channelId, publishAt, durationMinutes, assignees, metadata }
+    - Returns: Created ContentItem
+  - PATCH /api/calendar/items/{id}
+    - Body: partial ContentItem fields to update
+  - POST /api/calendar/items/bulk-reschedule
+    - Body: { itemIds: string[], newPublishAt: string, newChannelId?: string }
+  - GET /api/channels
+    - Returns: Channel[]
+  - GET /api/channels/capacity
+    - Returns: { [channelId]: capacityPerSlot }
+  - POST /api/audit
+    - Body: { action, actorId, targetItemId, details }
+
+- Business logic:
+  - Conflict detection: two or more items overlapping on the same channel/time with capacity constraints triggers a conflict.
+  - Slot snapping: when dragging, snap to nearest valid slot; if none, show unavailable state.
+  - Conflict resolution: suggest rescheduling to the next available slot or reassigning to another channel; allow approvals where required.
+
+- Security:
+  - Authentication: JWT-based or session-based per LifeOps auth strategy.
+  - Authorization: ensure only users with scheduling rights and appropriate roles can create/update calendar items; enforce per-channel permissions.
+  - Audit trails: every create/update/delete/action logged with reversible capability.
+
+- Validation:
+  - Server-side validation for required fields, types, valid channelId, and publishAt in ISO format.
+  - Validate arrays (assignees) and nested metadata safely; ensure no nulls cause runtime errors.
 
 ### Integration
-- Data Flow
-  - FinanceAutomationBridge connects ingestion, categorization, anomalies, forecasting, and monthly close to the frontend via API endpoints
-  - Transactions feed is categorized and enriched with rules; anomalies feed triggers alerts
-  - Subscriptions data is enriched with churn risk and spend limit checks; billing processors connected
-  - Forecasts feed to the UI with scenario controls
-  - Monthly close tasks and approvals flow back to the dashboard
-- Event Handling
-  - WebSocket/Push or polling for anomaly alerts and run status updates
-  - Audit trail hooks on every mutating action
-- Data Consistency
-  - Use idempotent operations for updates
-  - Validate shapes and ensure arrays default to [] using data ?? [] across responses
-- Error Handling
-  - Centralized error boundaries; user-friendly error messages and retry strategies
+
+- Data flows:
+  - Frontend fetches calendar items and channels; backend returns validated structures.
+  - On scheduling actions, frontend updates are persisted via API and then reflected in UI immediately; audit logs stored for traceability.
+  - Content Pipeline Automation hooks are triggered on key state transitions (e.g., idea → research → draft) as part of the broader LifeOps orchestration, with events emitted to agent orchestration layer.
+
+- Inter-module connections:
+  - Content Calendar consumes signals from Content Pipeline Automation for upcoming items and templates.
+  - Content Editor integration: selecting a calendar item navigates to the Editor with preloaded item context; edits and versioning flow back to calendar state.
 
 ---
 
 ## User Experience Flow
-1. User lands on Finance Dashboard
-   - Sees SnapshotTiles with Balance, Monthly Spend, Forecast, and Savings Opportunities
-   - Views a dense TransactionsOverview with categorized transactions; uses search and filters
-   - Checks AnomaliesPanel for recent flags
-   - Examines ForecastingPanel for scenario comparisons
-   - Opens MonthlyClosePanel to review reconciliations and pending approvals
-   - Embraces AgentRecommendationsPanel for optimization suggestions
-2. User navigates to Subscriptions & Billing
-   - Manages subscriptions (own and tracked), checks churn risk, sets spend limits, and connects billing processors
-3. User engages Transactions & Categorization
-   - Creates/cuts rules, manually categorizes transactions, marks exceptions
-   - Rules engine applies in real time to new transactions
-4. User interacts with agent-driven actions
-   - AgentRecommendations present actionable steps; user accepts/rejects with rationale captured
-   - Approvals queue handles any scheduled actions requiring human review
-5. All actions generate run artifacts
-   - Audit trails, logs, diffs, and inter-agent traces stored and accessible
+
+1. User lands on Content Calendar main page.
+   - See a multi-channel calendar with days/weeks/month views.
+   - All items pre-populated for the visible range; channels display order and capacity indicators.
+
+2. User switches to Week or Day view for granular scheduling.
+   - Cards appear in their respective channel lanes with clear time blocks.
+   - Slot grid indicates available publishing slots.
+
+3. User drags a ContentCard to a new time slot or channel.
+   - Live drag feedback shows potential drop target.
+   - If the target slot is valid and within capacity, the card snaps and a subtle confirmation appears.
+   - If the target creates a conflict, a warning badge appears; drop is prevented or requires a confirm.
+
+4. User opens ConflictsPanel to review conflicts.
+   - Conflicts are listed with severity and recommended actions.
+   - User can choose to reschedule, reassign, or approve an automatic resolution if permitted.
+
+5. User uses Quick Create to add a new content item.
+   - Minimal metadata form; upon submit, item appears in the calendar at the current view location or a chosen default slot.
+
+6. User clicks a calendar item to open the Content Editor workflow.
+   - Opens the Editor with idea → research → draft → edit → schedule → publish workflow steps.
+   - User can edit content, trigger LLM-assisted writing, manage versions, and connect to publishing connectors.
+
+7. System logs audit trails for every action.
+   - Users can review run artifacts and diffs in AuditTrail panels.
+
+8. All actions are reversible where possible.
+   - Users can revert scheduling changes to previous states; audit logs store diffs.
 
 ---
 
 ## Technical Specifications
 
-Data Models: [Schema details]
-- Transaction
+### Data Models
+- ContentItem
   - id: string
-  - date: string (ISO)
-  - amount: number
-  - currency: string
-  - categoryId: string | null
-  - status: 'pending'|'posted'|'flagged'
-  - notes: string
-  - userId: string
-  - merchant: string
+  - title: string
+  - type: string (idea, research, draft, edit, schedule, publish)
+  - channelId: string
+  - publishAt: string (ISO datetime)
+  - durationMinutes: number
+  - status: string
+  - assignees: string[]
+  - version: number
   - metadata: object
-- Category
+  - createdAt: string
+  - updatedAt: string
+
+- Channel
   - id: string
   - name: string
-  - parentId: string | null
+  - capacityPerSlot: number
   - color: string
-- Subscription
+
+- Conflict
   - id: string
-  - userId: string
-  - provider: string
-  - plan: string
-  - amount: number
-  - currency: string
-  - nextBillingDate: string
-  - status: 'active'|'paused'|'canceled'
-  - churnRiskScore: number
-  - isTracked: boolean
-- Anomaly
+  - channelId: string
+  - slotStart: string
+  - slotEnd: string
+  - reason: string
+  - severity: string
+  - itemIds: string[]
+
+- AuditLog
   - id: string
-  - transactionId: string
-  - detectedBy: string
-  - severity: 'low'|'medium'|'high'
-  - rationale: string
-  - status: 'open'|'closed'
-- Forecast
-  - id: string
-  - horizon: string
-  - series: string
-  - value: number
-  - confidence: number
-- MonthlyCloseTask
-  - id: string
-  - name: string
-  - dueDate: string
-  - ownerId: string
-  - status: 'open'|'in_progress'|'done'
-  - relatedRuns: string[]
-- AgentRecommendation
-  - id: string
-  - context: string
   - action: string
-  - expectedROI: number
-  - confidence: number
-- CronJob
-  - id: string
-  - name: string
-  - schedule: string
-  - timezone: string
-  - target: string
-  - inputPayload: object
-  - permissions: string
-  - constraints: object
-  - safetyRails: object
-  - retryPolicy: object
-  - outputs: object
+  - actorId: string
+  - targetItemId: string
+  - details: string
+  - createdAt: string
 
-API Endpoints: [Routes and methods]
-- GET /api/finance/dashboard (GET)
-  - returns: { balances, spend, forecast, opportunities, transactions: Transaction[], subscriptions: Subscription[], anomalies: Anomaly[], forecastData: Forecast[], monthlyCloseItems: MonthlyCloseTask[], recommendations: AgentRecommendation[] }
-  - safety guards: data ?? [], Array.isArray checks
-- POST /api/finance/ingest-transactions (POST)
-  - body: { transactions: Transaction[] }
-- POST /api/finance/categorize (POST)
-  - body: { ruleId: string, transactionIds: string[] }
-- GET /api/finance/subscriptions (GET)
-  - returns: Subscription[]
-- POST /api/finance/subscriptions/connect (POST)
-  - body: { provider: string, credentials: any }
-- GET /api/finance/anomalies (GET)
-  - returns: Anomaly[]
-- GET /api/finance/forecast (GET)
-  - returns: Forecast[]
-- GET /api/finance/monthly-close (GET)
-  - returns: MonthlyCloseTask[]
-- POST /api/finance/close/approve (POST)
-  - body: { taskId: string, approverId: string, notes?: string }
-- GET /api/finance/recommendations (GET)
-  - returns: AgentRecommendation[]
-- GET /api/cronjobs (GET)
-  - returns: CronJob[]
-- POST /api/cronjobs/run (POST)
-  - body: { cronJobId: string }
+### API Endpoints
+- GET /api/calendar/items?start=&end=&channels=
+- POST /api/calendar/items
+- PATCH /api/calendar/items/{id}
+- POST /api/calendar/items/bulk-reschedule
+- GET /api/channels
+- GET /api/channels/capacity
+- POST /api/audit
 
-Security: 
-- JWT-based authentication; roles: admin, finance_agent, analyst, user
-- Endpoint authorization checks
-- Data minimization; sensitive data masked where not required
+### Security
+- Authentication: token/session-based per LifeOps standard (JWT recommended for stateless APIs)
+- Authorization: per-channel permissions for create/update; enforce safety rails and approvals where applicable
+- Data validation and sanitization on server for all inputs
+- Audit trail preserved for all scheduling actions
 
-Validation:
-- All inputs validated server-side
-- Use safe defaults on responses: const items = Array.isArray(response?.data) ? response.data : []
-- Use data ?? [] for Supabase-like results
-- Optional chaining and destructuring with defaults everywhere
+### Validation Rules
+- Required: title, channelId, publishAt for create; channelId exists and is valid
+- publishAt must be ISO 8601
+- durationMinutes > 0
+- assignees must be an array of strings
+- Optional nested metadata must be sanitized
+- All API responses guarded with data ?? [] prior to mapping or iteration
 
 ---
 
 ## Acceptance Criteria
-- [ ] The Finance Dashboard renders without runtime errors, and all array operations guard against null/undefined by using (data ?? []) or Array.isArray checks
-- [ ] All frontend states initialize as arrays where appropriate: useState<Type[]>([]) for lists and collections
-- [ ] API responses are validated to always return arrays or empty arrays; no undefined array results propagate to UI
-- [ ] Transactions can be categorized manually, and categorization rules are created/edited with immediate effect on the feed
-- [ ] Subscriptions can be added, edited, and connected to billing processors; churn risk and spend limits appear and update correctly
-- [ ] Anomalies panel shows flagged transactions with agent rationale and remediation steps
-- [ ] Forecasting charts render correctly with multiple scenarios and accurate data binding
-- [ ] Monthly close checklist items reflect status changes and can be approved; audit trail is accessible
-- [ ] Agent recommendations are presented with confidence scores and option to execute or dismiss with rationale
-- [ ] All sensitive actions require appropriate approvals or constraints as configured by permissions
+
+- [ ] The Content Calendar renders correctly in Month, Week, and Day views with all channels and items for the visible date range.
+- [ ] Drag-and-drop scheduling updates publishAt and channelId with real-time conflict detection; conflicts panel updates instantly.
+- [ ] Quick Create creates a ContentItem with minimal metadata and appears in the correct slot, with server-side validation and audit logging.
+- [ ] ConflictsPanel surfaces all overlaps and capacity issues, with actionable resolution paths (reschedule/reassign/approve).
+- [ ] Opening a calendar item navigates to Content Editor with the item context and supports the full idea→publish workflow.
+- [ ] All API responses are validated defensively (data ?? [], Array.isArray checks) and all arrays initialized with useState([]).
+- [ ] Comprehensive unit and integration tests cover: calendar rendering, drag/drop, conflict detection, API routes, and audit logs.
+- [ ] Accessibility checks pass (ARIA roles, keyboard navigation, focus management in modals and drag/drop).
 
 ---
 
 ## UI/UX Guidelines
-Apply the project’s design system and ensure consistency across pages. The UI should be dense but legible, with clear hierarchy and accessible interactions. All components must visually align with the specified color palette, typography, spacing, and card treatments. Implement micro-interactions for hover, focus, and actions that feel tactile but restrained.
+
+Apply the LifeOps design system precisely.
+
+- Color palette and typography:
+  - Primary background #0B0B0C, secondary #151718, panel outlines #1F1F20
+  - Text: #FFFFFF; secondary meta #9DA3A6; disabled #56595B
+  - Accent: #FF3B30 for active/alerts
+  - Charts: teal #00C2A8, amber #FFB020, purple #8B5CF6
+  - Gradients: #111213 → #1A1A1B for depth
+
+- Typography and layout:
+  - Font: Inter, SF Pro Display, or Roboto
+  - Headings 600–700 weight, 20–28px; titles 14–16px; body 12–14px; captions 11–12px
+  - 8px baseline grid; gutters 220–260px; header height 56–64px
+  - Card radii 8–12px; shadows; borders subtle
+
+- Card design:
+  - Dark elevated cards with top inner highlight, rounded corners
+  - Icon/thumbnail at top, then title, then metadata
+  - Hover: translateY(-2px), border tint to #2A2A2B
+
+- Navigation:
+  - Left sidebar with icons; active state uses vertical accent pill #FF3B30
+  - Collapsible sections with carets; selection uses rounded background
+
+- Data visualization:
+  - Minimal grids, low-contrast axes, colored lines with rounded caps
+  - Tooltips: dark panels with white text, 8–10px radius
+
+- Interactions:
+  - Buttons: Primary, Secondary; hover lift; destructive actions emphasized
+  - Form elements: dark inputs, subtle borders, focused ring in accent color
+  - Toggles/chips/pills: rounded; active state uses accent
+  - Micro-interactions: 120–200ms transitions; clear affordances for actions
+
+- Design philosophy:
+  - Dense, screen-focused UI for power users; high readability with restrained accent usage
+  - Clear auditability and reversibility; traceable agent actions and run artifacts
 
 ---
 
-## Visual Style
+## Mandatory Coding Standards — Runtime Safety
 
-Color Palette:
-- Primary background: #0B0B0C
-- Secondary surface: #151718
-- Tertiary surface / panel outline: #1F1F20
-- Primary text / headings: #FFFFFF
-- Secondary text / meta: #9DA3A6
-- Subtle text / disabled: #56595B
-- Accent (action / alert): #FF3B30
-- Neutral highlight / icon fill: #CFCFCF
-- Soft highlight / gloss: #E6E7E8
-- Charts/Status accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
-- Dividers: rgba(255,255,255,0.03)
-- Gradients: subtle gradient from #111213 to #1A1A1B inside cards
+CRITICAL: Enforce in ALL generated code.
 
-Typography & Layout:
-- Font: Inter or similar geometric sans
-- Headings: 20–28px, weight 600–700
-- Card titles: 14–16px, weight 500–600
-- Body: 12–14px, weight 400
-- Microcopy: 11–12px, weight 300–400
-- Spacing: 8px baseline grid; gutters 220–260px for sidebar
-- Card padding: 16–20px; rounded corners 8–12px
-- Layout alignment: left-aligned lists; dense card grids; consistent vertical rhythm
-
-Key Design Elements
-- Card Design: dark elevated cards, subtle borders, gentle shadows, hover lifts
-- Navigation: left vertical sidebar with active pill indicator in accent color
-- Data Visualization: minimal charts with low-contrast axes, colored series using the accent palette
-- Interactive Elements: primary/secondary buttons, guarded inputs, toggles, chips, badges
-- Micro-interactions: 120–200ms transitions, subtle elevations
-- Badges: counts with neutral or accent colors
-
-Design Philosophy
-- Modern, minimal, developer-focused; dense information with clarity
-- Emphasis on traceability, auditability, and control
-- Consistent visual language across dashboard, lists, and charts
-- UX goals: fast scanning, reliable automation with human-in-the-loop controls
+1. Supabase-like results handling:
+   - const items = data ?? []
+2. Array method safety:
+   - (items ?? []).map(...)
+   - Array.isArray(items) ? items.map(...) : []
+3. React useState initialization for arrays:
+   - const [items, setItems] = useState<Item[]>([])
+4. API response validation:
+   - const list = Array.isArray(response?.data) ? response.data : []
+5. Optional chaining:
+   - obj?.property?.nested
+6. Destructuring with defaults:
+   - const { items = [], count = 0 } = response ?? {}
 
 ---
 
-### Mandatory Coding Standards — Runtime Safety (Non-Negotiable)
-- Supabase-like results: use nullish coalescing for arrays: const items = data ?? []
-- Array methods: guard all calls
-  - (items ?? []).map(...)
-  - Array.isArray(items) ? items.map(...) : []
-- React useState defaults for arrays: useState<Type[]>([])
-- API response shapes: const list = Array.isArray(response?.data) ? response.data : []
-- Optional chaining: safe access with ?. for nested API responses
-- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
-
----
-
-### PROJECT CONTEXT CONNECTION
-TARGET PAGE: Finance Dashboard
-- Finance hub: categorized transactions, subscription management, anomalies, forecasting, monthly close checklist, agent recommendations
-- Connected to Finance Automation: ingestion, categorization, anomaly detection, forecasting, monthly close workflows
-- Subscriptions & Billing page: manage user-owned/tracked subscriptions, churn detection, spend limits, connect billing processors
-- Transactions & Categorization page: list/manage transactions; manual categorization; categorization rules; mark exceptions
-
----
-
-This prompt provides a complete, actionable blueprint for AI tooling to generate the Finance Dashboard with robust runtime safety, architectural clarity, and alignment to the LifeOps design system. It instructs on frontend/backend separation, data models, API contracts, integration patterns, UX guidelines, and acceptance criteria to ensure a high-quality, maintainable implementation. for style.
+If you need this prompt tailored to a specific tech stack (e.g., Next.js + React + Prisma + Supabase, or Remix, or a custom in-house stack), specify constraints such as preferred state management library, testing framework, CI/CD setup, and any existing code conventions. This prompt is designed to be implementation-agnostic while providing concrete, actionable guidance for building the Content Calendar within LifeOps. for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1261,399 +1264,402 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Finance Dashboard Prompt
+# Content Calendar Prompt for AI Development Tool
 
-Create a comprehensive, production-ready implementation plan for building the Finance Dashboard in the LifeOps platform. This task encompasses a central Finance hub with categorized transactions, subscription management, anomalies, forecasting, monthly close checklist, and agent recommendations for optimizing spend, plus two connected pages: Subscriptions & Billing and Transactions & Categorization. All code and architecture must be resilient to null/undefined data and guarded against common runtime errors as specified in the project’s mandatory coding standards.
+This prompt is designed to guide an AI development tool to build a robust, production-ready Content Calendar feature within the LifeOps system. It covers the page, components, frontend/backend/integration requirements, UX flows, data models, security, validation, acceptance criteria, and UI/UX guidelines, all aligned with the project context and strict runtime safety rules.
 
 ---
 
-## Overview
-You will develop a modular, scalable Finance Dashboard composed of a central Finance Hub page and two connected pages (Subscriptions & Billing and Transactions & Categorization). The system integrates with Finance Automation workflows (ingestion, categorization, anomaly detection, forecasting, and monthly close), and supports agent-driven spend optimization recommendations. The UI should be dense, dark-themed, enterprise-grade, highly navigable for power users, and adhere to the provided design system and runtime safety rules.
+## Content Calendar
+
+### Overview
+Build a calendar-based scheduling UI for content items that supports publishing slots, drag-to-schedule, and conflict detection. This page sits at the nexus of Content Pipeline Automation (idea → research → drafting → editing → scheduling → publishing with LLM-assisted workflows and publishing connectors) and the Content Editor workflow (end-to-end editor with collaboration, versioning, and publishing integrations). The UI must be fast, keyboard-friendly, accessible, and highly responsive, with a dark, dense, power-user aesthetic consistent with LifeOps design language.
 
 ---
 
 ## Page Description (Full Detail)
+
 What this page is:
-- The Finance Dashboard is the Finance hub for LifeOps, delivering a consolidated view into categorized transactions, active and tracked subscriptions, anomaly alerts, forecasting, and monthly close readiness. It also surfaces agent recommendations to optimize spend and allocate resources efficiently.
+- A central Content Calendar that visualizes content items across time (month/week/day views) and channels, enabling drag-and-drop scheduling of publish slots, rescheduling, and conflict detection (team capacity, slot overlaps, channel restrictions).
 
 Goals:
-- Provide a single command center for financial operations, with fast access to:
-  - Categorized transactions: search, filter, bulk actions, and rule-based auto-categorization
-  - Subscriptions management: user-owned and tracked subscriptions, churn risk indicators, spend limits, and billing processor integrations
-  - Anomaly detection: real-time flags with agent rationale and remediation actions
-  - Forecasting: revenue/expense forecast visuals with scenario toggles
-  - Monthly close checklist: reconciliations, approvals, and audit trails
-  - Agent recommendations: explainable, traceable actions for optimizing spend
-- Ensure cohesive navigation with Subscriptions & Billing and Transactions & Categorization as connected pages. All interactions are captured with an audit trail and reversible where appropriate.
+- Provide an at-a-glance calendar with scalable views (Month, Week, Day) that render content cards as scheduled items.
+- Support drag-and-drop of content cards between slots, days, or channels, with live conflict detection and automated suggestions.
+- Show a Conflicts Panel listing overlapping slots, capacity warnings, and actionable next steps.
+- Include a Quick Create flow to rapidly add a content card with essential metadata (title, type, target channel, tentative publish window).
+- Connect with Content Pipeline Automation to automatically seed ideas, research tasks, drafts, edits, and scheduling where appropriate.
+- Integrate with the Content Editor for deeper editing, versioning, and publishing connectors.
+- Ensure all actions are logged, reversible, and traceable with an audit trail.
 
-UI elements and visual guidance:
-- Snapshot Tiles: at-a-glance balances, monthly spend, forecast, and savings opportunities
-- Transaction Feed: categorized lines, live search, tagging, and rule-based auto-categorization hints
-- Subscriptions Panel: recurring payments, churn risk indicators, spend-limit warnings, and processor connections
-- Anomaly Alerts: flags with agent-provided rationale and recommended actions
-- Monthly Close Checklist: items with status indicators, owner, due dates, and approvals
-- Agent Recommendations: contextual prompts with confidence scores and potential ROI impact
-- Global chrome: consistent dark UI with the specified color palette, typography, and spacing. Ensure responsive layout that preserves information density on large screens and scales gracefully to smaller viewports.
+UI elements and how they need to look:
+- Month/Week/Day Views: horizontally laid-out timeline with days/weeks and vertical lanes per publishing channel or team.
+- Drag & Drop Scheduling: draggable content cards that snap to slots; when dragged over a slot, show live slot feasibility and conflict indicators.
+- Conflicts Panel: side panel listing conflicts with severity badges, suggested resolutions, and one-click actions (reschedule, reassign, escalate).
+- Quick Create: modal or in-view inline form to create content items with minimal metadata, auto-populating from templates when possible.
+- Visual guidance: high-contrast white typography on near-black background; subtle card elevation, gradient card backs, and accent pills for statuses.
 
-Connected APIs and data flows:
-- Finance Automation services: ingestion, categorization, anomaly detection, forecasting, and monthly close orchestration
-- Subscriptions service: manage user-owned and tracked subscriptions, churn analytics, spend limit enforcement, and billing processor integrations
-- Transactions service: provide categorized transactions and rules engine
-- Agents orchestrator: deliver explainable recommendations and run artifacts
-- All API responses must be validated and guarded against null/undefined values (see runtime safety rules)
+Connected Pages:
+- Content Editor: Full workflow from ideation to publish with LLM-assisted writing, versioning, and publishing integrations.
+- Content Pipeline Automation: End-to-end automation spanning ideation → research → drafting → editing → scheduling → publishing with LLM assistance and publishing connectors.
+
+UI guidance and constraints:
+- Dense, keyboard-navigable, accessible controls.
+- Drag-and-drop must be robust with proper aria attributes and keyboard equivalents.
+- Conflicts should be detectable in real time with clear visual indicators and accessible messaging.
 
 ---
 
 ## Components to Build
-- FinanceDashboardShell
-  - Layout container with left navigation, top bar, and content region
-  - Persisted UI state (collapsed sidebar, active tab, user preferences)
 
-- SnapshotTiles
-  - Cards showing Balance, Monthly Spend, Forecast, and Savings Opportunities
-  - Data-driven with currency formatting, growth indicators, and drill-through actions
+1. CalendarView (Main Page)
+   - Props: timeRange (Month/Week/Day), channels[], items[], viewDate
+   - State: selectedSlot, draggingItem, viewMode, filters
+   - Features: render calendar grid, render content cards, drag-and-drop support, conflict detection overlays, responsive layout
+   - Data handling: consume sanitized items via API; ensure data ?? [] usage; guard array operations
 
-- TransactionsOverview
-  - Transaction Feed with: search, filter, categorized grouping, tag chips
-  - Manual Categorization UI (drag/assign or select)
-  - Create Categorization Rules modal
-  - Exceptions marking (unmatched or review-needed)
+2. ContentCard
+   - Props: item { id, title, type, status, channel, publishAt, duration, assignees, priority, metadata }
+   - UI: icon/thumbnail, title, channel badge, publish time, status pill, assignees
+   - Interactions: click to open in Content Editor, drag handle, quick actions (reschedule, reassign)
 
-- SubscriptionsPanel
-  - List of user-owned and tracked subscriptions
-  - Churn risk indicators, spend limit warnings
-  - Connect Billing Processors UI (add/remove connectors, OAuth flows)
+3. ChannelLane
+   - Props: channel, items[]
+   - UI: vertical lane for each channel, slot grid within lane
+   - Features: drop target for ContentCard, slot locking/availability states
 
-- AnomaliesPanel
-  - Real-time/near-real-time anomaly alerts with severity
-  - Agent-provided rationale, suggested remediation, and acknowledgement actions
+4. ConflictsPanel
+   - Props: conflicts[] (each with type: overlap, capacity, channel, items[])
+   - UI: list with severity badges, concise details, actions (suggested reschedule, reassign, approve)
+   - Behavior: filterable by severity, prioritized stacking, accessible via keyboard
 
-- ForecastingPanel
-  - Time-series charts with selectable horizons and scenarios
-  - ROI/impact indicators and scenario comparison
+5. QuickCreateModal
+   - Props: onCreate
+   - Fields: title, type, channel, tentativePublishAt, duration
+   - Validation: required fields, sensible defaults, auto-suggestion for templates
 
-- MonthlyClosePanel
-  - Checklists, reconciliations, auto-generated tasks
-  - Approval queue integration and audit trails
+6. Drag-and-Drop Engine
+   - Libraries: react-dnd or native pointer-based system with accessible fallbacks
+   - Requirements: snapshot of drag state, collision detection with slots, live feedback
 
-- AgentRecommendationsPanel
-  - Contextual recommendations with confidence scores
-  - Actionable steps, expected ROI, and reversible actions
+7. ConflictDetector
+   - Inputs: items, slots, channelCapacity
+   - Outputs: conflicts list with reason codes (overlap, capacity, tool restriction)
+   - Real-time updates as item positions change
 
-- FinanceAutomationBridge
-  - Orchestrates ingestion, categorization, anomaly detection, forecasting, and monthly close workflows
-  - Exposes status and traces for each workflow run
+8. API Bridge (Frontend Services)
+   - fetchCalendarItems(query): GET calendar items within range
+   - createCalendarItem(payload): POST new item
+   - updateCalendarItem(id, payload): PATCH/PUT
+   - bulkReschedule(ids, newSlot): POST
+   - fetchChannelCapacity(): GET capacity per channel and time slot
+   - logAudit(action, details): POST audit trail
 
-- NavPane (Left Sidebar)
-  - Sections for Finance Dashboard, Subscriptions & Billing, Transactions & Categorization
-  - Expandable trees, active state pill with accent color
+9. AuditTrail & RunArtifactsPanel
+   - Show per-action logs, diffs, and artifacts related to scheduling actions
 
-- DataVizPanel
-  - Lightweight charts for forecast, spend vs. baseline, anomalies
-  - Tooltips, legends, and accessible contrast
-
-- Modals & Forms
-  - Create/Edit Categorization Rule
-  - Connect Billing Processor
-  - Approvals and confirmations for critical actions
-
-- AuditTrailPane
-  - Global or per-item run history with logs, diffs, traces, and artifacts
-
-Note: All components must guard against null/undefined before calling array methods, and must initialize state with appropriate defaults as per the runtime safety rules.
+10. Tooltip/Popovers
+    - Contextual hints for drag targets, conflicts, and quick actions
 
 ---
 
 ## Implementation Requirements
 
 ### Frontend
-- Framework and Architecture
-  - React 18+ with TypeScript
-  - Component-driven architecture with a clear separation of concerns
-  - Use React Query or SWR for data fetching with safe data handling and caching
-  - Centralized state management for dashboards (e.g., Zustand or Redux Toolkit) with selectors
-- UI Components
-  - Reusable Card, Button, Input, Select, Toggle, Badge, Tooltip, Modal, ChartCard, and List components
-  - Cards must implement hover/focus states per design guidelines
-  - Tables or dense lists with accessible semantics (aria-labels, proper headers)
-- Accessibility
-  - Keyboard navigable, screen-reader friendly, high contrast modes
-  - Focus ring visibility and descriptive aria attributes
-- Data Handling and Safety
-  - All arrays treated as data ?? [] before mapping, filtering, reducing
-  - Array.isArray checks when operating on dynamic API results
-  - Initialize all array states with useState<Type[]>([])
-  - Validate API shapes: ensure data is an array: const items = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining for nested objects: obj?.prop?.nested
-  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
-- Routing and Pages
-  - FinanceDashboard page as root with sub-sections as tabs or cards
-  - Subscriptions & Billing page
-  - Transactions & Categorization page
-- Performance and Security
-  - Debounced search, pagination, and virtualization for long lists
-  - Client-side input validation and error boundaries
-  - Ensure sensitive data is not logged; implement proper error handling
+
+- Architecture:
+  - Component-driven with clear separation: CalendarView composed of ChannelLane, ContentCard, ConflictsPanel, and QuickCreateModal.
+  - State management: local UI state for drag/drop, plus global state for calendar data via a lightweight store (e.g., React Context or Zustand) to facilitate cross-component updates.
+  - Data safety: use data ?? [] for any API results; verify Array.isArray(results) before mapping; default useState<Type[]>([]) for array states.
+
+- UI/UX:
+  - Implement Month/Week/Day views with responsive breakpoints. Ensure layout gracefully degrades to a stacked vertical list on narrow viewports.
+  - Drag-and-drop: smooth drag visuals, snap to grid, and live conflict feedback. Ensure keyboard alternative: arrow keys to nudge, Enter to drop.
+  - Conflict indicators: inline indicators on slots and a dedicated ConflictsPanel with searchable/sortable conflicts by severity.
+  - Quick Create: accessible modal with focus trapping; form validation and inline hints.
+
+- Accessibility:
+  - ARIA roles for calendar regions, drag-and-drop, and modal dialogs.
+  - Keyboard focus management during drag, drop, and modal open.
+  - Color contrast checks comply with WCAG AA for text on backgrounds.
+
+- Performance:
+  - Virtualization for large calendars (only render visible rows/slots).
+  - Debounce rapid updates; batch API calls for consecutive edits.
+  - Efficient re-renders: use memoization where appropriate.
+
+- Runtime Safety:
+  - All API results accessed with nullish coalescing and guards:
+    - const items = data ?? [];
+    - Array.isArray(items) ? items.map(...) : []
+  - Initialize React state with correct types:
+    - const [items, setItems] = useState<Item[]>([]);
+  - Access nested API responses with optional chaining:
+    - response?.data?.items ?? []
+  - Destructure with defaults:
+    - const { items = [], conflicts = [] } = response ?? {};
+
+- Data flows:
+  - On load: fetchCalendarItems for the visible range; render items per channel lane.
+  - On drag: compute potential drop slot; if conflict detected, show warning and disable drop if critical.
+  - On drop/confirm: call updateCalendarItem or createCalendarItem; push audit trail entry.
+  - When a conflict is detected, update ConflictsPanel in real-time.
 
 ### Backend
-- API Design
-  - Endpoints to fetch categorized transactions, subscription data, anomalies, forecasts, monthly close tasks, and agent recommendations
-  - Endpoints to ingest transactions, categorize, and apply rules
-  - Endpoints to connect billing processors and manage subscriptions
-  - Endpoints to retrieve and mutate monthly close checklists and approvals
-  - Endpoints to fetch cronjob runs, permissions, and run artifacts
-- Data Models (Database)
-  - Transactions: id, date, amount, currency, category_id, status, notes, user_id, merchant, metadata
-  - Categories: id, name, parent_id, color
-  - Subscriptions: id, user_id, provider, plan, amount, currency, next_billing_date, status, churn_risk_score, is_tracked
-  - Anomalies: id, transaction_id, detected_by, severity, rationale, status
-  - Forecasts: id, horizon, series, value, confidence
-  - MonthlyCloseTasks: id, name, due_date, owner_id, status, related_runs
-  - AgentRecommendations: id, context, action, expected_roi, confidence
-  - CronJobs: id, name, schedule, timezone, target, input_payload, permissions, constraints, safety_rails, retry_policy, outputs
-- Business Logic
-  - Validation of inputs, idempotent operations, audit trails for all mutating actions
-  - Real-time or near-real-time anomaly detection triggers
-  - Categorization rules engine with allow-list/deny-list and user-configurable mappings
-  - Forecasting engine integration (historical data, seasonality, scenario modeling)
-  - Monthly close workflow orchestration with approvals
-- Security
-  - Authentication (JWT/OAuth as per project standards)
-  - Authorization roles: admin, finance_agent, analyst, user
-  - Input validation and server-side guards
-  - Rate limiting and auditing
+
+- Data models (schemata):
+  - ContentItem
+    - id: string
+    - title: string
+    - type: string (ideation, research, draft, edit, schedule, publish)
+    - channelId: string
+    - publishAt: string (ISO datetime)
+    - durationMinutes: number
+    - status: string (planned, in-progress, published, blocked)
+    - assignees: string[]
+    - version: number
+    - metadata: object
+    - createdAt: string
+    - updatedAt: string
+  - Channel
+    - id: string
+    - name: string
+    - capacityPerSlot: number
+    - color: string
+  - Conflict
+    - id: string
+    - channelId: string
+    - slotStart: string
+    - slotEnd: string
+    - reason: string
+    - severity: string (low|medium|high)
+    - itemIds: string[]
+  - AuditLog
+    - id: string
+    - action: string
+    - actorId: string
+    - targetItemId: string
+    - details: string
+    - createdAt: string
+
+- API endpoints:
+  - GET /api/calendar/items?start=...&end=...&channels=...
+    - Returns: { data: ContentItem[], meta: { total } }
+  - POST /api/calendar/items
+    - Body: { title, type, channelId, publishAt, durationMinutes, assignees, metadata }
+    - Returns: Created ContentItem
+  - PATCH /api/calendar/items/{id}
+    - Body: partial ContentItem fields to update
+  - POST /api/calendar/items/bulk-reschedule
+    - Body: { itemIds: string[], newPublishAt: string, newChannelId?: string }
+  - GET /api/channels
+    - Returns: Channel[]
+  - GET /api/channels/capacity
+    - Returns: { [channelId]: capacityPerSlot }
+  - POST /api/audit
+    - Body: { action, actorId, targetItemId, details }
+
+- Business logic:
+  - Conflict detection: two or more items overlapping on the same channel/time with capacity constraints triggers a conflict.
+  - Slot snapping: when dragging, snap to nearest valid slot; if none, show unavailable state.
+  - Conflict resolution: suggest rescheduling to the next available slot or reassigning to another channel; allow approvals where required.
+
+- Security:
+  - Authentication: JWT-based or session-based per LifeOps auth strategy.
+  - Authorization: ensure only users with scheduling rights and appropriate roles can create/update calendar items; enforce per-channel permissions.
+  - Audit trails: every create/update/delete/action logged with reversible capability.
+
+- Validation:
+  - Server-side validation for required fields, types, valid channelId, and publishAt in ISO format.
+  - Validate arrays (assignees) and nested metadata safely; ensure no nulls cause runtime errors.
 
 ### Integration
-- Data Flow
-  - FinanceAutomationBridge connects ingestion, categorization, anomalies, forecasting, and monthly close to the frontend via API endpoints
-  - Transactions feed is categorized and enriched with rules; anomalies feed triggers alerts
-  - Subscriptions data is enriched with churn risk and spend limit checks; billing processors connected
-  - Forecasts feed to the UI with scenario controls
-  - Monthly close tasks and approvals flow back to the dashboard
-- Event Handling
-  - WebSocket/Push or polling for anomaly alerts and run status updates
-  - Audit trail hooks on every mutating action
-- Data Consistency
-  - Use idempotent operations for updates
-  - Validate shapes and ensure arrays default to [] using data ?? [] across responses
-- Error Handling
-  - Centralized error boundaries; user-friendly error messages and retry strategies
+
+- Data flows:
+  - Frontend fetches calendar items and channels; backend returns validated structures.
+  - On scheduling actions, frontend updates are persisted via API and then reflected in UI immediately; audit logs stored for traceability.
+  - Content Pipeline Automation hooks are triggered on key state transitions (e.g., idea → research → draft) as part of the broader LifeOps orchestration, with events emitted to agent orchestration layer.
+
+- Inter-module connections:
+  - Content Calendar consumes signals from Content Pipeline Automation for upcoming items and templates.
+  - Content Editor integration: selecting a calendar item navigates to the Editor with preloaded item context; edits and versioning flow back to calendar state.
 
 ---
 
 ## User Experience Flow
-1. User lands on Finance Dashboard
-   - Sees SnapshotTiles with Balance, Monthly Spend, Forecast, and Savings Opportunities
-   - Views a dense TransactionsOverview with categorized transactions; uses search and filters
-   - Checks AnomaliesPanel for recent flags
-   - Examines ForecastingPanel for scenario comparisons
-   - Opens MonthlyClosePanel to review reconciliations and pending approvals
-   - Embraces AgentRecommendationsPanel for optimization suggestions
-2. User navigates to Subscriptions & Billing
-   - Manages subscriptions (own and tracked), checks churn risk, sets spend limits, and connects billing processors
-3. User engages Transactions & Categorization
-   - Creates/cuts rules, manually categorizes transactions, marks exceptions
-   - Rules engine applies in real time to new transactions
-4. User interacts with agent-driven actions
-   - AgentRecommendations present actionable steps; user accepts/rejects with rationale captured
-   - Approvals queue handles any scheduled actions requiring human review
-5. All actions generate run artifacts
-   - Audit trails, logs, diffs, and inter-agent traces stored and accessible
+
+1. User lands on Content Calendar main page.
+   - See a multi-channel calendar with days/weeks/month views.
+   - All items pre-populated for the visible range; channels display order and capacity indicators.
+
+2. User switches to Week or Day view for granular scheduling.
+   - Cards appear in their respective channel lanes with clear time blocks.
+   - Slot grid indicates available publishing slots.
+
+3. User drags a ContentCard to a new time slot or channel.
+   - Live drag feedback shows potential drop target.
+   - If the target slot is valid and within capacity, the card snaps and a subtle confirmation appears.
+   - If the target creates a conflict, a warning badge appears; drop is prevented or requires a confirm.
+
+4. User opens ConflictsPanel to review conflicts.
+   - Conflicts are listed with severity and recommended actions.
+   - User can choose to reschedule, reassign, or approve an automatic resolution if permitted.
+
+5. User uses Quick Create to add a new content item.
+   - Minimal metadata form; upon submit, item appears in the calendar at the current view location or a chosen default slot.
+
+6. User clicks a calendar item to open the Content Editor workflow.
+   - Opens the Editor with idea → research → draft → edit → schedule → publish workflow steps.
+   - User can edit content, trigger LLM-assisted writing, manage versions, and connect to publishing connectors.
+
+7. System logs audit trails for every action.
+   - Users can review run artifacts and diffs in AuditTrail panels.
+
+8. All actions are reversible where possible.
+   - Users can revert scheduling changes to previous states; audit logs store diffs.
 
 ---
 
 ## Technical Specifications
 
-Data Models: [Schema details]
-- Transaction
+### Data Models
+- ContentItem
   - id: string
-  - date: string (ISO)
-  - amount: number
-  - currency: string
-  - categoryId: string | null
-  - status: 'pending'|'posted'|'flagged'
-  - notes: string
-  - userId: string
-  - merchant: string
+  - title: string
+  - type: string (idea, research, draft, edit, schedule, publish)
+  - channelId: string
+  - publishAt: string (ISO datetime)
+  - durationMinutes: number
+  - status: string
+  - assignees: string[]
+  - version: number
   - metadata: object
-- Category
+  - createdAt: string
+  - updatedAt: string
+
+- Channel
   - id: string
   - name: string
-  - parentId: string | null
+  - capacityPerSlot: number
   - color: string
-- Subscription
+
+- Conflict
   - id: string
-  - userId: string
-  - provider: string
-  - plan: string
-  - amount: number
-  - currency: string
-  - nextBillingDate: string
-  - status: 'active'|'paused'|'canceled'
-  - churnRiskScore: number
-  - isTracked: boolean
-- Anomaly
+  - channelId: string
+  - slotStart: string
+  - slotEnd: string
+  - reason: string
+  - severity: string
+  - itemIds: string[]
+
+- AuditLog
   - id: string
-  - transactionId: string
-  - detectedBy: string
-  - severity: 'low'|'medium'|'high'
-  - rationale: string
-  - status: 'open'|'closed'
-- Forecast
-  - id: string
-  - horizon: string
-  - series: string
-  - value: number
-  - confidence: number
-- MonthlyCloseTask
-  - id: string
-  - name: string
-  - dueDate: string
-  - ownerId: string
-  - status: 'open'|'in_progress'|'done'
-  - relatedRuns: string[]
-- AgentRecommendation
-  - id: string
-  - context: string
   - action: string
-  - expectedROI: number
-  - confidence: number
-- CronJob
-  - id: string
-  - name: string
-  - schedule: string
-  - timezone: string
-  - target: string
-  - inputPayload: object
-  - permissions: string
-  - constraints: object
-  - safetyRails: object
-  - retryPolicy: object
-  - outputs: object
+  - actorId: string
+  - targetItemId: string
+  - details: string
+  - createdAt: string
 
-API Endpoints: [Routes and methods]
-- GET /api/finance/dashboard (GET)
-  - returns: { balances, spend, forecast, opportunities, transactions: Transaction[], subscriptions: Subscription[], anomalies: Anomaly[], forecastData: Forecast[], monthlyCloseItems: MonthlyCloseTask[], recommendations: AgentRecommendation[] }
-  - safety guards: data ?? [], Array.isArray checks
-- POST /api/finance/ingest-transactions (POST)
-  - body: { transactions: Transaction[] }
-- POST /api/finance/categorize (POST)
-  - body: { ruleId: string, transactionIds: string[] }
-- GET /api/finance/subscriptions (GET)
-  - returns: Subscription[]
-- POST /api/finance/subscriptions/connect (POST)
-  - body: { provider: string, credentials: any }
-- GET /api/finance/anomalies (GET)
-  - returns: Anomaly[]
-- GET /api/finance/forecast (GET)
-  - returns: Forecast[]
-- GET /api/finance/monthly-close (GET)
-  - returns: MonthlyCloseTask[]
-- POST /api/finance/close/approve (POST)
-  - body: { taskId: string, approverId: string, notes?: string }
-- GET /api/finance/recommendations (GET)
-  - returns: AgentRecommendation[]
-- GET /api/cronjobs (GET)
-  - returns: CronJob[]
-- POST /api/cronjobs/run (POST)
-  - body: { cronJobId: string }
+### API Endpoints
+- GET /api/calendar/items?start=&end=&channels=
+- POST /api/calendar/items
+- PATCH /api/calendar/items/{id}
+- POST /api/calendar/items/bulk-reschedule
+- GET /api/channels
+- GET /api/channels/capacity
+- POST /api/audit
 
-Security: 
-- JWT-based authentication; roles: admin, finance_agent, analyst, user
-- Endpoint authorization checks
-- Data minimization; sensitive data masked where not required
+### Security
+- Authentication: token/session-based per LifeOps standard (JWT recommended for stateless APIs)
+- Authorization: per-channel permissions for create/update; enforce safety rails and approvals where applicable
+- Data validation and sanitization on server for all inputs
+- Audit trail preserved for all scheduling actions
 
-Validation:
-- All inputs validated server-side
-- Use safe defaults on responses: const items = Array.isArray(response?.data) ? response.data : []
-- Use data ?? [] for Supabase-like results
-- Optional chaining and destructuring with defaults everywhere
+### Validation Rules
+- Required: title, channelId, publishAt for create; channelId exists and is valid
+- publishAt must be ISO 8601
+- durationMinutes > 0
+- assignees must be an array of strings
+- Optional nested metadata must be sanitized
+- All API responses guarded with data ?? [] prior to mapping or iteration
 
 ---
 
 ## Acceptance Criteria
-- [ ] The Finance Dashboard renders without runtime errors, and all array operations guard against null/undefined by using (data ?? []) or Array.isArray checks
-- [ ] All frontend states initialize as arrays where appropriate: useState<Type[]>([]) for lists and collections
-- [ ] API responses are validated to always return arrays or empty arrays; no undefined array results propagate to UI
-- [ ] Transactions can be categorized manually, and categorization rules are created/edited with immediate effect on the feed
-- [ ] Subscriptions can be added, edited, and connected to billing processors; churn risk and spend limits appear and update correctly
-- [ ] Anomalies panel shows flagged transactions with agent rationale and remediation steps
-- [ ] Forecasting charts render correctly with multiple scenarios and accurate data binding
-- [ ] Monthly close checklist items reflect status changes and can be approved; audit trail is accessible
-- [ ] Agent recommendations are presented with confidence scores and option to execute or dismiss with rationale
-- [ ] All sensitive actions require appropriate approvals or constraints as configured by permissions
+
+- [ ] The Content Calendar renders correctly in Month, Week, and Day views with all channels and items for the visible date range.
+- [ ] Drag-and-drop scheduling updates publishAt and channelId with real-time conflict detection; conflicts panel updates instantly.
+- [ ] Quick Create creates a ContentItem with minimal metadata and appears in the correct slot, with server-side validation and audit logging.
+- [ ] ConflictsPanel surfaces all overlaps and capacity issues, with actionable resolution paths (reschedule/reassign/approve).
+- [ ] Opening a calendar item navigates to Content Editor with the item context and supports the full idea→publish workflow.
+- [ ] All API responses are validated defensively (data ?? [], Array.isArray checks) and all arrays initialized with useState([]).
+- [ ] Comprehensive unit and integration tests cover: calendar rendering, drag/drop, conflict detection, API routes, and audit logs.
+- [ ] Accessibility checks pass (ARIA roles, keyboard navigation, focus management in modals and drag/drop).
 
 ---
 
 ## UI/UX Guidelines
-Apply the project’s design system and ensure consistency across pages. The UI should be dense but legible, with clear hierarchy and accessible interactions. All components must visually align with the specified color palette, typography, spacing, and card treatments. Implement micro-interactions for hover, focus, and actions that feel tactile but restrained.
+
+Apply the LifeOps design system precisely.
+
+- Color palette and typography:
+  - Primary background #0B0B0C, secondary #151718, panel outlines #1F1F20
+  - Text: #FFFFFF; secondary meta #9DA3A6; disabled #56595B
+  - Accent: #FF3B30 for active/alerts
+  - Charts: teal #00C2A8, amber #FFB020, purple #8B5CF6
+  - Gradients: #111213 → #1A1A1B for depth
+
+- Typography and layout:
+  - Font: Inter, SF Pro Display, or Roboto
+  - Headings 600–700 weight, 20–28px; titles 14–16px; body 12–14px; captions 11–12px
+  - 8px baseline grid; gutters 220–260px; header height 56–64px
+  - Card radii 8–12px; shadows; borders subtle
+
+- Card design:
+  - Dark elevated cards with top inner highlight, rounded corners
+  - Icon/thumbnail at top, then title, then metadata
+  - Hover: translateY(-2px), border tint to #2A2A2B
+
+- Navigation:
+  - Left sidebar with icons; active state uses vertical accent pill #FF3B30
+  - Collapsible sections with carets; selection uses rounded background
+
+- Data visualization:
+  - Minimal grids, low-contrast axes, colored lines with rounded caps
+  - Tooltips: dark panels with white text, 8–10px radius
+
+- Interactions:
+  - Buttons: Primary, Secondary; hover lift; destructive actions emphasized
+  - Form elements: dark inputs, subtle borders, focused ring in accent color
+  - Toggles/chips/pills: rounded; active state uses accent
+  - Micro-interactions: 120–200ms transitions; clear affordances for actions
+
+- Design philosophy:
+  - Dense, screen-focused UI for power users; high readability with restrained accent usage
+  - Clear auditability and reversibility; traceable agent actions and run artifacts
 
 ---
 
-## Visual Style
+## Mandatory Coding Standards — Runtime Safety
 
-Color Palette:
-- Primary background: #0B0B0C
-- Secondary surface: #151718
-- Tertiary surface / panel outline: #1F1F20
-- Primary text / headings: #FFFFFF
-- Secondary text / meta: #9DA3A6
-- Subtle text / disabled: #56595B
-- Accent (action / alert): #FF3B30
-- Neutral highlight / icon fill: #CFCFCF
-- Soft highlight / gloss: #E6E7E8
-- Charts/Status accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
-- Dividers: rgba(255,255,255,0.03)
-- Gradients: subtle gradient from #111213 to #1A1A1B inside cards
+CRITICAL: Enforce in ALL generated code.
 
-Typography & Layout:
-- Font: Inter or similar geometric sans
-- Headings: 20–28px, weight 600–700
-- Card titles: 14–16px, weight 500–600
-- Body: 12–14px, weight 400
-- Microcopy: 11–12px, weight 300–400
-- Spacing: 8px baseline grid; gutters 220–260px for sidebar
-- Card padding: 16–20px; rounded corners 8–12px
-- Layout alignment: left-aligned lists; dense card grids; consistent vertical rhythm
-
-Key Design Elements
-- Card Design: dark elevated cards, subtle borders, gentle shadows, hover lifts
-- Navigation: left vertical sidebar with active pill indicator in accent color
-- Data Visualization: minimal charts with low-contrast axes, colored series using the accent palette
-- Interactive Elements: primary/secondary buttons, guarded inputs, toggles, chips, badges
-- Micro-interactions: 120–200ms transitions, subtle elevations
-- Badges: counts with neutral or accent colors
-
-Design Philosophy
-- Modern, minimal, developer-focused; dense information with clarity
-- Emphasis on traceability, auditability, and control
-- Consistent visual language across dashboard, lists, and charts
-- UX goals: fast scanning, reliable automation with human-in-the-loop controls
+1. Supabase-like results handling:
+   - const items = data ?? []
+2. Array method safety:
+   - (items ?? []).map(...)
+   - Array.isArray(items) ? items.map(...) : []
+3. React useState initialization for arrays:
+   - const [items, setItems] = useState<Item[]>([])
+4. API response validation:
+   - const list = Array.isArray(response?.data) ? response.data : []
+5. Optional chaining:
+   - obj?.property?.nested
+6. Destructuring with defaults:
+   - const { items = [], count = 0 } = response ?? {}
 
 ---
 
-### Mandatory Coding Standards — Runtime Safety (Non-Negotiable)
-- Supabase-like results: use nullish coalescing for arrays: const items = data ?? []
-- Array methods: guard all calls
-  - (items ?? []).map(...)
-  - Array.isArray(items) ? items.map(...) : []
-- React useState defaults for arrays: useState<Type[]>([])
-- API response shapes: const list = Array.isArray(response?.data) ? response.data : []
-- Optional chaining: safe access with ?. for nested API responses
-- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
-
----
-
-### PROJECT CONTEXT CONNECTION
-TARGET PAGE: Finance Dashboard
-- Finance hub: categorized transactions, subscription management, anomalies, forecasting, monthly close checklist, agent recommendations
-- Connected to Finance Automation: ingestion, categorization, anomaly detection, forecasting, monthly close workflows
-- Subscriptions & Billing page: manage user-owned/tracked subscriptions, churn detection, spend limits, connect billing processors
-- Transactions & Categorization page: list/manage transactions; manual categorization; categorization rules; mark exceptions
-
----
-
-This prompt provides a complete, actionable blueprint for AI tooling to generate the Finance Dashboard with robust runtime safety, architectural clarity, and alignment to the LifeOps design system. It instructs on frontend/backend separation, data models, API contracts, integration patterns, UX guidelines, and acceptance criteria to ensure a high-quality, maintainable implementation.
+If you need this prompt tailored to a specific tech stack (e.g., Next.js + React + Prisma + Supabase, or Remix, or a custom in-house stack), specify constraints such as preferred state management library, testing framework, CI/CD setup, and any existing code conventions. This prompt is designed to be implementation-agnostic while providing concrete, actionable guidance for building the Content Calendar within LifeOps.
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist
