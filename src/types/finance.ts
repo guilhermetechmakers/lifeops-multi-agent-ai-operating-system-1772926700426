@@ -97,3 +97,153 @@ export interface CategorizationRule {
   categoryId: string;
   isActive: boolean;
 }
+
+/** Transactions & Categorization — enriched transaction with full spec fields */
+export type TransactionStatusEnriched =
+  | "ingested"
+  | "enriched"
+  | "categorized"
+  | "exception";
+
+export interface TransactionEnriched {
+  id: string;
+  date: string;
+  merchant: string;
+  amount: number;
+  accountId: string;
+  rawCategory?: string | null;
+  categorizedCategory?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
+  status: TransactionStatusEnriched;
+  subscriptionId?: string | null;
+  reconciliationId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Inferred category from automation (for display) */
+  inferredCategory?: string | null;
+  /** Confidence 0–1 for auto-categorization */
+  confidence?: number | null;
+  /** Subscription hint from enrichment */
+  subscriptionHint?: boolean | null;
+}
+
+/** Categorization rule with full spec (pattern, conditions, priority) */
+export interface CategorizationRuleEnriched {
+  id: string;
+  name: string;
+  pattern: string;
+  conditions: Record<string, unknown>;
+  targetCategory: string;
+  targetSubcategory?: string | null;
+  priority: number;
+  enabled: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransactionException {
+  id: string;
+  transactionId: string;
+  reason: string;
+  notes?: string;
+  reviewedBy?: string;
+  status: "open" | "resolved";
+  createdAt: string;
+}
+
+export interface AuditTrailEntry {
+  id: string;
+  entityType: "transaction" | "rule" | "exception";
+  entityId: string;
+  action: string;
+  actor: string;
+  timestamp: string;
+  details: string;
+}
+
+export interface IngestionJob {
+  id: string;
+  status: "pending" | "running" | "completed" | "failed";
+  newCount: number;
+  updatedCount: number;
+  startedAt?: string;
+  completedAt?: string;
+  error?: string;
+}
+
+/** Transactions & Categorization — enriched transaction model */
+export type TransactionCategorizationStatus =
+  | "ingested"
+  | "enriched"
+  | "categorized"
+  | "exception";
+
+export interface TransactionEnriched {
+  id: string;
+  date: string;
+  merchant: string;
+  amount: number;
+  accountId: string;
+  rawCategory?: string | null;
+  categorizedCategory?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
+  status: TransactionCategorizationStatus;
+  subscriptionId?: string | null;
+  reconciliationId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Enrichment: inferred category confidence 0–1 */
+  confidence?: number | null;
+  /** Enrichment: subscription indicator */
+  isSubscription?: boolean | null;
+  currency?: string;
+  notes?: string | null;
+}
+
+/** Categorization rule (full spec for rules editor) */
+export interface CategorizationRuleFull {
+  id: string;
+  name: string;
+  pattern: string;
+  conditions: Record<string, unknown>;
+  targetCategory: string;
+  targetSubcategory?: string | null;
+  priority: number;
+  enabled: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransactionException {
+  id: string;
+  transactionId: string;
+  reason: string;
+  notes?: string | null;
+  reviewedBy?: string | null;
+  status: "open" | "resolved";
+  createdAt: string;
+}
+
+export interface AuditTrailEntry {
+  id: string;
+  entityType: "transaction" | "rule" | "exception";
+  entityId: string;
+  action: string;
+  actor: string;
+  timestamp: string;
+  details: string;
+}
+
+export interface IngestionRun {
+  id: string;
+  status: "pending" | "running" | "completed" | "failed";
+  startedAt: string;
+  completedAt?: string | null;
+  newCount: number;
+  updatedCount: number;
+  error?: string | null;
+}
