@@ -172,3 +172,107 @@ export interface IngestionRun {
   updatedCount: number;
   error?: string | null;
 }
+
+/** Subscriptions & Billing — full spec aligned with API contracts */
+export type SubscriptionCadence = "monthly" | "quarterly" | "yearly";
+
+export interface SubscriptionBilling {
+  id: string;
+  vendor: string;
+  cadence: SubscriptionCadence;
+  amount: number;
+  currency: string;
+  status: "active" | "paused" | "canceled";
+  startDate: string;
+  endDate?: string | null;
+  isTracked: boolean;
+  nextChargeDate?: string | null;
+  spendLimit?: number | null;
+  globalCap?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Churn risk 0–1; optional for backward compat */
+  churnRiskScore?: number | null;
+}
+
+export type ConnectorType = "Stripe" | "PayPal" | "Other";
+
+export type ConnectorStatus = "connected" | "disconnected" | "error";
+
+export interface Connector {
+  id: string;
+  type: ConnectorType;
+  status: ConnectorStatus;
+  lastSync?: string | null;
+  connectedAt?: string | null;
+  config?: Record<string, unknown>;
+}
+
+export interface TransactionSubscription {
+  id: string;
+  subscriptionId?: string | null;
+  amount: number;
+  category?: string | null;
+  date: string;
+  status: "completed" | "pending" | "failed";
+}
+
+export interface ForecastSubscription {
+  id: string;
+  subscriptionId?: string | null;
+  period: string;
+  projectedAmount: number;
+}
+
+export interface AuditTrailSubscription {
+  id: string;
+  action: string;
+  entityId: string;
+  changes: Record<string, unknown>;
+  actor: string;
+  timestamp: string;
+}
+
+export interface ForecastSubscriptionsResponse {
+  lines?: ForecastSubscription[];
+  totalProjected?: number;
+  period?: string;
+}
+
+/** Agent recommendation for subscriptions & billing */
+export interface AgentRecommendationBilling {
+  id: string;
+  context: string;
+  action: string;
+  expectedROI?: number;
+  confidence?: number;
+  type?: "spend_optimization" | "churn_reduction" | "subscription_adjustment";
+}
+
+/** Monthly close step for subscriptions context */
+export interface MonthlyCloseStepBilling {
+  id: string;
+  name: string;
+  status: "open" | "in_progress" | "done";
+  dueDate?: string | null;
+  relatedSubscriptionIds?: string[];
+}
+
+/** Ingestion status for Finance Automation sync */
+export interface IngestionStatusBilling {
+  status: "idle" | "running" | "completed" | "failed";
+  lastRun?: string | null;
+  newCount: number;
+  updatedCount: number;
+  error?: string | null;
+}
+
+/** Notification for imminent charges, limit advisories, churn risk */
+export interface NotificationItemBilling {
+  id: string;
+  type: "imminent_charge" | "limit_advisory" | "churn_risk";
+  title: string;
+  message: string;
+  timestamp: string;
+  actionUrl?: string | null;
+}
