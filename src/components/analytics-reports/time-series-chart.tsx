@@ -58,7 +58,7 @@ export function TimeSeriesChart({
 }: TimeSeriesChartProps) {
   const chartData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const seriesList = useMemo(() => (Array.isArray(series) ? series : []), [series]);
-  const xAxisKey = xKey ?? categories?.[0] ?? "date" ?? "name";
+  const xAxisKey = xKey ?? categories?.[0] ?? "date";
 
   if (chartData.length === 0) {
     return (

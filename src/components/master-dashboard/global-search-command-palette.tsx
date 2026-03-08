@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Clock,
   CheckSquare,
@@ -212,6 +212,7 @@ function GlobalSearchCommandPaletteContent({
 export function GlobalSearchCommandPalette() {
   const [searchValue, setSearchValue] = useState("");
   const { open, setOpen } = useCommandPalette();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -227,6 +228,15 @@ export function GlobalSearchCommandPalette() {
   useEffect(() => {
     if (!open) setSearchValue("");
   }, [open]);
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && typeof q === "string" && q.trim()) {
+      setSearchValue(q.trim());
+      setOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setOpen, setSearchParams]);
 
   return (
     <GlobalSearchCommandPaletteContent
