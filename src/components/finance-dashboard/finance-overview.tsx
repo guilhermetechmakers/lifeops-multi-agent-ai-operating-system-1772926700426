@@ -9,6 +9,7 @@ import { AnomaliesPanel } from "./anomalies-panel";
 import { ForecastingPanel } from "./forecasting-panel";
 import { MonthlyClosePanel } from "./monthly-close-panel";
 import { FinanceAgentRecommendationsPanel } from "./agent-recommendations-panel";
+import { FinanceAutomationBridge } from "./finance-automation-bridge";
 import { AuditTrailPane } from "./audit-trail-pane";
 import { useFinanceDashboard, useApproveCloseTask } from "@/hooks/use-finance";
 
@@ -65,6 +66,14 @@ export function FinanceOverview() {
           />
           <FinanceAgentRecommendationsPanel
             recommendations={recommendations}
+            isLoading={isLoading}
+          />
+          <FinanceAutomationBridge
+            runs={[
+              { id: "w1", name: "Ingestion", status: "completed", traceId: "tr-1" },
+              { id: "w2", name: "Categorization", status: "completed", traceId: "tr-2" },
+              { id: "w3", name: "Anomaly detection", status: "idle" },
+            ]}
             isLoading={isLoading}
           />
           <AuditTrailPane entries={[]} />

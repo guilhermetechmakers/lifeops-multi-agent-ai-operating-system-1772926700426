@@ -100,7 +100,7 @@ export function SnapshotTiles({
       role="region"
       aria-label="Finance snapshot"
     >
-      {tileConfig.map(({ key, icon: Icon, label, getValue, getSub, trend }) => (
+      {tileConfig.map(({ key, icon: Icon, label, getValue, getSub, trend, to }) => (
         <Card
           key={key}
           className="border-white/[0.03] bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover"
@@ -145,10 +145,10 @@ export function SnapshotTiles({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="mt-2 h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  className="mt-2 h-7 gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
                   asChild
                 >
-                  <Link to="/dashboard/finance/transactions">
+                  <Link to={to}>
                     View details
                     <ArrowRight className="h-3 w-3" />
                   </Link>

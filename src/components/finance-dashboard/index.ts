@@ -8,6 +8,8 @@ export { AnomaliesPanel } from "./anomalies-panel";
 export { ForecastingPanel } from "./forecasting-panel";
 export { MonthlyClosePanel } from "./monthly-close-panel";
 export { FinanceAgentRecommendationsPanel } from "./agent-recommendations-panel";
+export { FinanceAutomationBridge } from "./finance-automation-bridge";
+export type { WorkflowRun, WorkflowRunStatus } from "./finance-automation-bridge";
 export { AuditTrailPane } from "./audit-trail-pane";
 export { CreateCategorizationRuleModal } from "./create-categorization-rule-modal";
 export { ConnectBillingProcessorModal } from "./connect-billing-processor-modal";

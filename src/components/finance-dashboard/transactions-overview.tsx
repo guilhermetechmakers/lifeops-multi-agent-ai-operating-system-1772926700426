@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Tag, Filter, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Transaction } from "@/types/finance";
 import { CreateCategorizationRuleModal } from "./create-categorization-rule-modal";
 
@@ -62,12 +63,13 @@ export function TransactionsOverview({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [ruleModalOpen, setRuleModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const filtered = useMemo(() => {
     const list = Array.isArray(transactions) ? transactions : [];
     let out = list;
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       out = out.filter(
         (t) =>
           (t.merchant ?? "").toLowerCase().includes(q) ||
@@ -78,7 +80,7 @@ export function TransactionsOverview({
       out = out.filter((t) => (t.categoryId ?? "") === categoryFilter);
     }
     return out;
-  }, [transactions, search, categoryFilter]);
+  }, [transactions, debouncedSearch, categoryFilter]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
