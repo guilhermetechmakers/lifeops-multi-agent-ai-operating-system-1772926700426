@@ -326,441 +326,67 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-# LifeOps — Development Blueprint
-
-## Project Concept
-LifeOps is a modular, multi-agent AI operating system that automates projects, content, finance, and health workflows via coordinated GPT-5 powered agents. It provides per-domain dashboards (Projects, Content, Finance, Health), a Master Dashboard command center, and a Cronjobs orchestration engine where scheduled/time/event/conditional automations are first-class objects. Agents coordinate via an orchestration layer with traceable agent-to-agent messaging, scoped memory, conflict resolution rules, and explainable, reversible actions. The platform targets knowledge workers, small teams, creators, and enterprises requiring safe, auditable automation across professional and personal domains.
-
-AI app description: A coordinated multi-agent system where agents negotiate, handoff, and execute workflows under permissioned automation levels (suggest-only → approval-required → bounded autopilot). Every action is schema-validated, explainable, permissioned, logged, reversible, and stored with full run artifacts.
-
-## Problem Statement
-- Core problems:
-  - Fragmented tools and manual workflows across projects, content, finance, and health.
-  - Lack of safe, auditable automation with human-in-the-loop controls.
-  - Difficulty orchestrating multiple AI agents with traceability, conflict resolution, and reversibility.
-  - High integration complexity for connectors (GitHub, Plaid, Stripe, Health APIs).
-- Who experiences them:
-  - Individual makers, small teams, solo entrepreneurs, finance-conscious users, health-focused users, and IT/admins.
-- Why they matter:
-  - Time wasted on repetitive tasks; risk from ungoverned automation; compliance and audit needs; integration and reliability friction.
-- Current gaps without solution:
-  - No unified, cross-domain OS with agent orchestration, cronjob-first automation, explainability, permissioning, and robust integrations.
-
-## Solution
-- How it addresses problems:
-  - Provides coordinated multi-agent orchestration with traceable messaging, scoped memory, and conflict resolution.
-  - Exposes Cronjobs as first-class objects with schedule builder, triggers, constraints, safety rails, permissions, retry policies, and rich run artifacts.
-  - Domain-specific dashboards and agent templates to accelerate setup and reduce manual overhead.
-  - Full audit trail, explainability metadata, schema validation, and reversible actions to enable safe autonomy.
-- Approach & methodology:
-  - Modular architecture: orchestration core, adapter layer for integrations, per-domain modules.
-  - Strong defaults favor human oversight (suggest-only for new users); sandbox/test modes; progressive autopilot enablement.
-  - Persistent, append-only audit store and artifact storage with versioning.
-  - RBAC, tenant scoping, encryption, and enterprise controls (SSO, data retention).
-- Key differentiators:
-  - Cronjobs as rich objects with bounded autopilot semantics.
-  - Deterministic conflict-resolution engine and explainable agent traces.
-  - Cross-domain OS combining developer tooling with content, finance, and health automation.
-- Value created:
-  - Time savings via automation, safer autonomous actions, centralized control, compliance-friendly auditability, and extensible integrations.
-
-## Requirements
-
-### 1. Pages (UI Screens)
-List of pages with purpose, key sections/components, and contribution.
-
-- Landing Page
-  - Purpose: Marketing and signup funnel.
-  - Components: Hero, feature cards, how-it-works, pricing teaser, integrations strip, CTAs.
-  - Contribution: Drives acquisition and explains value proposition.
-
-- Login / Signup Page
-  - Purpose: Unified auth entry and onboarding entrypoint.
-  - Components: Auth form, social OAuth buttons, SSO entry, onboarding modal.
-  - Contribution: Secure onboarding and connector initial setup.
-
-- Password Reset Page
-  - Purpose: Secure recovery.
-  - Components: Request form, token verification, strength meter.
-  - Contribution: Maintains account access and security.
-
-- Email Verification Page
-  - Purpose: Confirm email ownership.
-  - Components: Status banner, resend button.
-  - Contribution: Ensures trusted account bootstrap.
-
-- User Profile Page
-  - Purpose: Manage account, integrations, API keys, 2FA, billing.
-  - Components: Profile summary, integrations list, security settings, API key management, billing summary.
-  - Contribution: Central control for user security and integrations.
-
-- Master Dashboard
-  - Purpose: Command center & overview.
-  - Components: Global search/command bar, active cronjobs snapshot, agent health/alerts, quick actions, overview widgets.
-  - Contribution: Primary control surface for automation and monitoring.
-
-- Cronjobs Dashboard
-  - Purpose: List/manage cronjobs.
-  - Components: Cronjob list with status, filters, stats panel, create CTA.
-  - Contribution: Core automation management and health overview.
-
-- Cronjob Editor
-  - Purpose: Create/edit cronjob objects.
-  - Components: General, schedule (cron UI/timezone), trigger, target selector, payload builder, permissions & automation, constraints, retry policy, preview & validate.
-  - Contribution: Precise automation definition with safety rails.
-
-- Approvals Queue
-  - Purpose: Review queued actions requiring approval.
-  - Components: Queue list, detailed panel (diffs, agent rationale, artifacts), actions (approve/reject/conditional), comments/audit.
-  - Contribution: Human-in-the-loop governance for high-risk actions.
-
-- Run Details Page
-  - Purpose: Inspect a single run.
-  - Components: Run header, message trace viewer, logs/events, diff viewer, artifacts, revert controls.
-  - Contribution: Debugging, traceability, and reversibility.
-
-- Agent Trace & Debugger
-  - Purpose: Debug agent flows and conflict resolutions.
-  - Components: Conversation graph, scoped memory inspector, step-through controls, assertions/violations.
-  - Contribution: Explainability and developer debugging.
-
-- Projects Dashboard
-  - Purpose: Developer-centric project hub.
-  - Components: Roadmap, ticket board, PR summaries, CI status, agent suggestions.
-  - Contribution: Automates developer workflows and triage.
-
-- Project Detail
-  - Purpose: Deep project view.
-  - Components: Backlog, PR & CI panel, agent run history, activity feed.
-  - Contribution: Project-level automation and history.
-
-- Ticket Board
-  - Purpose: Kanban for issues with agent automation.
-  - Components: Columns, drag/drop, agent rules panel, bulk actions.
-  - Contribution: Triaging & automation for tasks.
-
-- CI & Integrations Page
-  - Purpose: Manage repo and CI connectors.
-  - Components: Integrations list, connector status, test triggers, adapter configuration.
-  - Contribution: Integration health and mapping to workflows.
-
-- Content Dashboard
-  - Purpose: Content pipeline overview.
-  - Components: Calendar, drafts, publishing queue, SEO insights, agent recommendations.
-  - Contribution: Automates content creation & publishing.
-
-- Content Editor
-  - Purpose: LLM-assisted authoring and collaboration.
-  - Components: WYSIWYG/Markdown, assistant pane, research pane, versioning, publish controls.
-  - Contribution: Accelerates content drafting and publishing.
-
-- Content Calendar
-  - Purpose: Schedule management.
-  - Components: Month/week/day views, drag/drop, conflict detection.
-  - Contribution: Coordinated publishing scheduling.
-
-- Finance Dashboard
-  - Purpose: Financial oversight and automation.
-  - Components: Snapshot tiles, transaction feed, subscriptions panel, anomaly alerts, monthly close checklist.
-  - Contribution: Automates reconciliation and forecasting.
-
-- Transactions & Categorization
-  - Purpose: Manage transaction workflows.
-  - Components: Transactions table, categorization rules, bulk actions, reconcile tools.
-  - Contribution: Automates bookkeeping tasks.
-
-- Subscriptions & Billing
-  - Purpose: Manage subscriptions & spend caps.
-  - Components: Subscription list, spend limits, churn indicators.
-  - Contribution: Controls recurring finances.
-
-- Forecasting & Reports
-  - Purpose: Cashflow forecasting and exports.
-  - Components: Forecast graphs, scenario builder, export tools.
-  - Contribution: Financial planning and reporting.
-
-- Health Dashboard
-  - Purpose: Personal health overview and workload balance.
-  - Components: Snapshot tiles, habits panel, training/meal plans, workload balancer.
-  - Contribution: Integrates personal health into work schedules.
-
-- Habits Tracker
-  - Purpose: Track habits and agent coaching.
-  - Components: Habit list, daily check-in, history, agent coaching.
-  - Contribution: Sustains personal improvements.
-
-- Training & Meal Planner
-  - Purpose: Generate and manage plans.
-  - Components: Plan builder, weekly calendar, grocery export.
-  - Contribution: Personalized health automation.
-
-- Settings & Preferences
-  - Purpose: Global application settings.
-  - Components: Notifications, privacy, team & RBAC, autopilot defaults, integrations.
-  - Contribution: Governance and user control.
-
-- About & Help
-  - Purpose: Documentation and support.
-  - Components: Docs links, FAQ, contact support.
-  - Contribution: User education and onboarding support.
-
-- Admin Dashboard
-  - Purpose: Enterprise admin controls.
-  - Components: User list & roles, org settings, compliance exports, usage & billing.
-  - Contribution: Org-level governance and compliance.
-
-- User Management
-  - Purpose: Manage users & sessions.
-  - Components: User table, role assignment UI, session revocation.
-  - Contribution: Security and role enforcement.
-
-- Analytics & Reports
-  - Purpose: Monitor usage and ROI.
-  - Components: MAU, cronjob metrics, approval rates, agent performance.
-  - Contribution: Product & business insights.
-
-- Checkout / Payment Page
-  - Purpose: Subscription purchase and billing.
-  - Components: Plan selector, billing form, secure payment, receipt.
-  - Contribution: Monetization flow.
-
-- Order / Transaction History
-  - Purpose: Billing history.
-  - Components: Invoice list, details, downloads.
-  - Contribution: Accounting transparency.
-
-- Content List / Library
-  - Purpose: Asset management.
-  - Components: Grid/list, filters, bulk actions.
-  - Contribution: Asset reuse and organization.
-
-- Documentation / Developer Docs
-  - Purpose: Public API and integration docs.
-  - Components: API reference, connector guides, agent template catalog.
-  - Contribution: Developer enablement and marketplace.
-
-- Privacy Policy, Terms, Cookie Policy
-  - Purpose: Legal compliance and consent.
-  - Components: Policy text and consent controls.
-  - Contribution: Compliance and transparency.
-
-- 404 / 500 / Loading / Success Pages
-  - Purpose: Error and transient states.
-  - Components: Messaging, retry, search/home CTA.
-  - Contribution: UX robustness.
-
-### 2. Features
-Core features with technical details and implementation notes.
-
-- Cronjobs Engine
-  - Details: Cronjob object model (id, name, enabled, schedule, timezone, trigger, target, input template, automation_level, constraints, safety_rails, retry_policy, last_run, next_run, run_history).
-  - Implementation: Time scheduler (cron library + timezone support), queueing (worker pool), dry-run simulation, cost estimation, REST + GraphQL APIs, optimistic UI, audit logging.
-  - Notes: Support cron expressions + GUI builder; enforce permissions; integrate with retry/backoff; dead-letter queue.
-
-- Agent Orchestration & Messaging
-  - Details: Message bus for agent-to-agent messages, per-run ordering guarantees, message schemas, explainability metadata.
-  - Implementation: Event-driven bus (Kafka/RabbitMQ or managed equivalent) or ordered durable queue per-run, message schema registry, per-run trace store.
-  - Notes: Guarantee deterministic ordering inside runs; attach reasoning artifacts and provenance.
-
-- Scoped Memory Store
-  - Details: Multi-scope memory (per-run / per-agent / global), TTL, encryption, retain/purge policies.
-  - Implementation: Encrypted key-value store (Postgres + encrypted fields or specialized store), retention manager, field-level redaction.
-  - Notes: Schema validation on writes, access auditing.
-
-- Conflict Resolution Engine
-  - Details: DSL for priority rules, deterministic evaluation, explainability recording.
-  - Implementation: Rule engine (Drools-like or custom evaluator), reproducible runs, audit entries for each decision.
-  - Notes: Expose override endpoints and human-in-loop insertion.
-
-- Approvals Workflow
-  - Details: Approval queue, SLA/prioritization, diffs & artifacts rendering, threaded comments, conditional approval actions.
-  - Implementation: Approval item model, reviewer assignment, notifications, audit linkage to runs.
-  - Notes: Support bulk approvals, escalation policies, role-based routing.
-
-- Audit Trail & Reversibility
-  - Details: Append-only event store, link events to runs/cronjobs/users, reversible action patterns.
-  - Implementation: Immutable log (WAL-backed store), reversible action endpoints with constraint checks and preview diffs.
-  - Notes: Exportable audits (CSV/JSON), retention config by tenant.
-
-- Integrations & Adapter System
-  - Details: Adapters (connect/test/run) for LLM provider, GitHub, Stripe, Plaid, QuickBooks/Xero, Health APIs.
-  - Implementation: Adapter abstraction with schema, connector health checks, secure secret storage, webhooks router.
-  - Notes: Rate-limit handling, token refresh, staging/sandbox connectors.
-
-- Agent Templates & Personas
-  - Details: Template metadata (persona, connectors needed, permission profile).
-  - Implementation: Catalog service with versioning, marketplace support.
-  - Notes: Sandbox/test execution; template validation.
-
-- Content Pipeline & Editor
-  - Details: WYSIWYG/Markdown editor, real-time collaboration, LLM assistant pane, versioning.
-  - Implementation: Operational transform / CRDT for realtime; autosave; LLM adapter with constrained prompts; publish connectors.
-  - Notes: Content attachments stored in object storage; editorial workflow states.
-
-- Finance Automation
-  - Details: Transaction ingestion, categorization rules, anomaly detection, forecasting.
-  - Implementation: ETL from Plaid, categorization engine (rules + ML fallback), anomaly detector with explainability.
-  - Notes: Secure handling of financial data and audit-ready exports.
-
-- Health Automation
-  - Details: Habit tracking, recovery scores, plan generator, calendar sync.
-  - Implementation: Connectors to HealthKit/Google Fit, personalized plan engine, calendar integration.
-  - Notes: Privacy-first defaults and explicit opt-ins.
-
-- Notifications & Alerts
-  - Details: In-app, email (SendGrid), push (Firebase), digesting/snoozing, delivery retries.
-  - Implementation: Notification service with templates, user preferences, channel fallbacks.
-  - Notes: Localization, templating variables, failure telemetry.
-
-- Search & Filter
-  - Details: Full-text, fuzzy search across entities with permission filters.
-  - Implementation: Elasticsearch/Algolia index, sync jobs, faceted search, autocomplete.
-  - Notes: Security filtering at query time; saved queries.
-
-- Billing & Payments
-  - Details: Stripe integration, subscription tiers, usage metering for LLM tokens.
-  - Implementation: Stripe webhooks, metering service for token usage, invoice generation.
-  - Notes: Proration logic, refunds, enterprise invoicing.
-
-- Authentication & RBAC
-  - Details: Email/password, OAuth (Google/GitHub/Microsoft), SSO (OIDC), JWT sessions, RBAC per resource/module.
-  - Implementation: Auth service (OpenID Connect/OAuth libs), secure token storage (refresh + access), 2FA/TOTP, rate limits.
-  - Notes: Audit logging for auth events; admin controls.
-
-- File Upload & Artifacts Storage
-  - Details: S3-compatible storage with signed URLs, versioning, virus scanning, retention.
-  - Implementation: Object store service + scanner (ClamAV or managed), signed URL generation, per-tenant prefixes.
-  - Notes: Access control via signed URLs, retention and lifecycle policies.
-
-- Error Handling & Validation
-  - Details: Centralized error format (code, message, details), client validation, server fallback.
-  - Implementation: Validation library (JSON Schema), standardized error responses, correlation IDs across systems.
-  - Notes: User-friendly messages and retry suggestions.
-
-- Performance & Observability
-  - Details: Caching (Redis), indexing, metrics (Prometheus), tracing (Jaeger), backup & recovery.
-  - Implementation: Instrumentation on services, dashboards for SLAs, alerting.
-  - Notes: CI/CD for infra, capacity planning.
-
-- Admin & Compliance Tools
-  - Details: Org management, audit export, SSO, tenant policies.
-  - Implementation: Admin APIs, compliance export endpoints, data retention manager.
-  - Notes: Emergency access logging and admin impersonation controls.
-
-### 3. User Journeys
-Step-by-step flows for typical user types.
-
-- New Individual User (sign up → create first cronjob)
-  1. Visit Landing → Click Create Account.
-  2. Signup (email/password or OAuth) → Email verification.
-  3. Onboarding modal: choose modules (Projects/Content/Finance/Health) → Connect first integration (optional).
-  4. Master Dashboard appears; guided tour CTA to create first Cronjob.
-  5. Open Cronjobs Dashboard → Create Cronjob (use template or blank).
-  6. Cronjob Editor: set name, schedule via builder, select target agent/template, fill input payload variables, set automation level (suggest-only default), constraints, safety rails.
-  7. Validate & Save → Cronjob created; next run shown on dashboard.
-  8. If automation level requires approval, item appears in Approvals Queue when triggered; otherwise it executes and appears in Run History.
-
-- Team Admin (org setup → integrate GitHub/Stripe → enable team cronjobs)
-  1. Signup or invited via Admin Invitation → Accept SSO invite.
-  2. Admin Dashboard: configure org settings, RBAC roles, data retention.
-  3. Connect enterprise integrations: GitHub, Stripe, Plaid via Adapter system; test connectors.
-  4. Configure autopilot defaults and safety policies (suggest-only for org, spend caps).
-  5. Invite team members and assign roles.
-  6. Create shared Cronjob templates (e.g., PR triage) and publish to team catalog.
-  7. Monitor Cronjobs Dashboard and Approvals Queue; export compliance reports.
-
-- Creator (content pipeline: idea → publish)
-  1. Signup → Connect CMS and social accounts.
-  2. Content Dashboard: use starter workflow template (weekly content pipeline).
-  3. Use Content Editor with LLM assistant to draft; store artifacts.
-  4. Schedule via Content Calendar; Cronjob created to auto-publish at scheduled time (approval-required until autopilot enabled).
-  5. Monitor run outcomes and analytics; revert publish if needed.
-
-- Finance Manager (monthly close)
-  1. Connect Plaid and accounting adapter (QuickBooks/Xero).
-  2. Transactions ingested → Auto-categorized; review exceptions.
-  3. Create Cronjob for monthly close (schedule last day of month).
-  4. Cronjob runs agents to reconcile, generate monthly close pack, and post journal entries (approval-required by default).
-  5. Download reports and export to accounting system; audit trail attached.
-
-- Health-Focused User (habit + workload balance)
-  1. Signup → Connect Health APIs and Google Calendar.
-  2. Set goals; agent persona generates training/meal plan.
-  3. Cronjob schedules daily habit nudges and weekly recovery review.
-  4. Workload Balancer agent suggests calendar adjustments to optimize recovery; suggestions can appear in Approvals Queue or be auto-applied under bounded autopilot.
-
-- Developer (PR triage automation)
-  1. Connect GitHub and CI.
-  2. Enable PR triage template from agent catalog.
-  3. Cronjob listens to repo webhooks (trigger type: event) and runs agent workflows to triage PRs, add reviewers, or open tickets.
-  4. Agent decisions are logged; revertible actions applied via GitHub adapter.
-
-## UI Guide
-(See Visual Style below — apply consistently across components.)
+- Maintain the dark UI aesthetic, high-contrast typography, and careful use of accent colors
+- Use 8px baseline grid with multiples; ensure 220–260px sidebar/content rhythm for any potential admin/editor components (though public page should optimally be full-width on large viewports)
+- Implement card-based layout with rounded corners and subtle borders; hover interactions should be mindful and subtle
+- Ensure readability and scannability for marketing content, with clear visual hierarchy and digestible copy blocks
+- Favor accessibility, performance, and maintainability in code organization and theming
+
+---
 
 ## Visual Style
 
-### Color Palette:
+Color Palette (as defined in PROJECT CONTEXT)
 - Primary background: #0B0B0C
 - Secondary surface: #151718
 - Tertiary surface / panel outline: #1F1F20
-- Primary text / headings: #FFFFFF
-- Secondary text / meta: #9DA3A6
-- Subtle text / disabled: #56595B
-- Accent (action / alert): #FF3B30
-- Neutral highlight / icon fill: #CFCFCF
-- Soft highlight / gloss: #E6E7E8
+- Primary text: #FFFFFF
+- Secondary text: #9DA3A6
+- Subtle text: #56595B
+- Accent: #FF3B30
+- Neutral highlight: #CFCFCF
+- Soft highlight: #E6E7E8
 - Supporting accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
-- Borders / dividers: rgba(255,255,255,0.03)
+- Borders: rgba(255,255,255,0.03)
 - Gradients: #111213 → #1A1A1B
 
-### Typography & Layout:
-- Font family: Inter or SF Pro Display (Roboto fallback)
-- Weights:
+Typography & Layout
+- Font: Inter (or SF Pro Display / Roboto fallback)
+- Hierarchy
   - Headings: 600–700, 20–28px
   - Card titles: 500–600, 14–16px
   - Body: 400, 12–14px
   - Microcopy: 300–400, 11–12px
-- Baseline grid: 8px multiples
-- Sidebar width: ~220–260px; header height: 56–64px
-- Card padding: 16–20px
+- Spacing: 8px baseline grid
+- Layout: Responsive grid; hero + features + 3-step + pricing + testimonials + integrations + footer
+- Alignment: Left-aligned lists; card grids center/left as appropriate
 
-### Key Design Elements
-- Card Design: dark elevated cards, rounded corners (8–12px), subtle border and shadow, hover lift translateY(-2px).
-- Navigation: left vertical sidebar (#151718) with accent pill (#FF3B30) for active state, collapsible trees.
-- Data Viz: muted axes, supporting accent palette for series, rounded bars/lines, dark tooltips.
-- Interactive Elements: primary/secondary button styles, dark inputs with inner glow, smooth micro-interactions (120–200ms).
-- Badges: compact rounded badges; red (#FF3B30) for alerts.
+Key Design Elements
+- Card: dark elevated cards with 8–12px radius; gradient background, subtle borders, hover lift
+- Navigation: left sidebar (if used in editor) with accent pills; top breadcrumb bar on internal docs
+- Data Visualization: minimal charts or no charts on Landing Page; if present, use low-contrast axes and colored series
+- Interactive Elements: primary actions with strong visual emphasis; secondary actions subdued
 
-### Design Philosophy
-- Modern, minimal, utilitarian dark UI for focused work.
-- Power-user oriented density with clear visual hierarchy.
-- Clarity, traceability, and control: visual cues for actions and audit artifacts.
-- UX goals: fast scanning of agent workflows and audit trails, low cognitive load for monitoring and approvals.
+Design Philosophy
+- Modern, dense, and developer-friendly marketing UI
+- Clarity, control, and trust through consistent visuals and subtle depth
+- Reusability and component-driven architecture to support future pages (docs, dashboards)
 
 ---
 
-Implementation Notes:
-- Enforce design tokens across components; central CSS-in-JS or design-token pipeline.
-- Ensure accessibility (contrast, keyboard navigation, ARIA) despite dark theme.
-- All micro-interactions should follow specified timing and easing.
+## Mandatory Coding Standards — Runtime Safety
 
-## Instructions to AI Development Tool
-1. Refer back to Project Concept, Problem Statement, and Solution to understand rationale.
-2. Ensure features/pages solve identified problems and adhere to safety/autonomy defaults.
-3. Validate all API & UI implementations against schema and audit requirements.
-4. Apply the UI Guide and Visual Style exactly across components.
-5. Maintain consistency with modular architecture, adapter patterns, and RBAC.
+CRITICAL: Apply these rules in ALL generated code
+1. Supabase-like results or mocked data: use nullish coalescing data ?? [] where appropriate
+2. Array methods safety: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+3. React useState defaults for arrays: useState<Type[]>([])
+4. API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+5. Optional chaining: use obj?.prop?.nested
+6. Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
-PROJECT CONTEXT
-- Product: LifeOps — Multi-Agent AI Operating System.
-- Scope assets: Product & API docs, onboarding assets, JSON schema library, LifeOps logos, UI component kit, agent persona templates, starter workflow templates, marketing illustrations.
-- Key features: Cronjobs engine, agent orchestration, approvals workflow, scoped memory, conflict resolution, audit trail, integrations (OpenAI/GPT-5 canonical, GitHub, Stripe, Plaid, QuickBooks/Xero, Health APIs), notifications (SendGrid, Firebase), storage (S3-compatible), search (Elasticsearch/Algolia), billing (Stripe).
-- Security/compliance: encryption at rest/in transit, RBAC, SSO, audit exports, retention policies.
-- Monetization: multi-tier subscription, marketplace for templates, usage-based LLM billing.
-- Challenges & mitigations: default suggest-only behavior, sandboxing, robust adapter abstraction, schema validation, human-in-loop approvals, enterprise deployment options (VPC/on-prem).
+---
 
-End of blueprint.
+This prompt provides a complete blueprint for building the Landing Page and the Documentation page in LifeOps, with detailed component specifications, data safety rules, visual guidelines, and acceptance criteria. It emphasizes null-safety, type-safe data handling, and alignment with the requested design system. If you’d like, I can tailor content placeholders (hero text, feature copy, pricing tiers, testimonials) to your brand voice or export-ready JSON structures for CMS ingestion.
 
 ## Implementation Notes
 

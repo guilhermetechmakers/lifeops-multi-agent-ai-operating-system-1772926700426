@@ -62,6 +62,7 @@ export default {
         "slide-in-left": "slideInLeft 0.3s ease-out",
         "slide-in-right": "slideInRight 0.3s ease-out",
         "scale-in": "scaleIn 0.2s ease-out",
+        "bounce-in": "bounceIn 0.6s ease-out",
       },
       keyframes: {
         fadeIn: {
@@ -86,6 +87,12 @@ export default {
         },
         scaleIn: {
           "0%": { opacity: "0", transform: "scale(0.9)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        bounceIn: {
+          "0%": { opacity: "0", transform: "scale(0.3)" },
+          "50%": { opacity: "1", transform: "scale(1.05)" },
+          "70%": { transform: "scale(0.9)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
       },
