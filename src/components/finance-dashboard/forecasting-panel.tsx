@@ -4,7 +4,9 @@
  */
 
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   AreaChart,
   Area,
@@ -71,7 +73,13 @@ export function ForecastingPanel({
           <BarChart3 className="h-5 w-5" />
           Forecast
         </CardTitle>
-        <div className="flex gap-1">
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard/finance/forecasting">
+            <Button variant="ghost" size="sm" className="h-7 text-xs">
+              Forecasting & Reports
+            </Button>
+          </Link>
+          <div className="flex gap-1">
           {(["30d", "60d"] as const).map((h) => (
             <button
               key={h}
@@ -87,6 +95,7 @@ export function ForecastingPanel({
               {h}
             </button>
           ))}
+          </div>
         </div>
       </CardHeader>
       <CardContent>

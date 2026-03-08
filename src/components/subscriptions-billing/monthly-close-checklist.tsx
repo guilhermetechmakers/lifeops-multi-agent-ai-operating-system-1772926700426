@@ -144,7 +144,7 @@ export function MonthlyCloseChecklist({
                             : onStart?.(t.id)
                         }
                       >
-                        {t.status === "in_progress" ? "Approve" : "Start"}
+                        {(t as { status?: string }).status === "in_progress" ? "Approve" : "Start"}
                       </Button>
                     )}
                   </div>

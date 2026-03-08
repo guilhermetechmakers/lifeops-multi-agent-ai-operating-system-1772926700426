@@ -97,9 +97,9 @@ export function AuditTrailPanel({
         ) : (
           <ScrollArea style={{ height: maxHeight }}>
             <div className="space-y-2 pr-4">
-              {data.map((e) => (
+              {(data ?? []).map((e) => (
                 <div
-                  key={e.id}
+                  key={e.id ?? `${e.entityId}-${e.timestamp}`}
                   className="rounded-lg border border-white/[0.03] p-2 text-sm"
                 >
                   <p className="font-medium">{e.action ?? "—"}</p>

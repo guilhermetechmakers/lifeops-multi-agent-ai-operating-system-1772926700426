@@ -25,6 +25,7 @@ import ArtifactsPage from "@/pages/artifacts";
 import { FinanceDashboardShell, FinanceOverview } from "@/components/finance-dashboard";
 import FinanceSubscriptionsPage from "@/pages/finance-subscriptions";
 import FinanceTransactionsPage from "@/pages/finance-transactions";
+import ForecastingReportsPage from "@/pages/forecasting-reports";
 import DashboardHealth from "@/pages/dashboard-health";
 import DashboardSettings from "@/pages/dashboard-settings";
 import { UserProfileLayout } from "@/components/profile";
@@ -104,6 +105,7 @@ function App() {
               <Route path="subscriptions" element={<FinanceSubscriptionsPage />} />
               <Route path="subscriptions-billing" element={<FinanceSubscriptionsPage />} />
               <Route path="transactions" element={<FinanceTransactionsPage />} />
+              <Route path="forecasting" element={<ForecastingReportsPage />} />
             </Route>
             <Route path="health" element={<DashboardHealth />} />
             <Route path="settings" element={<DashboardSettings />} />

@@ -290,6 +290,18 @@ export function DashboardLayout() {
                 Dashboard
               </NavLink>
               <NavLink
+                to="/dashboard/finance/forecasting"
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Forecasting & Reports
+              </NavLink>
+              <NavLink
                 to="/dashboard/finance/subscriptions"
                 className={({ isActive }) =>
                   `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${

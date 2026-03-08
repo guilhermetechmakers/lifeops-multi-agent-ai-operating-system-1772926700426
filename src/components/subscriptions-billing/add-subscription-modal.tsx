@@ -1,7 +1,9 @@
 /**
  * AddSubscriptionModal — Create new subscription with validation.
+ * Parent should close modal on create success; form resets when modal closes.
  */
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,10 +72,12 @@ export function AddSubscriptionModal({
     },
   });
 
+  useEffect(() => {
+    if (!open) reset();
+  }, [open, reset]);
+
   const onSubmit = (data: FormData) => {
     onCreate(data);
-    reset();
-    onOpenChange(false);
   };
 
   return (

@@ -148,16 +148,19 @@ export default function FinanceSubscriptionsPage() {
     endDate?: string | null;
     isTracked: boolean;
   }) => {
-    createSub.mutate({
-      vendor: data.vendor,
-      cadence: data.cadence,
-      amount: data.amount,
-      currency: data.currency,
-      startDate: data.startDate,
-      endDate: data.endDate ?? undefined,
-      status: "active",
-      isTracked: data.isTracked,
-    });
+    createSub.mutate(
+      {
+        vendor: data.vendor,
+        cadence: data.cadence,
+        amount: data.amount,
+        currency: data.currency,
+        startDate: data.startDate,
+        endDate: data.endDate ?? undefined,
+        status: "active",
+        isTracked: data.isTracked,
+      },
+      { onSuccess: () => setAddModalOpen(false) }
+    );
   };
 
   const handlePause = (sub: SubscriptionBilling) => {
