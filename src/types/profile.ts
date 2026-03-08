@@ -33,6 +33,7 @@ export interface ApiKey {
   user_id: string;
   keyHash: string;
   keyPreview?: string;
+  fingerprint?: string;
   scopes: string[];
   name: string;
   createdAt: string;
@@ -91,6 +92,12 @@ export interface TwoFactorConfig {
   details?: Record<string, unknown>;
 }
 
+export interface TwoFactorSetupResult {
+  qrCodeDataUrl?: string;
+  secret?: string;
+  backupCodes?: string[];
+}
+
 export interface NotificationPrefs {
   email: boolean;
   sms: boolean;
@@ -104,6 +111,7 @@ export interface UserPreference {
     defaultAgent: string;
     notificationPrefs: NotificationPrefs;
     dataExportConsent: boolean;
+    modulePreferences?: ModulePreferencesMap;
     [key: string]: unknown;
   };
   updatedAt: string;
@@ -130,4 +138,16 @@ export type ApiKeyCreateInput = CreateApiKeyInput;
 
 export interface UpdatePreferencesInput {
   preferences: Partial<UserPreference["preferences"]>;
+}
+
+/** Per-module preference for feature flags and defaults */
+export interface ModulePreference {
+  moduleName: string;
+  enabled: boolean;
+  settings?: Record<string, unknown>;
+}
+
+/** Extended preferences including module-level toggles */
+export interface ModulePreferencesMap {
+  [moduleName: string]: { enabled: boolean; settings?: Record<string, unknown> };
 }

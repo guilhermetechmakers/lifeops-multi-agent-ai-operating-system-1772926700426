@@ -2,7 +2,7 @@
  * Preferences panel: default agent behavior, autopilot settings, notification prefs.
  */
 
-import { Sliders, Bot, Zap } from "lucide-react";
+import { Sliders, Bot, Zap, Layers, RotateCcw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,14 @@ const AGENT_OPTIONS = [
   { value: "proactive", label: "Proactive" },
 ] as const;
 
+const MODULE_OPTIONS = [
+  { id: "cronjobs", label: "Cronjobs & automation" },
+  { id: "content", label: "Content library" },
+  { id: "finance", label: "Finance & billing" },
+  { id: "health", label: "Health tracking" },
+  { id: "analytics", label: "Analytics & reports" },
+] as const;
+
 export function PreferencesPanel() {
   const { preferences: prefs, isLoading } = usePreferences();
   const update = useUpdatePreferences();
@@ -25,6 +33,7 @@ export function PreferencesPanel() {
     defaultAgent?: string;
     notificationPrefs?: { email?: boolean; sms?: boolean; push?: boolean };
     dataExportConsent?: boolean;
+    modulePreferences?: Record<string, { enabled: boolean; settings?: Record<string, unknown> }>;
   };
   const autopilotEnabled = preferences.autopilotEnabled ?? false;
   const defaultAgent = preferences.defaultAgent ?? "assistant";
@@ -33,6 +42,12 @@ export function PreferencesPanel() {
   const smsNotif = notificationPrefs.sms ?? false;
   const pushNotif = notificationPrefs.push ?? true;
   const dataExportConsent = preferences.dataExportConsent ?? false;
+  const modulePrefsMap = preferences.modulePreferences ?? {};
+  const modulePrefs = MODULE_OPTIONS.map((opt) => ({
+    moduleName: opt.label,
+    id: opt.id,
+    enabled: modulePrefsMap[opt.id]?.enabled ?? true,
+  }));
 
   const handleAutopilotChange = (v: boolean) => {
     update.mutate({ autopilotEnabled: v });
@@ -54,6 +69,21 @@ export function PreferencesPanel() {
 
   const handleDataExportChange = (v: boolean) => {
     update.mutate({ dataExportConsent: v });
+  };
+
+  const handleModuleToggle = (moduleId: string, enabled: boolean) => {
+    const map = { ...modulePrefsMap, [moduleId]: { enabled, settings: modulePrefsMap[moduleId]?.settings } };
+    update.mutate({ modulePreferences: map });
+  };
+
+  const handleResetToDefaults = () => {
+    update.mutate({
+      modulePreferences: {},
+      autopilotEnabled: false,
+      defaultAgent: "assistant",
+      notificationPrefs: { email: true, sms: false, push: true },
+      dataExportConsent: false,
+    });
   };
 
   if (isLoading) {
@@ -200,6 +230,51 @@ export function PreferencesPanel() {
               aria-label="Data export consent"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-white/[0.03] bg-card">
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5" />
+              Module preferences
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Enable or disable features per module
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetToDefaults}
+            disabled={update.isPending}
+            className="shrink-0"
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Reset to defaults
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(modulePrefs ?? []).map((mod) => (
+            <div
+              key={mod.id}
+              className="flex items-center justify-between rounded-lg border border-white/[0.03] bg-secondary/50 p-4"
+            >
+              <div>
+                <p className="font-medium text-foreground">{mod.moduleName}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {mod.enabled ? "Enabled" : "Disabled"}
+                </p>
+              </div>
+              <Switch
+                checked={mod.enabled}
+                onCheckedChange={(v) => handleModuleToggle(mod.id, v)}
+                disabled={update.isPending}
+                aria-label={`Toggle ${mod.moduleName}`}
+              />
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

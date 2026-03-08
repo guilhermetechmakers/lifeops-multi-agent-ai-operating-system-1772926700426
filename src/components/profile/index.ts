@@ -8,3 +8,4 @@ export { SecurityPanel } from "./security-panel";
 export { ApiKeysPanel } from "./api-keys-panel";
 export { BillingPanel } from "./billing-panel";
 export { PreferencesPanel } from "./preferences-panel";
+export { SessionsPanel } from "./sessions-panel";

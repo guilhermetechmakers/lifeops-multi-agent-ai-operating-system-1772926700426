@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return () => { cancelled = true };
     }
 
-    const { token, user } = readStoredSession();
+    const { token } = readStoredSession();
     if (token) {
       authApi.getMe().then((me) => {
         if (cancelled) return;

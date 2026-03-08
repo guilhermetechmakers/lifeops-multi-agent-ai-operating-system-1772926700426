@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Key, Plus, Trash2, Copy, Loader2, Check } from "lucide-react";
+import { Key, Plus, Trash2, Copy, Loader2, Check, RotateCw, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import {
   useApiKeys,
   useCreateApiKey,
   useRevokeApiKey,
+  useRotateApiKey,
 } from "@/hooks/use-profile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -36,14 +37,37 @@ export function ApiKeysPanel() {
   const { items: keys, isLoading } = useApiKeys();
   const createKey = useCreateApiKey();
   const revokeKey = useRevokeApiKey();
+  const rotateKey = useRotateApiKey();
   const [newKeyResult, setNewKeyResult] = useState<ApiKeyCreateResult | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newScopes, setNewScopes] = useState<string[]>([]);
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [rotateId, setRotateId] = useState<string | null>(null);
+  const [rotateResult, setRotateResult] = useState<ApiKeyCreateResult | null>(null);
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
 
   const safeKeys = keys ?? [];
+
+  const toggleReveal = (id: string) => {
+    setRevealedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleRotate = () => {
+    if (!rotateId) return;
+    rotateKey.mutate(rotateId, {
+      onSuccess: (data) => {
+        setRotateResult(data ?? null);
+        setRotateId(null);
+      },
+    });
+  };
 
   const handleCreate = () => {
     if (!newName.trim()) {
@@ -69,8 +93,6 @@ export function ApiKeysPanel() {
     toast.success("Copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const closeNewKeyResult = () => setNewKeyResult(null);
 
   if (isLoading) {
     return (
@@ -111,12 +133,12 @@ export function ApiKeysPanel() {
               {(safeKeys ?? []).map((key) => (
                 <li
                   key={key.id}
-                  className="flex items-center justify-between rounded-lg border border-white/[0.03] bg-secondary/50 p-4"
+                  className="flex items-center justify-between gap-4 rounded-lg border border-white/[0.03] bg-secondary/50 p-4"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-foreground">{key.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                      {key.keyPreview ?? key.keyHash}
+                      {revealedIds.has(key.id) ? (key.keyHash ?? key.keyPreview ?? "••••••••") : (key.keyPreview ?? key.keyHash ?? "••••••••")}
                     </p>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       {(key.scopes ?? []).map((s) => (
@@ -127,23 +149,59 @@ export function ApiKeysPanel() {
                           {s}
                         </span>
                       ))}
+                      {key.fingerprint && (
+                        <span className="text-xs text-muted-foreground font-mono">
+                          Fingerprint: {key.fingerprint}
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         Created {formatDistanceToNow(new Date(key.createdAt), { addSuffix: true })}
                         {key.lastUsedAt && ` · Last used ${formatDistanceToNow(new Date(key.lastUsedAt), { addSuffix: true })}`}
                       </span>
                     </div>
                   </div>
-                  {key.revocable && (
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setRevokeId(key.id)}
-                      aria-label={`Revoke ${key.name}`}
+                      onClick={() => toggleReveal(key.id)}
+                      aria-label={revealedIds.has(key.id) ? "Mask key" : "Reveal key"}
+                      title={revealedIds.has(key.id) ? "Mask key" : "Reveal key (masked by default)"}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {revealedIds.has(key.id) ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
-                  )}
+                    {key.revocable && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRotateId(key.id)}
+                          disabled={rotateKey.isPending}
+                          aria-label={`Rotate ${key.name}`}
+                          title="Rotate key"
+                        >
+                          {rotateKey.isPending && rotateId === key.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RotateCw className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => setRevokeId(key.id)}
+                          aria-label={`Revoke ${key.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -212,12 +270,42 @@ export function ApiKeysPanel() {
         </Card>
       )}
 
-      {/* Show key once */}
-      {newKeyResult && (
+      {/* Rotate confirmation dialog */}
+      <AlertDialog open={!!rotateId} onOpenChange={() => setRotateId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rotate API key?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A new key will be generated. The old key will stop working immediately. Copy the new key — it won&apos;t be shown again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRotate}
+              disabled={rotateKey.isPending}
+            >
+              {rotateKey.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rotate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Show key once (create or rotate) */}
+      {(newKeyResult ?? rotateResult) && (
         <Card className="border-primary/30 bg-primary/5 animate-fade-in-up">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Key created — copy it now</CardTitle>
-            <Button variant="ghost" size="sm" onClick={closeNewKeyResult}>
+            <CardTitle className="text-base">
+              {rotateResult ? "Key rotated — copy it now" : "Key created — copy it now"}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setNewKeyResult(null);
+                setRotateResult(null);
+              }}
+            >
               Done
             </Button>
           </CardHeader>
@@ -225,13 +313,13 @@ export function ApiKeysPanel() {
             <div className="flex gap-2">
               <Input
                 readOnly
-                value={newKeyResult.key}
+                value={(newKeyResult ?? rotateResult)?.key ?? ""}
                 className="font-mono text-sm bg-background"
               />
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => copyKey(newKeyResult.key)}
+                onClick={() => copyKey((newKeyResult ?? rotateResult)?.key ?? "")}
                 aria-label="Copy key"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -268,6 +356,7 @@ export function ApiKeysPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </div>
   );
 }

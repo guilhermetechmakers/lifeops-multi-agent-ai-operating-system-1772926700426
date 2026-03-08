@@ -1,4 +1,4 @@
-import { Plug, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Plug, CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,16 +16,20 @@ const PROVIDER_ICONS: Record<string, React.ComponentType<{ className?: string }>
 export interface IntegrationCardProps {
   integration: Integration;
   onConnect?: (provider: string) => void;
+  onReconnect?: (provider: string) => void;
   onDisconnect?: (provider: string) => void;
   isConnecting?: boolean;
+  isReconnecting?: boolean;
   isDisconnecting?: boolean;
 }
 
 export function IntegrationCard({
   integration,
   onConnect,
+  onReconnect,
   onDisconnect,
   isConnecting = false,
+  isReconnecting = false,
   isDisconnecting = false,
 }: IntegrationCardProps) {
   const Icon = PROVIDER_ICONS[integration.provider] ?? Plug;
@@ -58,17 +62,31 @@ export function IntegrationCard({
             </div>
           </div>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex gap-2">
           {isConnected ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDisconnect?.(integration.provider)}
-              disabled={isDisconnecting}
-              className="text-destructive border-destructive/30 hover:bg-destructive/10"
-            >
-              {isDisconnecting ? "..." : "Disconnect"}
-            </Button>
+            <>
+              {onReconnect && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onReconnect(integration.provider)}
+                  disabled={isReconnecting}
+                  aria-label={`Reconnect ${displayName}`}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isReconnecting ? "animate-spin" : ""}`} />
+                  {!isReconnecting && "Reconnect"}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDisconnect?.(integration.provider)}
+                disabled={isDisconnecting}
+                className="text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
+                {isDisconnecting ? "..." : "Disconnect"}
+              </Button>
+            </>
           ) : (
             <Button
               size="sm"

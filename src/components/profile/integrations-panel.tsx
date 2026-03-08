@@ -1,12 +1,18 @@
 import { Plug } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IntegrationCard } from "./integration-card";
-import { useIntegrations, useConnectIntegration, useDisconnectIntegration } from "@/hooks/use-profile";
+import {
+  useIntegrations,
+  useConnectIntegration,
+  useReconnectIntegration,
+  useDisconnectIntegration,
+} from "@/hooks/use-profile";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function IntegrationsPanel() {
   const { items, isLoading } = useIntegrations();
   const connect = useConnectIntegration();
+  const reconnect = useReconnectIntegration();
   const disconnect = useDisconnectIntegration();
 
   const integrations = items ?? [];
@@ -43,8 +49,10 @@ export function IntegrationsPanel() {
                 key={integration.id}
                 integration={integration}
                 onConnect={(p) => connect.mutate(p)}
+                onReconnect={(p) => reconnect.mutate(p)}
                 onDisconnect={(p) => disconnect.mutate(p)}
                 isConnecting={connect.isPending}
+                isReconnecting={reconnect.isPending}
                 isDisconnecting={disconnect.isPending}
               />
             ))}

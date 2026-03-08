@@ -3,7 +3,7 @@
  * Uses settings API IntegrationAdapter[]; guards (adapters ?? []).
  */
 
-import { Plug, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Plug, CheckCircle, XCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,19 +104,38 @@ export function IntegrationsCard() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {isConnected ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => test.mutate(adapter.id)}
-                      disabled={isTesting}
-                      className="border-white/[0.03]"
-                    >
-                      {isTesting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Test connection"
-                      )}
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => connect.mutate({ id: adapter.id, credentials: {} })}
+                        disabled={connect.isPending}
+                        className="border-white/[0.03]"
+                        title="Reconnect / Re-authorize"
+                      >
+                        {connect.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Reconnect
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => test.mutate(adapter.id)}
+                        disabled={isTesting}
+                        className="border-white/[0.03]"
+                      >
+                        {isTesting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Test"
+                        )}
+                      </Button>
+                    </>
                   ) : (
                     <Button
                       size="sm"

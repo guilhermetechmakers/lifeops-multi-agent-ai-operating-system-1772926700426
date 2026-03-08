@@ -12,6 +12,7 @@ import type {
   Session,
   TwoFactorConfig,
   UserPreference,
+  ModulePreferencesMap,
 } from "@/types/profile";
 
 const MOCK_USER_ID = "user-1";
@@ -65,6 +66,7 @@ const mockApiKeys: ApiKey[] = [
     user_id: MOCK_USER_ID,
     keyHash: "sk_••••••••••••••••••••••••••••••••",
     keyPreview: "sk_life_...",
+    fingerprint: "a1b2c3d4",
     scopes: ["read", "write"],
     name: "Development",
     createdAt: "2024-02-01T00:00:00Z",
@@ -110,6 +112,7 @@ const mockSessions: Session[] = [
     lastActiveAt: "2024-03-08T14:00:00Z",
     expiresAt: "2024-03-14T08:00:00Z",
     revoked: false,
+    current: true,
   },
   {
     id: "sess-2",
@@ -141,6 +144,13 @@ const mockPreferences: UserPreference = {
       push: true,
     },
     dataExportConsent: false,
+    modulePreferences: {
+      cronjobs: { enabled: true },
+      content: { enabled: true },
+      finance: { enabled: true },
+      health: { enabled: true },
+      analytics: { enabled: true },
+    } as ModulePreferencesMap,
   },
   updatedAt: "2024-03-01T00:00:00Z",
 };
@@ -159,6 +169,24 @@ export const profileMockApi = {
   getIntegrations: async (): Promise<Integration[]> => {
     await new Promise((r) => setTimeout(r, 250));
     return [...mockIntegrations];
+  },
+
+  reconnectIntegration: async (provider: string): Promise<Integration> => {
+    await new Promise((r) => setTimeout(r, 400));
+    const existing = mockIntegrations.find((i) => i.provider === provider);
+    return {
+      ...(existing ?? {
+        id: `int-${provider}`,
+        user_id: MOCK_USER_ID,
+        provider,
+        status: "disconnected",
+        lastSyncedAt: null,
+        credentialsRef: null,
+      }),
+      status: "connected",
+      lastSyncedAt: new Date().toISOString(),
+      credentialsRef: `creds-${provider}`,
+    };
   },
 
   connectIntegration: async (provider: string): Promise<Integration> => {
@@ -212,6 +240,28 @@ export const profileMockApi = {
     await new Promise((r) => setTimeout(r, 200));
   },
 
+  rotateApiKey: async (id: string): Promise<ApiKeyCreateResult> => {
+    await new Promise((r) => setTimeout(r, 300));
+    const existing = mockApiKeys.find((k) => k.id === id);
+    const key = `sk_life_${Math.random().toString(36).slice(2, 20)}_${Date.now()}`;
+    return {
+      id: existing?.id ?? id,
+      key,
+      name: existing?.name ?? "Rotated",
+      scopes: existing?.scopes ?? ["read"],
+      createdAt: new Date().toISOString(),
+    };
+  },
+
+  revokeAllSessions: async (): Promise<void> => {
+    await new Promise((r) => setTimeout(r, 250));
+  },
+
+  uploadAvatar: async (_formData: FormData): Promise<{ avatarUrl: string }> => {
+    await new Promise((r) => setTimeout(r, 400));
+    return { avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=avatar" };
+  },
+
   getBilling: async (): Promise<Billing> => {
     await new Promise((r) => setTimeout(r, 250));
     return { ...mockBilling };
@@ -243,9 +293,13 @@ export const profileMockApi = {
 
   updatePreferences: async (prefs: Partial<UserPreference["preferences"]>): Promise<UserPreference> => {
     await new Promise((r) => setTimeout(r, 200));
+    const merged = { ...mockPreferences.preferences, ...prefs };
+    if (prefs.modulePreferences !== undefined) {
+      merged.modulePreferences = prefs.modulePreferences;
+    }
     return {
       ...mockPreferences,
-      preferences: { ...mockPreferences.preferences, ...prefs },
+      preferences: merged,
       updatedAt: new Date().toISOString(),
     };
   },

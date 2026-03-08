@@ -48,6 +48,7 @@ import {
   ApiKeysPanel,
   BillingPanel,
   PreferencesPanel,
+  SessionsPanel,
 } from "@/components/profile";
 import AboutHelpPage from "@/pages/about-help";
 import {
@@ -198,6 +199,7 @@ function App() {
               <Route path="integrations" element={<IntegrationsPanel />} />
               <Route path="security" element={<SecurityPanel />} />
               <Route path="api-keys" element={<ApiKeysPanel />} />
+              <Route path="sessions" element={<SessionsPanel />} />
               <Route path="billing" element={<BillingPanel />} />
               <Route path="preferences" element={<PreferencesPanel />} />
             </Route>

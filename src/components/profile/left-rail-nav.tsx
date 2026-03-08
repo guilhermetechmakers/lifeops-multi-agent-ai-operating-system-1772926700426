@@ -11,6 +11,7 @@ import {
   Key,
   CreditCard,
   Sliders,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const PROFILE_SECTIONS = [
   { to: "/dashboard/profile/integrations", label: "Integrations", icon: Plug },
   { to: "/dashboard/profile/security", label: "Security", icon: Shield },
   { to: "/dashboard/profile/api-keys", label: "API Keys", icon: Key },
+  { to: "/dashboard/profile/sessions", label: "Sessions", icon: Monitor },
   { to: "/dashboard/profile/billing", label: "Billing", icon: CreditCard },
   { to: "/dashboard/profile/preferences", label: "Preferences", icon: Sliders },
 ] as const;

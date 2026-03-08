@@ -88,6 +88,23 @@ export function useConnectIntegration() {
   });
 }
 
+export function useReconnectIntegration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (provider: string) => {
+      if (USE_MOCK) return profileMockApi.reconnectIntegration(provider);
+      return profileApi.reconnectIntegration(provider);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.integrations() });
+      toast.success("Integration reconnected");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to reconnect");
+    },
+  });
+}
+
 export function useDisconnectIntegration() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -148,6 +165,62 @@ export function useRevokeApiKey() {
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to revoke");
+    },
+  });
+}
+
+export function useRotateApiKey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (USE_MOCK) return profileMockApi.rotateApiKey(id);
+      return profileApi.rotateApiKey(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.apiKeys() });
+      toast.success("API key rotated. Copy the new key — it won't be shown again.");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to rotate API key");
+    },
+  });
+}
+
+export function useRevokeAllSessions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (USE_MOCK) return profileMockApi.revokeAllSessions();
+      return profileApi.revokeAllSessions();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.sessions() });
+      toast.success("All sessions revoked. You will need to sign in again.");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to revoke sessions");
+    },
+  });
+}
+
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      if (USE_MOCK) return profileMockApi.uploadAvatar(formData);
+      return profileApi.uploadAvatar(formData);
+    },
+    onSuccess: (data) => {
+      const avatarUrl = data?.avatarUrl ?? null;
+      queryClient.setQueryData(profileKeys.profile(), (prev: unknown) => {
+        const p = prev as { avatarUrl?: string | null } | null | undefined;
+        return p ? { ...p, avatarUrl } : prev;
+      });
+      queryClient.invalidateQueries({ queryKey: profileKeys.profile() });
+      toast.success("Avatar updated");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to upload avatar");
     },
   });
 }

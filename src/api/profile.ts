@@ -32,11 +32,17 @@ export const profileApi = {
   updateProfile: (input: ProfileUpdateInput) =>
     api.patch<UserProfile>(`${PROFILE_BASE}`, input),
 
+  uploadAvatar: (formData: FormData, onProgress?: (pct: number) => void) =>
+    api.upload<{ avatarUrl: string }>(`${PROFILE_BASE}/avatar`, formData, onProgress),
+
   getIntegrations: () =>
     api.get<Integration[]>(`${PROFILE_BASE}/integrations`).then((r) => extractArray<Integration>(r ?? {})),
 
   connectIntegration: (provider: string) =>
     api.post<Integration>(`${PROFILE_BASE}/integrations/${provider}/connect`, {}),
+
+  reconnectIntegration: (provider: string) =>
+    api.post<Integration>(`${PROFILE_BASE}/integrations/${provider}/reconnect`, {}),
 
   disconnectIntegration: (provider: string) =>
     api.post<Integration>(`${PROFILE_BASE}/integrations/${provider}/disconnect`, {}),
@@ -50,6 +56,9 @@ export const profileApi = {
   revokeApiKey: (id: string) =>
     api.delete<void>(`${PROFILE_BASE}/apikeys/${id}`),
 
+  rotateApiKey: (id: string) =>
+    api.post<ApiKeyCreateResult>(`${PROFILE_BASE}/apikeys/${id}/rotate`, {}),
+
   getBilling: () => api.get<Billing>(`${PROFILE_BASE}/billing`),
 
   getSessions: () =>
@@ -57,6 +66,9 @@ export const profileApi = {
 
   revokeSession: (sessionId: string) =>
     api.delete<void>(`${PROFILE_BASE}/sessions/${sessionId}`),
+
+  revokeAllSessions: () =>
+    api.delete<void>(`${PROFILE_BASE}/sessions`),
 
   getTwoFactor: () => api.get<TwoFactorConfig>(`${PROFILE_BASE}/2fa`),
 

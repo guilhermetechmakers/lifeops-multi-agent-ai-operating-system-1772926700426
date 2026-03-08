@@ -21,6 +21,7 @@ import {
 import {
   useSessions,
   useRevokeSession,
+  useRevokeAllSessions,
   useTwoFactor,
   useUpdateTwoFactor,
   useUpdatePassword,
@@ -46,9 +47,11 @@ export function SecurityPanel() {
   const { items: sessions, isLoading: sessionsLoading } = useSessions();
   const { config: twoFactor, isLoading: twoFactorLoading } = useTwoFactor();
   const revokeSession = useRevokeSession();
+  const revokeAllSessions = useRevokeAllSessions();
   const update2FA = useUpdateTwoFactor();
   const updatePassword = useUpdatePassword();
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [revokeAllOpen, setRevokeAllOpen] = useState(false);
 
   const form = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
@@ -168,14 +171,27 @@ export function SecurityPanel() {
       </Card>
 
       <Card className="border-white/[0.03] bg-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Monitor className="h-5 w-5" />
-            Active Sessions
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Manage devices where you're signed in
-          </p>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Active Sessions
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Manage devices where you&apos;re signed in
+            </p>
+          </div>
+          {sessionsList.length > 1 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={() => setRevokeAllOpen(true)}
+              disabled={revokeAllSessions.isPending}
+            >
+              Revoke all
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {sessionsLoading ? (
@@ -191,7 +207,14 @@ export function SecurityPanel() {
                   className="flex items-center justify-between rounded-lg border border-white/[0.03] bg-secondary/50 p-4"
                 >
                   <div>
-                    <p className="font-medium text-foreground">{session.device}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground">{session.device}</p>
+                      {session.current && (
+                        <span className="rounded bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+                          Current session
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Last active {formatDistanceToNow(new Date(session.lastActiveAt), { addSuffix: true })}
                       {session.ip && ` · ${session.ip}`}
@@ -236,6 +259,34 @@ export function SecurityPanel() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Revoke
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={revokeAllOpen} onOpenChange={setRevokeAllOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke all sessions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will sign you out on all devices. You will need to sign in again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                revokeAllSessions.mutate(undefined, {
+                  onSuccess: () => {
+                    setRevokeAllOpen(false);
+                    window.location.href = "/auth";
+                  },
+                });
+              }}
+              disabled={revokeAllSessions.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {revokeAllSessions.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Revoke all"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
