@@ -146,12 +146,9 @@ export function QuickAddModal({ open, onOpenChange, projectId, type }: QuickAddM
             <Label>Priority</Label>
             <Select
               value={String(form.watch("priority") ?? (isBacklog ? "Medium" : "medium"))}
-              onValueChange={(v: string) => {
-                const val = v ?? (isBacklog ? "Medium" : "medium");
-                form.setValue(
-                  "priority",
-                  val as "Low" | "Medium" | "High" | "low" | "medium" | "high" | "critical"
-                );
+              onValueChange={(v) => {
+                const val: string = v ?? (isBacklog ? "Medium" : "medium");
+                form.setValue("priority", val);
               }}
             >
               <SelectTrigger className="mt-1 border-white/[0.03]">

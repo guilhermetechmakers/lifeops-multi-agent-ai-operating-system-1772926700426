@@ -79,7 +79,7 @@ export interface Milestone {
   epicIds?: string[];
 }
 
-export type TicketStatus = "backlog" | "in_progress" | "in_review" | "done";
+export type TicketStatus = "backlog" | "ready" | "in_progress" | "in_review" | "done";
 export type TicketPriority = "low" | "medium" | "high" | "critical";
 
 export interface Ticket {
@@ -96,6 +96,66 @@ export interface Ticket {
   dueDate?: string;
   source?: string;
   estimate?: string;
+  labels?: string[];
+  sprintId?: string;
+  storyPoints?: number;
+}
+
+/** Ticket Board column definition */
+export interface BoardColumn {
+  id: TicketStatus | string;
+  projectId: string;
+  name: string;
+  order: number;
+  archived?: boolean;
+}
+
+/** Sprint for sprint planning */
+export interface Sprint {
+  id: string;
+  projectId: string;
+  name: string;
+  startDate?: string;
+  endDate?: string;
+  capacity?: number;
+  state?: string;
+}
+
+/** Agent automation rule */
+export interface AutomationRule {
+  id: string;
+  projectId: string;
+  name: string;
+  conditions?: Record<string, unknown>;
+  actions?: Record<string, unknown>;
+  enabled?: boolean;
+  createdAt?: string;
+}
+
+/** Agent/rule run execution */
+export interface RuleRun {
+  id: string;
+  ruleOrAgentId: string;
+  status: string;
+  logs?: string[];
+  artifacts?: string[];
+  startedAt?: string;
+  finishedAt?: string;
+}
+
+/** Run artifact reference */
+export interface RunArtifactRef {
+  id: string;
+  runId: string;
+  type: string;
+  contentRef: string;
+}
+
+/** User for assignee display */
+export interface TicketUser {
+  id: string;
+  name: string;
+  avatarUrl?: string;
 }
 
 export type PRStatus = "open" | "merged" | "closed";
