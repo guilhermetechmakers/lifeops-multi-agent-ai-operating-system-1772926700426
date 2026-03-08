@@ -180,9 +180,21 @@ function getOrCreateRun(runId: string, cronjobId?: string): RunDetail {
   return run;
 }
 
+export function getRunWithStatus(runId: string, status: RunDetail["status"], cronjobId?: string): RunDetail {
+  const run = getOrCreateRun(runId, cronjobId);
+  return { ...run, status };
+}
+
 export async function mockGetRunDetail(runId: string, cronjobId?: string): Promise<RunDetail | null> {
   await new Promise((r) => setTimeout(r, 300));
-  return getOrCreateRun(runId, cronjobId);
+  const run = getOrCreateRun(runId, cronjobId);
+  if (runId === "run-2" || runId.endsWith("-running")) {
+    return { ...run, status: "running", endedAt: undefined };
+  }
+  if (runId.endsWith("-paused")) {
+    return { ...run, status: "paused", endedAt: undefined };
+  }
+  return run;
 }
 
 export async function mockGetRunTrace(_runId: string): Promise<TraceEvent[]> {
@@ -214,31 +226,23 @@ export async function mockRevertRun(runId: string, _payload: RevertPayload): Pro
   };
 }
 
-export async function mockPauseRun(runId: string): Promise<{ success: boolean; state?: string; message?: string }> {
+export async function mockPauseRun(_runId: string): Promise<{ success: boolean; state: string }> {
   await new Promise((r) => setTimeout(r, 300));
-  return { success: true, state: "paused", message: "Run paused" };
+  return { success: true, state: "paused" };
 }
 
-export async function mockResumeRun(runId: string): Promise<{ success: boolean; state?: string; message?: string }> {
+export async function mockResumeRun(_runId: string): Promise<{ success: boolean; state: string }> {
   await new Promise((r) => setTimeout(r, 300));
-  return { success: true, state: "running", message: "Run resumed" };
+  return { success: true, state: "running" };
 }
 
-export async function mockHaltRun(runId: string): Promise<{ success: boolean; state?: string; message?: string }> {
+export async function mockHaltRun(_runId: string): Promise<{ success: boolean; state: string }> {
   await new Promise((r) => setTimeout(r, 300));
-  return { success: true, state: "aborted", message: "Run halted" };
-}
-
-export async function mockInjectHumanInput(
-  runId: string,
-  _payload: { input: Record<string, unknown>; checkpointId?: string; stepId?: string; agentId?: string; reason?: string }
-): Promise<{ success: boolean; state?: string; message?: string }> {
-  await new Promise((r) => setTimeout(r, 400));
-  return { success: true, message: "Human input injected" };
+  return { success: true, state: "halted" };
 }
 
 export async function mockInjectInput(
-  runId: string,
+  _runId: string,
   _payload: { stepId?: string; agentId?: string; input: Record<string, unknown>; reason?: string }
 ): Promise<{ success: boolean }> {
   await new Promise((r) => setTimeout(r, 400));

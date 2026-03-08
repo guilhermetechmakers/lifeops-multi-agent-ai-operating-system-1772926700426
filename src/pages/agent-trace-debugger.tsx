@@ -14,6 +14,9 @@ import {
   AssertionsPanel,
   RunTraceExporter,
   RunDetailsPanel,
+  VariableStatesInspector,
+  PerformanceHealthIndicators,
+  ExplainabilityPanel,
 } from "@/components/agent-trace";
 import {
   useTrace,
@@ -21,7 +24,14 @@ import {
   useRevertTrace,
   useExportTrace,
 } from "@/hooks/use-agent-trace";
+import {
+  usePauseRun,
+  useResumeRun,
+  useHaltRun,
+  useInjectInput,
+} from "@/hooks/use-run-details";
 import { mockAssertions, mockConflicts } from "@/api/debug-trace-mock";
+import { HumanInputInjectModal } from "@/components/run-details";
 import { cn } from "@/lib/utils";
 
 const RUN_PARAM = "runId";
@@ -46,8 +56,13 @@ export default function AgentTraceDebuggerPage() {
 
   const revertMutation = useRevertTrace(runId);
   const exportMutation = useExportTrace(runId);
+  const pauseMutation = usePauseRun(runId);
+  const resumeMutation = useResumeRun(runId);
+  const haltMutation = useHaltRun(runId);
+  const injectMutation = useInjectInput(runId);
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [injectModalOpen, setInjectModalOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedScopeId, setSelectedScopeId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -186,11 +201,28 @@ export default function AgentTraceDebuggerPage() {
                     />
                   </div>
                   <div className="space-y-4">
+                    <PerformanceHealthIndicators
+                      messageCount={messages.length}
+                      durationMs={traceData?.runId ? 60000 : 0}
+                      retryCount={0}
+                      safetyWarnings={[]}
+                    />
                     <ScopedMemoryInspector
                       scopes={scopes}
                       entries={entries}
                       selectedScopeId={scopeId}
                       onScopeChange={setSelectedScopeId}
+                    />
+                    <VariableStatesInspector
+                      steps={safeSteps}
+                      currentStepIndex={currentStepIndex}
+                      selectedAgentId={selectedAgentId ?? activeStepAgentId}
+                    />
+                    <ExplainabilityPanel
+                      steps={safeSteps}
+                      messages={messages}
+                      currentStepIndex={currentStepIndex}
+                      selectedAgentId={selectedAgentId ?? activeStepAgentId}
                     />
                     <RunDetailsPanel
                       runId={runId}
@@ -200,6 +232,14 @@ export default function AgentTraceDebuggerPage() {
                       artifactCount={traceData?.artifacts?.length ?? 0}
                       onRevert={handleRevert}
                       isReverting={revertMutation.isPending}
+                      onPause={() => pauseMutation.mutate()}
+                      onResume={() => resumeMutation.mutate()}
+                      onHalt={() => haltMutation.mutate()}
+                      onInjectInput={() => setInjectModalOpen(true)}
+                      isPausing={pauseMutation.isPending}
+                      isResuming={resumeMutation.isPending}
+                      isHalting={haltMutation.isPending}
+                      isInjecting={injectMutation.isPending}
                     />
                     <RunTraceExporter
                       runId={runId}
@@ -208,6 +248,15 @@ export default function AgentTraceDebuggerPage() {
                     />
                   </div>
                 </div>
+
+                <HumanInputInjectModal
+                  open={injectModalOpen}
+                  onOpenChange={setInjectModalOpen}
+                  onSubmit={(p) => injectMutation.mutate(p)}
+                  isSubmitting={injectMutation.isPending}
+                  runId={runId}
+                  agentId={selectedAgentId ?? activeStepAgentId ?? undefined}
+                />
 
                 <div className="mt-4">
                   <AssertionsPanel

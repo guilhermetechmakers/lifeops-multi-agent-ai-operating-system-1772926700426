@@ -18,6 +18,7 @@ import {
   Square,
   Send,
   FileJson,
+  Bug,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ export interface RunDetailsHeaderProps {
   onReRun?: () => void;
   onExportArtifacts?: () => void;
   onExportDebug?: () => void;
+  onOpenDebugger?: () => void;
   onPause?: () => void;
   onResume?: () => void;
   onHalt?: () => void;
@@ -78,6 +80,7 @@ export function RunDetailsHeader({
   onReRun,
   onExportArtifacts,
   onExportDebug,
+  onOpenDebugger,
   onPause,
   onResume,
   onHalt,
@@ -265,6 +268,18 @@ export function RunDetailsHeader({
               >
                 <FileJson className="h-4 w-4" />
                 Debug Export
+              </Button>
+            )}
+            {onOpenDebugger && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenDebugger}
+                className="gap-2"
+                aria-label="Open in Agent Trace Debugger"
+              >
+                <Bug className="h-4 w-4" />
+                Open Debugger
               </Button>
             )}
           </div>

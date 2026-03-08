@@ -100,16 +100,18 @@ export function RunOverviewPanel({ run, className }: RunOverviewPanelProps) {
           )}
 
           {/* Target */}
-          {target && typeof target === "object" && (
+          {target != null && (
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <Target className="h-3.5 w-3.5" />
                 Target
               </div>
               <p className="font-mono text-xs text-foreground">
-                {target.name ?? target.id ?? target.type ?? "—"}
+                {typeof target === "object"
+                  ? (target.name ?? target.id ?? target.type ?? "—")
+                  : String(target)}
               </p>
-              {target.type && (
+              {typeof target === "object" && target.type && (
                 <span className="text-xs text-muted-foreground">{target.type}</span>
               )}
             </div>

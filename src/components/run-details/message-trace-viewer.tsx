@@ -28,6 +28,7 @@ function TraceRow({
   onToggle: () => void;
 }) {
   const payload = event.fullPayload ?? event.payloadExcerpt;
+  const exp = event.explainability;
 
   return (
     <div className="rounded-md border border-white/[0.06] bg-secondary/20 transition-colors hover:bg-secondary/40">
@@ -50,6 +51,21 @@ function TraceRow({
             <span className="rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
               {event.type}
             </span>
+            {event.version != null && (
+              <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground" title="Version">
+                v{event.version}
+              </span>
+            )}
+            {event.ttl != null && (
+              <span className="text-[10px] text-muted-foreground" title="TTL (seconds)">
+                TTL:{event.ttl}s
+              </span>
+            )}
+            {event.state != null && (
+              <span className="rounded px-1 py-0.5 text-[10px] text-muted-foreground" title="Message state">
+                {event.state}
+              </span>
+            )}
             {event.outcome != null && (
               <span className="text-xs text-muted-foreground">({event.outcome})</span>
             )}
@@ -59,15 +75,35 @@ function TraceRow({
               {event.payloadExcerpt}
             </p>
           )}
+          {exp?.rationale != null && !isExpanded && (
+            <p className="mt-1 truncate text-xs text-muted-foreground italic">
+              {exp.rationale}
+            </p>
+          )}
         </div>
       </button>
-      {isExpanded && payload != null && (
-        <div className="border-t border-white/[0.06] px-3 pb-3 pt-1">
-          <pre className="max-h-40 overflow-auto rounded bg-background/80 p-2 font-mono text-xs text-foreground">
-            {typeof payload === "string"
-              ? payload
-              : JSON.stringify(payload, null, 2)}
-          </pre>
+      {isExpanded && (
+        <div className="border-t border-white/[0.06] space-y-2 px-3 pb-3 pt-1">
+          {exp != null && (
+            <div className="rounded bg-background/50 p-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Explainability</p>
+              <ul className="text-xs text-foreground space-y-0.5">
+                {exp.action != null && <li><span className="text-muted-foreground">Action:</span> {exp.action}</li>}
+                {exp.decision != null && <li><span className="text-muted-foreground">Decision:</span> {exp.decision}</li>}
+                {exp.rationale != null && <li><span className="text-muted-foreground">Rationale:</span> {exp.rationale}</li>}
+                {Array.isArray(exp.artifactIds) && exp.artifactIds.length > 0 && (
+                  <li><span className="text-muted-foreground">Artifacts:</span> {(exp.artifactIds ?? []).join(", ")}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {payload != null && (
+            <pre className="max-h-40 overflow-auto rounded bg-background/80 p-2 font-mono text-xs text-foreground">
+              {typeof payload === "string"
+                ? payload
+                : JSON.stringify(payload, null, 2)}
+            </pre>
+          )}
         </div>
       )}
     </div>

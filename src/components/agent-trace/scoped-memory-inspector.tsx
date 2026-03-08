@@ -88,8 +88,18 @@ export function ScopedMemoryInspector({
           ))}
         </div>
         {currentScope && (
-          <div className="pt-1">
+          <div className="pt-1 flex flex-wrap items-center gap-2">
             <EncryptionStatusBadge encrypted={currentScope.encrypted} />
+            {currentScope.ttl != null && (
+              <span className="text-[10px] text-muted-foreground" title="TTL (seconds)">
+                TTL: {currentScope.ttl}s
+              </span>
+            )}
+            {currentScope.governance != null && Object.keys(currentScope.governance).length > 0 && (
+              <span className="text-[10px] text-muted-foreground" title="Governance rules">
+                Governance: {Object.keys(currentScope.governance).length} rules
+              </span>
+            )}
           </div>
         )}
         <div className="relative pt-2">

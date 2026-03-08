@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -29,6 +29,7 @@ import {
   RelatedContextPanel,
   RunOverviewPanel,
   HumanInputInjectModal,
+  ApprovalQueue,
 } from "@/components/run-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -42,10 +43,12 @@ import {
   CheckCircle2,
   RotateCcw,
   History,
+  CheckSquare,
 } from "lucide-react";
 
 export default function RunDetailsPage() {
   const { id: cronjobId, runId } = useParams<{ id?: string; runId: string }>();
+  const navigate = useNavigate();
   const { run, trace, logs, diffs, artifacts, timing, reversibleActions, auditTrail, isLoading, error } =
     useRunDetails(runId ?? null, cronjobId);
   const revertMutation = useRevertRun(runId ?? null);
@@ -55,6 +58,21 @@ export default function RunDetailsPage() {
   const injectMutation = useInjectInput(runId ?? null);
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
   const [injectModalOpen, setInjectModalOpen] = useState(false);
+
+  const mockApprovals: import("@/components/run-details/approval-queue").ApprovalItem[] =
+    (run?.status === "paused" || run?.status === "running") && run
+      ? (run.pendingApprovals ?? []).length > 0
+        ? (run.pendingApprovals ?? []) as import("@/components/run-details/approval-queue").ApprovalItem[]
+        : [
+            {
+              id: "approval-1",
+              actionType: "human-review",
+              agentId: "agent-pr-triage",
+              context: { prCount: 3, threshold: 5 },
+              requestedAt: run.startedAt,
+            },
+          ]
+      : [];
 
   const canRevert =
     Boolean(run) &&
@@ -132,6 +150,13 @@ export default function RunDetailsPage() {
     toast.success("Debug trace exported");
   }, [run, trace, logs, diffs, artifacts, timing, runId]);
 
+  const handleOpenDebugger = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("runId", runId ?? "");
+    if (cronjobId) params.set("cronJobId", cronjobId);
+    navigate(`/dashboard/debug?${params.toString()}`);
+  }, [runId, cronjobId, navigate]);
+
   const handleInjectInput = useCallback(
     (payload: { stepId?: string; agentId?: string; input: Record<string, unknown>; reason?: string }) => {
       injectMutation.mutate(payload);
@@ -184,6 +209,7 @@ export default function RunDetailsPage() {
         onReRun={handleReRun}
         onExportArtifacts={handleExportArtifacts}
         onExportDebug={handleExportDebug}
+        onOpenDebugger={handleOpenDebugger}
         onPause={() => pauseMutation.mutate()}
         onResume={() => resumeMutation.mutate()}
         onHalt={() => haltMutation.mutate()}
@@ -241,6 +267,12 @@ export default function RunDetailsPage() {
             <History className="h-4 w-4" />
             Audit
           </TabsTrigger>
+          {(run?.status === "paused" || run?.status === "running") && (
+            <TabsTrigger value="approvals" className="gap-2">
+              <CheckSquare className="h-4 w-4" />
+              Approvals
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="inputs" className="space-y-4">
@@ -308,6 +340,16 @@ export default function RunDetailsPage() {
         <TabsContent value="audit" className="space-y-4">
           <AuditTrailPanel auditTrail={auditTrail} />
         </TabsContent>
+
+        {(run?.status === "paused" || run?.status === "running") && (
+          <TabsContent value="approvals" className="space-y-4">
+            <ApprovalQueue
+              items={Array.isArray(mockApprovals) ? mockApprovals : []}
+              onApprove={(id) => toast.success(`Approved ${id}`)}
+              onReject={(id) => toast.info(`Rejected ${id}`)}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </AnimatedPage>
   );

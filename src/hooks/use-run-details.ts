@@ -93,8 +93,10 @@ function invalidateRun(qc: ReturnType<typeof useQueryClient>, runId: string) {
 export function usePauseRun(runId: string | undefined | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      USE_MOCK ? mock.mockPauseRun(runId!) : runsApi.pause(runId!),
+    mutationFn: async (): Promise<{ success: boolean; state: string }> => {
+      const r = USE_MOCK ? await mock.mockPauseRun(runId!) : await runsApi.pause(runId!);
+      return { success: r.success, state: r.state ?? "paused" };
+    },
     onSuccess: () => {
       if (runId) invalidateRun(qc, runId);
       toast.success("Run paused");
@@ -106,8 +108,10 @@ export function usePauseRun(runId: string | undefined | null) {
 export function useResumeRun(runId: string | undefined | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      USE_MOCK ? mock.mockResumeRun(runId!) : runsApi.resume(runId!),
+    mutationFn: async (): Promise<{ success: boolean; state: string }> => {
+      const r = USE_MOCK ? await mock.mockResumeRun(runId!) : await runsApi.resume(runId!);
+      return { success: r.success, state: r.state ?? "running" };
+    },
     onSuccess: () => {
       if (runId) invalidateRun(qc, runId);
       toast.success("Run resumed");
@@ -119,8 +123,10 @@ export function useResumeRun(runId: string | undefined | null) {
 export function useHaltRun(runId: string | undefined | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      USE_MOCK ? mock.mockHaltRun(runId!) : runsApi.halt(runId!),
+    mutationFn: async (): Promise<{ success: boolean; state: string }> => {
+      const r = USE_MOCK ? await mock.mockHaltRun(runId!) : await runsApi.halt(runId!);
+      return { success: r.success, state: r.state ?? "halted" };
+    },
     onSuccess: () => {
       if (runId) invalidateRun(qc, runId);
       toast.success("Run halted");

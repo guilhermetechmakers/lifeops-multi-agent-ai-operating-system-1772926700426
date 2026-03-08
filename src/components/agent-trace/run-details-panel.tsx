@@ -4,7 +4,7 @@
  */
 
 import { Link } from "react-router-dom";
-import { ExternalLink, RotateCcw } from "lucide-react";
+import { ExternalLink, RotateCcw, Pause, Play, Square, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,14 @@ export interface RunDetailsPanelProps {
   artifactCount?: number;
   onRevert?: () => void;
   isReverting?: boolean;
+  onPause?: () => void;
+  onResume?: () => void;
+  onHalt?: () => void;
+  onInjectInput?: () => void;
+  isPausing?: boolean;
+  isResuming?: boolean;
+  isHalting?: boolean;
+  isInjecting?: boolean;
   className?: string;
 }
 
@@ -31,6 +39,14 @@ export function RunDetailsPanel({
   artifactCount = 0,
   onRevert,
   isReverting = false,
+  onPause,
+  onResume,
+  onHalt,
+  onInjectInput,
+  isPausing = false,
+  isResuming = false,
+  isHalting = false,
+  isInjecting = false,
   className,
 }: RunDetailsPanelProps) {
   const detailsUrl = cronJobId
@@ -72,6 +88,34 @@ export function RunDetailsPanel({
               <p>Artifacts: {artifactCount}</p>
             </div>
             <div className="flex flex-col gap-2">
+              {(status === "running" || status === "paused") && (
+                <div className="flex gap-1">
+                  {status === "running" && onPause && (
+                    <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={onPause} disabled={isPausing} aria-label="Pause">
+                      <Pause className="h-3.5 w-3.5" />
+                      {isPausing ? "…" : "Pause"}
+                    </Button>
+                  )}
+                  {status === "paused" && onResume && (
+                    <Button variant="outline" size="sm" className="flex-1 gap-1 text-teal" onClick={onResume} disabled={isResuming} aria-label="Resume">
+                      <Play className="h-3.5 w-3.5" />
+                      {isResuming ? "…" : "Resume"}
+                    </Button>
+                  )}
+                  {onHalt && (
+                    <Button variant="outline" size="sm" className="gap-1 text-destructive" onClick={onHalt} disabled={isHalting} aria-label="Halt">
+                      <Square className="h-3.5 w-3.5" />
+                      {isHalting ? "…" : "Halt"}
+                    </Button>
+                  )}
+                  {status === "paused" && onInjectInput && (
+                    <Button variant="outline" size="sm" className="gap-1" onClick={onInjectInput} disabled={isInjecting} aria-label="Inject input">
+                      <Send className="h-3.5 w-3.5" />
+                      {isInjecting ? "…" : "Inject"}
+                    </Button>
+                  )}
+                </div>
+              )}
               <Link to={detailsUrl}>
                 <Button variant="outline" size="sm" className="w-full border-white/[0.03]" asChild>
                   <span>

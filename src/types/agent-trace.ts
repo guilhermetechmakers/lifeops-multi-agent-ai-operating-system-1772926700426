@@ -34,6 +34,9 @@ export interface MemoryScope {
   encrypted: boolean;
   createdAt: string;
   updatedAt: string;
+  ttl?: number;
+  governance?: Record<string, unknown>;
+  expiresAt?: string;
 }
 
 export interface MemoryEntry {

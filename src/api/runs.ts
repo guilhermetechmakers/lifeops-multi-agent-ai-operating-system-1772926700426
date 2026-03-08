@@ -54,13 +54,13 @@ export const runsApi = {
     api.post<RevertResponse>(`${BASE}/${runId}/revert`, payload),
 
   pause: (runId: string, payload?: { reason?: string }) =>
-    api.post<{ success: boolean; state: string }>(`${BASE}/${runId}/pause`, payload ?? {}),
+    api.post<{ success: boolean; state?: string }>(`${BASE}/${runId}/pause`, payload ?? {}),
 
   resume: (runId: string, payload?: { reason?: string }) =>
-    api.post<{ success: boolean; state: string }>(`${BASE}/${runId}/resume`, payload ?? {}),
+    api.post<{ success: boolean; state?: string }>(`${BASE}/${runId}/resume`, payload ?? {}),
 
   halt: (runId: string, payload?: { reason?: string }) =>
-    api.post<{ success: boolean; state: string }>(`${BASE}/${runId}/halt`, payload ?? {}),
+    api.post<{ success: boolean; state?: string }>(`${BASE}/${runId}/halt`, payload ?? {}),
 
   injectInput: (runId: string, payload: { stepId?: string; agentId?: string; input: Record<string, unknown>; reason?: string }) =>
     api.post<{ success: boolean }>(`${BASE}/${runId}/inject-input`, payload),

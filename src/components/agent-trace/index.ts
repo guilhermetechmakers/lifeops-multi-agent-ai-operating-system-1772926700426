@@ -5,3 +5,6 @@ export { AssertionsPanel } from "./assertions-panel";
 export { RunTraceExporter } from "./run-trace-exporter";
 export { RunDetailsPanel } from "./run-details-panel";
 export { EncryptionStatusBadge } from "./encryption-status-badge";
+export { VariableStatesInspector } from "./variable-states-inspector";
+export { PerformanceHealthIndicators } from "./performance-health-indicators";
+export { ExplainabilityPanel } from "./explainability-panel";
