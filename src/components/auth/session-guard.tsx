@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface SessionGuardProps {
   children: ReactNode;
+  /** If provided, user must have at least one of these roles to access the route. */
+  requiredRoles?: string[];
 }
 
 /**
@@ -36,8 +38,9 @@ function SessionGuardSkeleton() {
 
 /**
  * Protects routes that require authentication. Redirects to /auth when not signed in.
+ * When requiredRoles is set, user must have at least one of the given roles (RBAC).
  */
-export function SessionGuard({ children }: SessionGuardProps) {
+export function SessionGuard({ children, requiredRoles }: SessionGuardProps) {
   const auth = useAuth();
   const location = useLocation();
 
@@ -47,6 +50,13 @@ export function SessionGuard({ children }: SessionGuardProps) {
 
   if (!auth.isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (requiredRoles && requiredRoles.length > 0) {
+    const hasRequiredRole = requiredRoles.some((role) => auth.hasRole(role));
+    if (!hasRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;

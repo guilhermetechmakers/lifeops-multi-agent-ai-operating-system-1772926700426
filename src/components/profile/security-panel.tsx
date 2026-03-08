@@ -68,7 +68,7 @@ export function SecurityPanel() {
     );
   });
 
-  const sessionsList = sessions ?? [];
+  const sessionsList = Array.isArray(sessions) ? sessions : [];
 
   return (
     <div className="space-y-6">
@@ -159,7 +159,8 @@ export function SecurityPanel() {
                 checked={twoFactor?.enabled ?? false}
                 onCheckedChange={(v) => update2FA.mutate(v)}
                 disabled={update2FA.isPending}
-                aria-label="Toggle 2FA"
+                aria-label="Toggle two-factor authentication"
+                aria-checked={twoFactor?.enabled ?? false}
               />
             </div>
           )}

@@ -73,28 +73,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   React.useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setState((s) => ({ ...s, isLoading: false }));
-      return;
-    }
     let cancelled = false;
-    supabaseAuth.supabaseGetSession().then((session) => {
-      if (cancelled) return;
-      if (session?.token && session?.user) {
-        writeStoredSession(session.token, session.user);
-        setState({
-          token: session.token,
-          user: session.user,
-          isLoading: false,
-          isAuthenticated: true,
-        });
-      } else {
-        setState((s) => ({ ...s, isLoading: false }));
-      }
-    }).catch(() => {
-      if (!cancelled) setState((s) => ({ ...s, isLoading: false }));
-    });
-    return () => { cancelled = true; };
+
+    if (isSupabaseConfigured()) {
+      supabaseAuth.supabaseGetSession().then((session) => {
+        if (cancelled) return;
+        if (session?.token && session?.user) {
+          writeStoredSession(session.token, session.user);
+          setState({
+            token: session.token,
+            user: session.user,
+            isLoading: false,
+            isAuthenticated: true,
+          });
+        } else {
+          setState((s) => ({ ...s, isLoading: false }));
+        }
+      }).catch(() => {
+        if (!cancelled) setState((s) => ({ ...s, isLoading: false }));
+      });
+      return () => { cancelled = true };
+    }
+
+    const { token, user } = readStoredSession();
+    if (token) {
+      authApi.getMe().then((me) => {
+        if (cancelled) return;
+        if (me) {
+          writeStoredSession(token, me);
+          setState({
+            token,
+            user: me,
+            isLoading: false,
+            isAuthenticated: true,
+          });
+        } else {
+          setState((s) => ({ ...s, isLoading: false }));
+        }
+      }).catch(() => {
+        if (!cancelled) setState((s) => ({ ...s, isLoading: false }));
+      });
+    } else {
+      setState((s) => ({ ...s, isLoading: false }));
+    }
+    return () => { cancelled = true };
   }, []);
 
   const setSession = React.useCallback((response: AuthResponse) => {
@@ -169,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasRole = React.useCallback(
     (role: string): boolean => {
-      const roles = state.user?.roles ?? [];
+      const roles = (state.user?.roles ?? []) as string[];
       return Array.isArray(roles) && roles.includes(role);
     },
     [state.user]

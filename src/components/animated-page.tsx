@@ -8,7 +8,7 @@ interface AnimatedPageProps {
 
 export function AnimatedPage({ children, className }: AnimatedPageProps) {
   return (
-    <div className={cn("animate-fade-in-up", className)}>
+    <div className={cn("animate-fade-in-up motion-reduce:animate-none", className)}>
       {children}
     </div>
   );

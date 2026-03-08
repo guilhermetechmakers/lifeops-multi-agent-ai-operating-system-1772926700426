@@ -75,6 +75,50 @@ export async function signup(input: SignUpInput): Promise<AuthResponse> {
   return data ?? { token: "", user: {} as User };
 }
 
+/** Get current user (auth/me) — for session rehydration and RBAC */
+export async function getMe(): Promise<User | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const session = await supabaseAuth.supabaseGetSession();
+      return session?.user ?? null;
+    } catch {
+      return null;
+    }
+  }
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 200));
+    return null;
+  }
+  try {
+    const data = await api.get<User | { user?: User }>(`${AUTH_BASE}/me`);
+    if (data && typeof data === "object" && "id" in data) return data as User;
+    const user = (data as { user?: User })?.user ?? null;
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+/** Refresh access token — backend returns new token + user */
+export async function refresh(): Promise<AuthResponse | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const session = await supabaseAuth.supabaseGetSession();
+      if (session?.token && session?.user) return session;
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  if (USE_MOCK) return null;
+  try {
+    const data = await api.post<AuthResponse>(`${AUTH_BASE}/refresh`, {});
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Initiate OAuth flow - returns redirect URL */
 export async function initiateOAuth(provider: string): Promise<{ url: string }> {
   if (USE_MOCK) {

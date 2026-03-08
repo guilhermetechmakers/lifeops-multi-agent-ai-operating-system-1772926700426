@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 export function BillingPanel() {
   const { billing, isLoading } = useBilling();
-  const invoices = billing?.invoices ?? [];
+  const invoices = Array.isArray(billing?.invoices) ? billing.invoices : [];
 
   if (isLoading) {
     return (

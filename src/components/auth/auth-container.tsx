@@ -139,10 +139,11 @@ export function AuthContainer({
             value={mode}
             onValueChange={(v) => setMode(v as "login" | "signup")}
             className="w-full"
+            aria-label="Sign in or create account"
           >
-            <TabsList className="grid w-full grid-cols-2 bg-secondary border border-white/[0.03]">
-              <TabsTrigger value="login">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-secondary border border-white/[0.03]" role="tablist">
+              <TabsTrigger value="login" role="tab" aria-selected={mode === "login"}>Sign in</TabsTrigger>
+              <TabsTrigger value="signup" role="tab" aria-selected={mode === "signup"}>Sign up</TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="mt-4 space-y-4">
               {isRateLimited && (

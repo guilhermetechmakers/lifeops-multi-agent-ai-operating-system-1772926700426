@@ -25,7 +25,7 @@ interface UseAuthEventsParams {
 const USE_MOCK =
   import.meta.env.VITE_USE_MOCK_AUTH === "true" || !import.meta.env.VITE_API_URL;
 
-function mockAuthEvents(userId?: string): AuthEvent[] {
+function mockAuthEvents(_userId?: string): AuthEvent[] {
   const base = [
     { id: "e1", action: "user.login", resource: "auth", timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
     { id: "e2", action: "session.created", resource: "auth", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
@@ -56,11 +56,10 @@ async function fetchAuthEvents(params: UseAuthEventsParams): Promise<AuthEvent[]
 }
 
 export function useAuthEvents(params: UseAuthEventsParams = {}) {
-  const { user, isAuthenticated } = useAuth();
-  const userId = user?.id;
+  const { isAuthenticated } = useAuth();
 
   const { data, isLoading } = useQuery({
-    queryKey: [AUTH_EVENTS_KEY, userId, params.currentUserOnly, params.limit],
+    queryKey: [AUTH_EVENTS_KEY, params.currentUserOnly, params.limit],
     queryFn: () => fetchAuthEvents(params),
     enabled: isAuthenticated,
     staleTime: 60_000,

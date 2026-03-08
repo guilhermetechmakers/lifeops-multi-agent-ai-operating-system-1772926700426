@@ -77,7 +77,7 @@ function mapSupabaseUserToLifeOps(supabaseUser: Record<string, unknown>): User {
     full_name: displayName || undefined,
     avatar_url: raw?.avatar_url as string | undefined,
     roles: Array.isArray(raw?.roles) ? (raw.roles as string[]) : ["user"],
-    providers: Array.isArray(supabaseUser?.app_metadata?.providers) ? (supabaseUser.app_metadata.providers as string[]) : ["email"],
+    providers: Array.isArray((supabaseUser?.app_metadata as Record<string, unknown>)?.providers) ? ((supabaseUser.app_metadata as Record<string, unknown>).providers as string[]) : ["email"],
     created_at: String(supabaseUser?.created_at ?? new Date().toISOString()),
     updated_at: String(supabaseUser?.updated_at ?? new Date().toISOString()),
   };

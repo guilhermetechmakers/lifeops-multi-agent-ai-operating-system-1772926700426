@@ -141,7 +141,7 @@ function App() {
             <Route path="runs/:runId" element={<RunDetailsPage />} />
             <Route path="cronjobs/:id/edit" element={<CronjobEditor />} />
             <Route path="approvals" element={<Approvals />} />
-            <Route path="admin" element={<AdminDashboardShell />}>
+            <Route path="admin" element={<SessionGuard requiredRoles={["admin"]}><AdminDashboardShell /></SessionGuard>}>
               <Route index element={<AdminOverview />} />
               <Route path="users" element={<UserManagementPage />} />
               <Route path="organizations" element={<OrganizationsPanel />} />
