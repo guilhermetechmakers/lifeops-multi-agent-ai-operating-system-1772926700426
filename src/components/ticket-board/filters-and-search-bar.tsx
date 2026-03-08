@@ -20,7 +20,6 @@ import type { Sprint } from "@/types/projects";
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
   { value: "backlog", label: "Backlog" },
-  { value: "ready", label: "Ready" },
   { value: "in_progress", label: "In Progress" },
   { value: "in_review", label: "In Review" },
   { value: "done", label: "Done" },
