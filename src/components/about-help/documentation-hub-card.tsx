@@ -1,95 +1,75 @@
 /**
- * DocumentationHubCard — Grid/list of documentation links and tutorials.
- * Guards all array operations with (docs ?? []).map(...)
+ * DocumentationHubCard — Grid of documentation links and tutorials.
+ * Data: docs array; guarded with (docs ?? []) and Array.isArray.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SectionTitle } from "./section-title";
 import { BookOpen, ExternalLink } from "lucide-react";
-import type { Doc } from "@/types/about-help";
 import { cn } from "@/lib/utils";
+import type { Doc } from "@/types/about-help";
 
-export interface DocumentationHubCardProps {
+interface DocumentationHubCardProps {
   docs?: Doc[] | null;
   className?: string;
 }
 
-const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  guide: BookOpen,
-  api: BookOpen,
-  reference: BookOpen,
-};
-
-export function DocumentationHubCard({
-  docs,
-  className,
-}: DocumentationHubCardProps) {
-  const items = Array.isArray(docs) ? docs : (docs ?? []);
+export function DocumentationHubCard({ docs, className }: DocumentationHubCardProps) {
+  const list = Array.isArray(docs) ? docs : (docs ?? []);
 
   return (
     <Card
       className={cn(
-        "card-health border-white/[0.03] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover",
+        "rounded-xl border border-white/[0.03] bg-gradient-to-b from-[#111213] to-[#1A1A1B] shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover",
         className
       )}
-      role="region"
-      aria-labelledby="docs-hub-title"
     >
-      <CardHeader>
-        <CardTitle id="docs-hub-title" className="text-base font-semibold">
-          Documentation & tutorials
-        </CardTitle>
+      <CardHeader className="pb-3">
+        <SectionTitle>Docs &amp; tutorials</SectionTitle>
+        <p className="text-sm text-muted-foreground">
+          Getting started guides, templates, and API references.
+        </p>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {(items ?? []).map((doc) => {
-            const Icon =
-              TYPE_ICONS[doc?.type ?? ""] ?? BookOpen;
-            const tags = Array.isArray(doc?.tags) ? doc.tags : [];
-            return (
-              <a
-                key={doc?.id ?? `doc-${Math.random()}`}
-                href={doc?.url ?? "#"}
-                className={cn(
-                  "group flex flex-col gap-2 rounded-lg border border-white/[0.03] bg-secondary/30 p-4 transition-all duration-200",
-                  "hover:-translate-y-0.5 hover:border-white/[0.06] hover:shadow-md"
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-md bg-primary/10 p-2">
-                    <Icon className="h-4 w-4 text-primary" aria-hidden />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-foreground group-hover:text-primary">
-                      {doc?.title ?? "Untitled"}
-                    </h3>
-                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                      {doc?.description ?? ""}
-                    </p>
-                  </div>
-                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      <CardContent className="p-0 pt-0">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {list.map((doc) => (
+            <a
+              key={doc.id}
+              href={doc.url ?? "#"}
+              className={cn(
+                "group flex flex-col gap-2 rounded-lg border border-white/[0.03] bg-card/50 p-4 transition-all duration-200",
+                "hover:-translate-y-0.5 hover:border-white/[0.06] hover:shadow-md"
+              )}
+              aria-label={`Open ${doc.title}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <BookOpen className="h-4 w-4 text-primary" aria-hidden />
                 </div>
-                {tags.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {tags.slice(0, 3).map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="text-[10px] font-normal"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                {doc.type ? (
+                  <Badge variant="secondary" className="shrink-0 text-xs">
+                    {doc.type}
+                  </Badge>
                 ) : null}
-              </a>
-            );
-          })}
+              </div>
+              <h3 className="font-medium text-foreground group-hover:text-primary">
+                {doc.title ?? "Untitled"}
+              </h3>
+              {doc.description ? (
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {doc.description}
+                </p>
+              ) : null}
+              <span className="mt-1 inline-flex items-center text-xs text-muted-foreground group-hover:text-foreground">
+                Open <ExternalLink className="ml-1 h-3 w-3" />
+              </span>
+            </a>
+          ))}
         </div>
-        {items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No documentation available yet.
+        {list.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-white/10 py-6 text-center text-sm text-muted-foreground">
+            No documentation links yet.
           </p>
         ) : null}
       </CardContent>

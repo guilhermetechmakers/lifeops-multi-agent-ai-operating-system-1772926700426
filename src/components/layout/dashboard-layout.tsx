@@ -16,6 +16,7 @@ import {
   Menu,
   Search,
   Bell,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,17 @@ export function DashboardLayout() {
                 {!collapsed && <span>Profile</span>}
               </span>
             </Link>
+            <Link to="/dashboard/about-help">
+              <span
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  location.pathname.startsWith("/dashboard/about-help") && "bg-primary text-primary-foreground"
+                )}
+              >
+                <HelpCircle className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>About & Help</span>}
+              </span>
+            </Link>
             <Link to="/dashboard/settings">
               <span
                 className={cn(
@@ -124,6 +136,17 @@ export function DashboardLayout() {
               >
                 <Settings className="h-5 w-5 shrink-0" />
                 {!collapsed && <span>Settings</span>}
+              </span>
+            </Link>
+            <Link to="/dashboard/about-help">
+              <span
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  location.pathname === "/dashboard/about-help" && "bg-primary text-primary-foreground"
+                )}
+              >
+                <HelpCircle className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>About &amp; Help</span>}
               </span>
             </Link>
           </nav>
@@ -180,10 +203,37 @@ export function DashboardLayout() {
                 Profile
               </span>
             </Link>
+            <Link to="/dashboard/about-help" onClick={() => setMobileOpen(false)}>
+              <span className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                location.pathname.startsWith("/dashboard/about-help")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}>
+                <HelpCircle className="h-5 w-5 shrink-0" />
+                About & Help
+              </span>
+            </Link>
             <Link to="/dashboard/settings" onClick={() => setMobileOpen(false)}>
-              <span className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
+              <span className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                location.pathname === "/dashboard/settings"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}>
                 <Settings className="h-5 w-5 shrink-0" />
                 Settings
+              </span>
+            </Link>
+            <Link to="/dashboard/about-help" onClick={() => setMobileOpen(false)}>
+              <span className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                location.pathname === "/dashboard/about-help"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}>
+                <HelpCircle className="h-5 w-5 shrink-0" />
+                About &amp; Help
               </span>
             </Link>
           </nav>

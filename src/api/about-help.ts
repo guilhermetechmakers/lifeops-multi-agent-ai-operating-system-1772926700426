@@ -1,20 +1,20 @@
 /**
  * About & Help API layer.
- * Uses mock data for now; structure ready for future backend integration.
+ * Mock data for now; ready for GET /about-help/docs, /faqs, POST /support/tickets, GET /support/tickets, GET /onboarding/steps, GET /community/channels.
  */
 
 import type {
-  AboutInfo,
+  AboutHeaderData,
   Doc,
   FAQ,
   Ticket,
   OnboardingStep,
   Channel,
   SearchResult,
-  VersionHistory,
+  VersionHistoryItem,
 } from "@/types/about-help";
 
-const MOCK_ABOUT: AboutInfo = {
+const aboutHeader: AboutHeaderData = {
   version: "1.0.0",
   company: "LifeOps",
   mission:
@@ -23,273 +23,207 @@ const MOCK_ABOUT: AboutInfo = {
   termsUrl: "/terms",
 };
 
-const MOCK_DOCS: Doc[] = [
+const docs: Doc[] = [
   {
-    id: "d1",
+    id: "1",
     title: "Getting started",
-    description: "Set up your workspace, connect integrations, and run your first agent.",
-    url: "/docs#getting-started",
+    description: "Set up your workspace, connect integrations, and run your first automation.",
+    url: "/docs#overview",
     type: "guide",
-    tags: ["onboarding", "setup"],
+    tag: ["onboarding"],
   },
   {
-    id: "d2",
+    id: "2",
     title: "API reference",
     description: "REST and GraphQL APIs for cronjobs, runs, approvals, and agent templates.",
     url: "/docs#api",
     type: "api",
-    tags: ["api", "developers"],
+    tag: ["developers"],
   },
   {
-    id: "d3",
+    id: "3",
     title: "Connector guides",
-    description: "Integration guides for GitHub, Stripe, Plaid, and Health APIs.",
+    description: "Integration guides for GitHub, Stripe, Plaid, QuickBooks, and Health APIs.",
     url: "/docs#connectors",
     type: "guide",
-    tags: ["integrations", "oauth"],
+    tag: ["integrations"],
   },
   {
-    id: "d4",
+    id: "4",
     title: "Agent template catalog",
     description: "Pre-built agent personas for PR triage, content drafting, and habit coaching.",
     url: "/docs#agent-templates",
     type: "reference",
-    tags: ["agents", "templates"],
+    tag: ["agents"],
   },
   {
-    id: "d5",
+    id: "5",
     title: "Workflow schema",
     description: "Cronjob object model, schedule builder, trigger types, and retry policies.",
-    url: "/docs#workflow",
+    url: "/docs#cronjobs",
     type: "reference",
-    tags: ["cronjobs", "schema"],
+    tag: ["developers"],
   },
 ];
 
-const MOCK_FAQS: FAQ[] = [
+const faqs: FAQ[] = [
   {
-    id: "f1",
+    id: "1",
     question: "How do I create my first cronjob?",
     answer:
-      "Navigate to Dashboard > Cronjobs > New. Choose a template or start from scratch. Configure the schedule, triggers, and agent assignments. Save and enable the cronjob.",
+      "Go to Dashboard → Cronjobs → New. Choose a trigger (schedule or webhook), define inputs, and select an agent template. Save and enable the cronjob.",
     tags: ["cronjobs", "getting-started"],
   },
   {
-    id: "f2",
-    question: "How does the approval flow work?",
+    id: "2",
+    question: "How is billing calculated?",
     answer:
-      "When an agent proposes an action that requires human approval, it appears in the Approvals queue. You can approve, reject, or modify the proposal. Approved actions are logged in the audit trail.",
-    tags: ["approvals", "agents"],
+      "Billing is based on run minutes and agent invocations. Check Settings → Billing for usage and limits.",
+    tags: ["billing", "account"],
   },
   {
-    id: "f3",
-    question: "Can I connect my own calendar for health sync?",
+    id: "3",
+    question: "Can I connect my own calendar for health plans?",
     answer:
-      "Yes. Go to Settings > Integrations and connect Google Calendar or Outlook. Training and meal plans can sync events to your calendar.",
-    tags: ["health", "integrations", "calendar"],
+      "Yes. In Health → Training & Meal Planner, use Sync to calendar to push sessions and reminders to Google Calendar or Outlook.",
+    tags: ["health", "integrations"],
   },
   {
-    id: "f4",
-    question: "How do I export my data?",
+    id: "4",
+    question: "Where are audit logs stored?",
     answer:
-      "Navigate to Settings > Exports. You can export habits, training plans, transactions, and audit logs. Exports are delivered as JSON or CSV.",
-    tags: ["settings", "data", "export"],
+      "Audit logs are available under Settings → Data & security. Export is supported for compliance.",
+    tags: ["security", "settings"],
   },
   {
-    id: "f5",
-    question: "What happens if an agent run fails?",
+    id: "5",
+    question: "How do I get support?",
     answer:
-      "Failed runs are logged with error details. You can retry from the run details page. Configure retry policies in the cronjob schema.",
-    tags: ["cronjobs", "runs", "errors"],
+      "Use the Contact support form on this page or email support@lifeops.io. We respond within 24 hours.",
+    tags: ["support"],
   },
 ];
 
-const MOCK_TICKETS: Ticket[] = [
+const tickets: Ticket[] = [
   {
     id: "t1",
-    subject: "Question about habit reminders",
-    status: "resolved",
-    updatedAt: "2025-03-01T14:00:00Z",
+    subject: "API rate limit increase",
+    status: "open",
+    updatedAt: "2025-03-01T12:00:00Z",
     priority: "medium",
   },
   {
     id: "t2",
-    subject: "API rate limit clarification",
-    status: "in_progress",
-    updatedAt: "2025-03-07T10:30:00Z",
-    priority: "high",
+    subject: "Health dashboard sync",
+    status: "resolved",
+    updatedAt: "2025-02-28T09:00:00Z",
+    priority: "low",
   },
 ];
 
-const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
-  {
-    id: "o1",
-    title: "Create your first cronjob",
-    description: "Set up a simple scheduled task to understand the workflow.",
-    completed: true,
-    link: "/dashboard/cronjobs/new",
-  },
-  {
-    id: "o2",
-    title: "Connect an integration",
-    description: "Link GitHub, Stripe, or another connector to enable agent actions.",
-    completed: true,
-    link: "/dashboard/settings/integrations",
-  },
-  {
-    id: "o3",
-    title: "Review an approval",
-    description: "Check the Approvals queue and approve or reject a proposal.",
-    completed: false,
-    link: "/dashboard/approvals",
-  },
-  {
-    id: "o4",
-    title: "Set up health habits",
-    description: "Create a habit in the Health module and track your first streak.",
-    completed: false,
-    link: "/dashboard/health/habits",
-  },
+const onboardingSteps: OnboardingStep[] = [
+  { id: "1", title: "Create an account", description: "Sign up and verify your email.", completed: true, link: "/auth" },
+  { id: "2", title: "Connect first integration", description: "Link GitHub, Stripe, or another connector.", completed: true, link: "/dashboard/settings" },
+  { id: "3", title: "Run your first cronjob", description: "Create and run a simple scheduled task.", completed: false, link: "/dashboard/cronjobs" },
+  { id: "4", title: "Explore Health module", description: "Set up habits or a training plan.", completed: false, link: "/dashboard/health" },
+  { id: "5", title: "Invite a team member", description: "Add collaborators and set permissions.", completed: false, link: "/dashboard/settings" },
 ];
 
-const MOCK_CHANNELS: Channel[] = [
-  {
-    id: "c1",
-    name: "Discord",
-    url: "https://discord.gg/lifeops",
-    emoji: "💬",
-    description: "Community chat, support, and announcements.",
-  },
-  {
-    id: "c2",
-    name: "GitHub Discussions",
-    url: "https://github.com/lifeops/discussions",
-    emoji: "🐙",
-    description: "Feature requests, bug reports, and technical discussions.",
-  },
+const channels: Channel[] = [
+  { id: "1", name: "Discord", url: "https://discord.gg/lifeops", emoji: "💬", description: "Community chat and support." },
+  { id: "2", name: "GitHub Discussions", url: "https://github.com/lifeops/discussions", emoji: "🐙", description: "Feature requests and bug reports." },
+  { id: "3", name: "Forum", url: "https://forum.lifeops.io", emoji: "📋", description: "Guides and best practices." },
 ];
 
-const MOCK_VERSION_HISTORY: VersionHistory[] = [
-  { version: "1.0.0", date: "2025-03-01", notes: "Initial release with core modules." },
-  { version: "0.9.0", date: "2025-02-15", notes: "Beta: Health dashboard, forecasting." },
+const versionHistory: VersionHistoryItem[] = [
+  { version: "1.0.0", date: "2025-03-01", notes: "Initial release. Health dashboard, habits, training & meal planner." },
+  { version: "0.9.0", date: "2025-02-15", notes: "Beta: Finance module, forecasting, approvals." },
 ];
 
-/**
- * Fetch about info. Returns validated data with safe defaults.
- */
-export async function fetchAboutInfo(): Promise<AboutInfo> {
-  const data = MOCK_ABOUT ?? {};
-  return {
-    version: data.version ?? "0.0.0",
-    company: data.company ?? "LifeOps",
-    mission: data.mission ?? "",
-    privacyUrl: data.privacyUrl,
-    termsUrl: data.termsUrl,
-  };
+/** Normalize API list response; use when integrating real backend. */
+function asArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : [];
 }
 
-/**
- * Fetch documentation list. Returns array; guards against non-array.
- */
-export async function fetchDocs(): Promise<Doc[]> {
-  const raw = MOCK_DOCS ?? [];
-  return Array.isArray(raw) ? raw : [];
+export async function getAboutHeader(): Promise<AboutHeaderData> {
+  return Promise.resolve(aboutHeader);
 }
 
-/**
- * Fetch FAQ list. Returns array; guards against non-array.
- */
-export async function fetchFAQs(): Promise<FAQ[]> {
-  const raw = MOCK_FAQS ?? [];
-  return Array.isArray(raw) ? raw : [];
+export async function getDocs(): Promise<Doc[]> {
+  return Promise.resolve(asArray(docs));
 }
 
-/**
- * Fetch support tickets. Returns array; guards against non-array.
- */
-export async function fetchTickets(): Promise<Ticket[]> {
-  const raw = MOCK_TICKETS ?? [];
-  return Array.isArray(raw) ? raw : [];
+export async function getFaqs(): Promise<FAQ[]> {
+  return Promise.resolve(asArray(faqs));
 }
 
-/**
- * Fetch onboarding steps. Returns array; guards against non-array.
- */
-export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
-  const raw = MOCK_ONBOARDING_STEPS ?? [];
-  return Array.isArray(raw) ? raw : [];
+export async function getTickets(): Promise<Ticket[]> {
+  return Promise.resolve(asArray(tickets));
 }
 
-/**
- * Fetch community channels. Returns array; guards against non-array.
- */
-export async function fetchChannels(): Promise<Channel[]> {
-  const raw = MOCK_CHANNELS ?? [];
-  return Array.isArray(raw) ? raw : [];
+export async function getOnboardingSteps(): Promise<OnboardingStep[]> {
+  return Promise.resolve(asArray(onboardingSteps));
 }
 
-/**
- * Fetch version history. Returns array; guards against non-array.
- */
-export async function fetchVersionHistory(): Promise<VersionHistory[]> {
-  const raw = MOCK_VERSION_HISTORY ?? [];
-  return Array.isArray(raw) ? raw : [];
+export async function getChannels(): Promise<Channel[]> {
+  return Promise.resolve(asArray(channels));
 }
 
-/**
- * Search across docs and FAQs. Returns array; guards against non-array.
- */
-export function searchAboutHelp(query: string): SearchResult[] {
-  const q = (query ?? "").toLowerCase().trim();
+export async function getVersionHistory(): Promise<VersionHistoryItem[]> {
+  return Promise.resolve(asArray(versionHistory));
+}
+
+/** Global search across docs and FAQs; returns results for dropdown. */
+export function searchDocsAndFaqs(query: string, docsList: Doc[], faqsList: FAQ[]): SearchResult[] {
+  const q = (query ?? "").trim().toLowerCase();
   if (!q) return [];
-
-  const docs = MOCK_DOCS ?? [];
-  const faqs = MOCK_FAQS ?? [];
   const results: SearchResult[] = [];
-
-  (Array.isArray(docs) ? docs : []).forEach((d) => {
-    const match =
-      (d.title ?? "").toLowerCase().includes(q) ||
-      (d.description ?? "").toLowerCase().includes(q) ||
-      ((d.tags ?? []) as string[]).some((t) => t.toLowerCase().includes(q));
-    if (match) {
+  const docItems = Array.isArray(docsList) ? docsList : [];
+  const faqItems = Array.isArray(faqsList) ? faqsList : [];
+  docItems.forEach((d) => {
+    if (d.title.toLowerCase().includes(q) || (d.description ?? "").toLowerCase().includes(q)) {
       results.push({
-        id: d.id,
-        title: d.title ?? "",
+        id: `doc-${d.id}`,
+        title: d.title,
         type: "doc",
-        snippet: d.description ?? "",
+        snippet: (d.description ?? "").slice(0, 80) + (d.description && d.description.length > 80 ? "…" : ""),
         url: d.url ?? "#",
       });
     }
   });
-
-  (Array.isArray(faqs) ? faqs : []).forEach((f) => {
-    const match =
+  faqItems.forEach((f) => {
+    if (
       (f.question ?? "").toLowerCase().includes(q) ||
-      (f.answer ?? "").toLowerCase().includes(q) ||
-      ((f.tags ?? []) as string[]).some((t) => t.toLowerCase().includes(q));
-    if (match) {
+      (f.answer ?? "").toLowerCase().includes(q)
+    ) {
       results.push({
-        id: f.id,
+        id: `faq-${f.id}`,
         title: f.question ?? "",
         type: "faq",
-        snippet: (f.answer ?? "").slice(0, 100) + "...",
+        snippet: (f.answer ?? "").slice(0, 80) + (f.answer && f.answer.length > 80 ? "…" : ""),
         url: `#faq-${f.id}`,
       });
     }
   });
-
-  return results;
+  return results.slice(0, 8);
 }
 
-/**
- * Submit support ticket. Placeholder for future API.
- */
+/** Submit support ticket (mock). Future: POST /support/tickets */
 export async function submitTicket(_payload: {
   name: string;
   email: string;
   subject: string;
   message: string;
 }): Promise<{ id: string }> {
-  return { id: `t-${Date.now()}` };
+  return Promise.resolve({ id: `t-${Date.now()}` });
+}
+
+/** Toggle onboarding step completed (mock). Future: PATCH /onboarding/steps/:id */
+export async function setOnboardingStepCompleted(
+  stepId: string,
+  completed: boolean
+): Promise<void> {
+  const step = onboardingSteps.find((s) => s.id === stepId);
+  if (step) step.completed = completed;
+  return Promise.resolve();
 }

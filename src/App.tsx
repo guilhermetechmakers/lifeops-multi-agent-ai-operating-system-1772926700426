@@ -45,6 +45,7 @@ import {
   BillingPanel,
   PreferencesPanel,
 } from "@/components/profile";
+import AboutHelpPage from "@/pages/about-help";
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
@@ -75,6 +76,7 @@ function App() {
             <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/docs" element={<Docs />} />
+          <Route path="/about-help" element={<Navigate to="/dashboard/about-help" replace />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/auth/forgot" element={<PasswordResetPage />} />
@@ -121,6 +123,7 @@ function App() {
               <Route path="habits" element={<HealthHabitsPage />} />
               <Route path="training-meals" element={<HealthTrainingMealsPage />} />
             </Route>
+            <Route path="about-help" element={<AboutHelpPage />} />
             <Route path="settings" element={<SettingsDashboardShell />}>
               <Route index element={<SettingsGlobalPage />} />
               <Route path="profile" element={<SettingsProfileRedirectPage />} />

@@ -1,9 +1,9 @@
 /**
  * About & Help page data models.
- * Compatible with future API integration.
+ * Compatible with future API: GET /about-help/docs, /faqs, /support/tickets, /onboarding/steps, /community/channels.
  */
 
-export interface AboutInfo {
+export interface AboutHeaderData {
   version: string;
   company: string;
   mission: string;
@@ -17,7 +17,7 @@ export interface Doc {
   description: string;
   url: string;
   type: string;
-  tags?: string[];
+  tag?: string[];
 }
 
 export interface FAQ {
@@ -30,11 +30,9 @@ export interface FAQ {
 export interface Ticket {
   id: string;
   subject: string;
-  message?: string;
-  status: "open" | "in_progress" | "resolved" | "closed";
-  createdAt?: string;
+  status: string;
   updatedAt: string;
-  priority?: "low" | "medium" | "high";
+  priority?: string;
 }
 
 export interface OnboardingStep {
@@ -56,12 +54,12 @@ export interface Channel {
 export interface SearchResult {
   id: string;
   title: string;
-  type: "doc" | "faq";
+  type: string;
   snippet: string;
   url: string;
 }
 
-export interface VersionHistory {
+export interface VersionHistoryItem {
   version: string;
   date: string;
   notes: string;
