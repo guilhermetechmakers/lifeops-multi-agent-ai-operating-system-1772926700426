@@ -123,10 +123,12 @@ export function ProjectHeader({ projectId, onStatusChange, className }: ProjectH
         >
           {status}
         </Badge>
-        <Button variant="outline" size="sm" className="gap-1.5 border-white/[0.03]">
-          <Plug className="h-4 w-4" />
-          Connect integrations
-        </Button>
+        <Link to={`/dashboard/projects/${projectId}/ci-integrations`}>
+          <Button variant="outline" size="sm" className="gap-1.5 border-white/[0.03]">
+            <Plug className="h-4 w-4" />
+            Connect integrations
+          </Button>
+        </Link>
       </div>
     </header>
   );

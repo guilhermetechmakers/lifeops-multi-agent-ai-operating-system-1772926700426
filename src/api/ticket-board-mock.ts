@@ -7,9 +7,10 @@ import type { Column, Sprint, Rule, Run, Artifact } from "@/types/ticket-board";
 
 const columns: Column[] = [
   { id: "backlog", projectId: "proj-1", name: "Backlog", order: 0 },
-  { id: "in_progress", projectId: "proj-1", name: "In Progress", order: 1 },
-  { id: "in_review", projectId: "proj-1", name: "In Review", order: 2 },
-  { id: "done", projectId: "proj-1", name: "Done", order: 3 },
+  { id: "ready", projectId: "proj-1", name: "Ready", order: 1 },
+  { id: "in_progress", projectId: "proj-1", name: "In Progress", order: 2 },
+  { id: "in_review", projectId: "proj-1", name: "In Review", order: 3 },
+  { id: "done", projectId: "proj-1", name: "Done", order: 4 },
 ];
 
 const sprints: Sprint[] = [
@@ -60,6 +61,19 @@ const tickets: Ticket[] = [
     createdAt: "2025-02-10T00:00:00Z",
     updatedAt: "2025-02-10T00:00:00Z",
     estimate: "2d",
+  },
+  {
+    id: "t2b",
+    projectId: "proj-1",
+    title: "Document API contracts",
+    status: "ready",
+    priority: "low",
+    labels: ["docs"],
+    sprintId: "sprint-1",
+    storyPoints: 2,
+    createdAt: "2025-02-12T00:00:00Z",
+    updatedAt: "2025-03-01T00:00:00Z",
+    estimate: "1d",
   },
   {
     id: "t3",

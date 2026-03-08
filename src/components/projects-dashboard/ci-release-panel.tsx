@@ -50,7 +50,14 @@ export function CIReleasePanel({ projectId, className }: CIReleasePanelProps) {
   return (
     <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">CI & Releases</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">CI & Releases</CardTitle>
+          <Link to={`/dashboard/projects/${projectId}/ci-integrations`}>
+            <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-foreground">
+              Manage
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>

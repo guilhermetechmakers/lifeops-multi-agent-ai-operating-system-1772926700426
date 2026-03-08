@@ -43,14 +43,15 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "shrink-0 w-64 rounded-xl border border-white/[0.03] bg-[#151718]/80 transition-all duration-200 min-h-[320px] flex flex-col",
-        isOver && "ring-2 ring-primary/40 bg-[#151718]"
+        "card-project-detail shrink-0 w-64 min-h-[320px] flex flex-col transition-all duration-200",
+        isOver && "ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
       )}
+      style={{ minHeight: "320px" }}
     >
-      <div className="px-4 py-3 border-b border-white/[0.03] flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-[rgb(255_255_255/0.03)] flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">{title}</span>
-          <span className="text-xs text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+          <span className="text-xs text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded-md">
             {ticketList.length}
           </span>
         </div>
@@ -59,7 +60,7 @@ export function KanbanColumn({
             <div className="w-12 h-1.5 rounded-full bg-secondary overflow-hidden">
               <div
                 className={cn(
-                  "h-full rounded-full transition-all",
+                  "h-full rounded-full transition-all duration-200",
                   (usedCapacity ?? 0) > (capacity ?? 0)
                     ? "bg-destructive"
                     : "bg-teal"

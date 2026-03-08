@@ -52,9 +52,9 @@ export function TicketCard({
       {...attributes}
       {...listeners}
       className={cn(
-        "cursor-grab active:cursor-grabbing border-white/[0.03] bg-card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
-        isDragging && "opacity-90 shadow-lg rotate-1 scale-[1.02]",
-        isSelected && "ring-2 ring-primary/50"
+        "cursor-grab active:cursor-grabbing border-[rgb(255_255_255/0.03)] bg-card rounded-lg transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5",
+        isDragging && "opacity-90 shadow-lg scale-[1.02]",
+        isSelected && "ring-2 ring-primary/50 ring-offset-2 ring-offset-background"
       )}
     >
       <CardContent className="p-4">
@@ -128,7 +128,7 @@ export function TicketCard({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="border-white/[0.03] bg-[#151718]">
+            <DropdownMenuContent align="end" className="border-[rgb(255_255_255/0.03)] bg-card">
               <DropdownMenuItem onClick={() => onInlineEdit?.(ticket)}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Quick edit

@@ -90,14 +90,14 @@ export function AgentAutomationPanel({ projectId, className }: AgentAutomationPa
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-32 rounded" />
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-14 w-full" />
+              <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -107,7 +107,7 @@ export function AgentAutomationPanel({ projectId, className }: AgentAutomationPa
 
   return (
     <>
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -139,7 +139,7 @@ export function AgentAutomationPanel({ projectId, className }: AgentAutomationPa
                 {(ruleList ?? []).map((rule) => (
                   <div
                     key={rule.id}
-                    className="rounded-lg border border-white/[0.03] bg-secondary/30 p-3"
+                    className="rounded-lg border border-[rgb(255_255_255/0.03)] bg-secondary/30 p-3 transition-all duration-200 hover:bg-secondary/40"
                   >
                     <div className="flex items-center gap-2">
                       <button
@@ -219,7 +219,7 @@ export function AgentAutomationPanel({ projectId, className }: AgentAutomationPa
       </Card>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="border-white/[0.03] bg-[#151718]">
+        <DialogContent className="border-[rgb(255_255_255/0.03)] bg-card">
           <DialogHeader>
             <DialogTitle>Create automation rule</DialogTitle>
           </DialogHeader>
@@ -231,7 +231,7 @@ export function AgentAutomationPanel({ projectId, className }: AgentAutomationPa
                 value={newRuleName}
                 onChange={(e) => setNewRuleName(e.target.value)}
                 placeholder="e.g. Auto-assign high priority"
-                className="mt-1 border-white/[0.03]"
+                className="mt-1 border-[rgb(255_255_255/0.03)]"
               />
             </div>
             <p className="text-xs text-muted-foreground">

@@ -20,6 +20,7 @@ import type { Sprint } from "@/types/projects";
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
   { value: "backlog", label: "Backlog" },
+  { value: "ready", label: "Ready" },
   { value: "in_progress", label: "In Progress" },
   { value: "in_review", label: "In Review" },
   { value: "done", label: "Done" },
@@ -79,7 +80,7 @@ export function FiltersAndSearchBar({
             placeholder="Search tickets..."
             value={searchValue}
             onChange={(e) => handleSearch(e.target.value)}
-            className="pl-9 border-white/[0.03] bg-secondary/30"
+            className="pl-9 border-[rgb(255_255_255/0.03)] bg-secondary/30"
             aria-label="Search tickets"
           />
         </div>
@@ -107,7 +108,7 @@ export function FiltersAndSearchBar({
         )}
       </div>
       {showFilters && (
-        <div className="flex flex-wrap gap-3 p-3 rounded-lg border border-white/[0.03] bg-secondary/20 animate-fade-in">
+        <div className="flex flex-wrap gap-3 p-3 rounded-lg border border-[rgb(255_255_255/0.03)] bg-secondary/20 animate-fade-in">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Status</span>
             <Select
@@ -119,7 +120,7 @@ export function FiltersAndSearchBar({
                 })
               }
             >
-              <SelectTrigger className="w-36 h-8 border-white/[0.03]">
+              <SelectTrigger className="w-36 h-8 border-[rgb(255_255_255/0.03)]">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -142,7 +143,7 @@ export function FiltersAndSearchBar({
                 })
               }
             >
-              <SelectTrigger className="w-36 h-8 border-white/[0.03]">
+              <SelectTrigger className="w-36 h-8 border-[rgb(255_255_255/0.03)]">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -165,7 +166,7 @@ export function FiltersAndSearchBar({
                 })
               }
             >
-              <SelectTrigger className="w-40 h-8 border-white/[0.03]">
+              <SelectTrigger className="w-40 h-8 border-[rgb(255_255_255/0.03)]">
                 <SelectValue placeholder="All sprints" />
               </SelectTrigger>
               <SelectContent>

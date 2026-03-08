@@ -3,7 +3,6 @@
  */
 
 import { api } from "@/lib/api";
-import { safeArray } from "@/lib/api";
 import type {
   Integration,
   Connector,

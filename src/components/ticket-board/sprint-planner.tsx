@@ -51,14 +51,14 @@ export function SprintPlanner({
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-5 w-28 rounded" />
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[1, 2].map((i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+              <Skeleton key={i} className="h-24 w-full rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -67,7 +67,7 @@ export function SprintPlanner({
   }
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -94,8 +94,8 @@ export function SprintPlanner({
                     type="button"
                     onClick={() => onSprintSelect?.(isActive ? null : sprint.id)}
                     className={cn(
-                      "w-full text-left rounded-lg border p-3 transition-all",
-                      "border-white/[0.03] bg-secondary/30 hover:bg-secondary/50",
+                      "w-full text-left rounded-lg border p-3 transition-all duration-200",
+                      "border-[rgb(255_255_255/0.03)] bg-secondary/30 hover:bg-secondary/50",
                       isActive && "ring-2 ring-primary/40 bg-secondary/50"
                     )}
                   >

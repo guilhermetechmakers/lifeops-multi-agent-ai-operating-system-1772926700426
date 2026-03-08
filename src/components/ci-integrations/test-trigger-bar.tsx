@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface TestTriggerBarProps {
-  integrationId: string;
+  integrationId?: string;
   environments?: string[];
   onTriggerRun: () => void;
   onFetchLogs?: () => void;
@@ -24,7 +24,7 @@ export interface TestTriggerBarProps {
 }
 
 export function TestTriggerBar({
-  integrationId,
+  integrationId: _integrationId,
   environments = ["staging", "production"],
   onTriggerRun,
   onFetchLogs,

@@ -2,23 +2,24 @@
  * IntegrationCard — provider type, status badge, last run, health score, quick actions.
  */
 
-import { Play, FileText, RefreshCw, Settings, GitBranch, Zap, Server } from "lucide-react";
+import { Settings, GitBranch, Zap, Server } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConnectorStatusPanel } from "./connector-status-panel";
 import { TestTriggerBar } from "./test-trigger-bar";
 import { HealthMetricsPanel } from "./health-metrics-panel";
+import { useConnectors } from "@/hooks/use-integrations";
 import { cn } from "@/lib/utils";
-import type { Integration, Connector } from "@/types/integrations";
+import type { Integration } from "@/types/integrations";
 
 export interface IntegrationCardProps {
   integration: Integration;
-  connectors?: Connector[];
   onTestTrigger?: () => void;
   onViewLogs?: () => void;
   onRerun?: () => void;
   onEdit?: () => void;
+  onViewRunHistory?: () => void;
   isRunning?: boolean;
   className?: string;
 }
@@ -55,14 +56,15 @@ function formatRelativeTime(iso: string | undefined): string {
 
 export function IntegrationCard({
   integration,
-  connectors = [],
   onTestTrigger,
   onViewLogs,
   onRerun,
   onEdit,
+  onViewRunHistory,
   isRunning = false,
   className,
 }: IntegrationCardProps) {
+  const { items: connectors } = useConnectors(integration.id);
   const Icon = TYPE_ICONS[integration.type] ?? Zap;
   const statusVariant = STATUS_VARIANTS[integration.status] ?? "outline";
 
@@ -88,57 +90,31 @@ export function IntegrationCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <HealthMetricsPanel healthScore={integration.healthScore} />
-        <ConnectorStatusPanel connectors={connectors} />
+        <ConnectorStatusPanel connectors={connectors ?? []} />
         <TestTriggerBar
           integrationId={integration.id}
-          onTriggerRun={onTestTrigger}
-          onFetchLogs={onViewLogs}
-          onReplayWebhook={onRerun}
+          onTriggerRun={onTestTrigger ?? (() => {})}
+          onFetchLogs={onViewLogs ?? undefined}
+          onReplayWebhook={onRerun ?? undefined}
           isRunning={isRunning}
         />
-        <div className="flex flex-wrap gap-2">
-          {onTestTrigger && (
-            <Button
-              variant="default"
-              size="sm"
-              className="gap-1.5"
-              onClick={onTestTrigger}
-              disabled={isRunning}
-              aria-label={`Trigger test for ${integration.name}`}
-            >
-              <Play className="h-4 w-4" />
-              Test
-            </Button>
-          )}
-          {onViewLogs && (
+        <div className="flex gap-2">
+          {onViewRunHistory && (
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 border-white/[0.03]"
-              onClick={onViewLogs}
-              aria-label={`View logs for ${integration.name}`}
+              className="flex-1 gap-1.5 border-white/[0.03]"
+              onClick={onViewRunHistory}
+              aria-label={`View run history for ${integration.name}`}
             >
-              <FileText className="h-4 w-4" />
-              Logs
-            </Button>
-          )}
-          {onRerun && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 border-white/[0.03]"
-              onClick={onRerun}
-              aria-label={`Rerun ${integration.name}`}
-            >
-              <RefreshCw className="h-4 w-4" />
-              Rerun
+              Run history
             </Button>
           )}
           {onEdit && (
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 border-white/[0.03]"
+              className="flex-1 gap-1.5 border-white/[0.03]"
               onClick={onEdit}
               aria-label={`Edit ${integration.name}`}
             >

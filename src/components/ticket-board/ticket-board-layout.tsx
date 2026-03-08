@@ -38,6 +38,7 @@ import { QuickAddModal } from "@/components/project-detail/quick-add-modal";
 
 const COLUMNS: { id: TicketStatus; label: string }[] = [
   { id: "backlog", label: "Backlog" },
+  { id: "ready", label: "Ready" },
   { id: "in_progress", label: "In Progress" },
   { id: "in_review", label: "In Review" },
   { id: "done", label: "Done" },
@@ -168,10 +169,10 @@ export function TicketBoardLayout({
 
   if (isLoading) {
     return (
-      <div className={cn("space-y-4", className)}>
-        <Skeleton className="h-10 w-full max-w-md" />
+      <div className={cn("space-y-6", className)}>
+        <Skeleton className="h-10 w-full max-w-md rounded-lg" />
         <div className="flex gap-4 overflow-x-auto pb-2">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-80 w-64 shrink-0 rounded-xl" />
           ))}
         </div>
@@ -180,7 +181,7 @@ export function TicketBoardLayout({
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Header: project context, sprint selector, quick actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <FiltersAndSearchBar
@@ -189,14 +190,18 @@ export function TicketBoardLayout({
           sprints={sprintList}
         />
         <div className="flex items-center gap-2 shrink-0">
-          <Button size="sm" className="gap-1.5" onClick={() => setQuickAddOpen(true)}>
+          <Button
+            size="sm"
+            className="gap-1.5 transition-transform duration-200 hover:scale-[1.02]"
+            onClick={() => setQuickAddOpen(true)}
+          >
             <Plus className="h-4 w-4" />
             Create Ticket
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="gap-1.5"
+            className="gap-1.5 transition-transform duration-200 hover:scale-[1.02]"
             onClick={() => runAutomation.mutate(undefined)}
           >
             <Zap className="h-4 w-4" />
@@ -224,7 +229,7 @@ export function TicketBoardLayout({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex gap-4 overflow-x-auto pb-4 min-h-[360px]">
+            <div className="flex gap-4 overflow-x-auto pb-4 min-h-[360px] animate-fade-in">
               {COLUMNS.map((col) => {
                 const cap = getColumnCapacity(col.id);
                 return (

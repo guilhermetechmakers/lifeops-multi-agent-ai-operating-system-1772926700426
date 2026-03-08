@@ -38,14 +38,14 @@ export function ProjectDetailTimelinePanel({
 
   if (isLoading) {
     return (
-      <Card className={cn("border-white/[0.03] bg-card", className)}>
+      <Card className={cn("card-project-detail", className)}>
         <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-5 w-36 rounded" />
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -54,7 +54,7 @@ export function ProjectDetailTimelinePanel({
   }
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card", className)}>
+    <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
@@ -81,8 +81,8 @@ export function ProjectDetailTimelinePanel({
                       setExpandedId(expandedId === run.id ? null : run.id)
                     }
                     className={cn(
-                      "w-full flex items-center gap-2 rounded-lg border border-white/[0.03] p-2.5",
-                      "text-left hover:bg-secondary/30 transition-colors"
+                      "w-full flex items-center gap-2 rounded-lg border border-[rgb(255_255_255/0.03)] p-2.5",
+                      "text-left hover:bg-secondary/30 transition-colors duration-200"
                     )}
                   >
                     {expandedId === run.id ? (
@@ -113,7 +113,7 @@ export function ProjectDetailTimelinePanel({
                   </button>
                   {expandedId === run.id && (
                     <div className="pl-8 pr-2 pb-2">
-                      <div className="rounded border border-white/[0.03] bg-secondary/20 p-2 text-xs font-mono text-muted-foreground space-y-1 animate-fade-in">
+                      <div className="rounded border border-[rgb(255_255_255/0.03)] bg-secondary/20 p-2 text-xs font-mono text-muted-foreground space-y-1 animate-fade-in">
                         {(run.logs ?? []).map((log, i) => (
                           <div key={i}>{log}</div>
                         ))}

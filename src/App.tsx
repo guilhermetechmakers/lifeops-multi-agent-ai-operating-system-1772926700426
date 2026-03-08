@@ -35,6 +35,7 @@ import {
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
+import CIIntegrationsPage from "@/pages/ci-integrations";
 import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
@@ -84,6 +85,7 @@ function App() {
               <Route index element={<ProjectsDashboardShell />} />
               <Route path=":projectId" element={<ProjectsDashboardShell />} />
               <Route path=":projectId/detail" element={<ProjectDetail />} />
+              <Route path=":projectId/ci-integrations" element={<CIIntegrationsPage />} />
               <Route path=":projectId/ticket-board" element={<TicketBoardPage />} />
             </Route>
             <Route path="content" element={<DashboardContent />} />

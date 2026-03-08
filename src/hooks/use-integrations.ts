@@ -207,6 +207,21 @@ export function useRepoLinks(projectId: string | undefined | null) {
   return { ...query, items };
 }
 
+export function useSaveRepoLink(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<RepoLink>) =>
+      USE_MOCK
+        ? mock.mockSaveRepoLink(projectId, data)
+        : integrationsApi.saveRepoLink(projectId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.repoLinks(projectId) });
+      toast.success("Repository link saved");
+    },
+    onError: (err: Error) => toast.error(err.message ?? "Failed to save"),
+  });
+}
+
 export function useIntegrationAudit(
   projectId: string | undefined | null,
   integrationId?: string | null

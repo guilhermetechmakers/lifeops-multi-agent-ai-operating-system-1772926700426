@@ -56,6 +56,11 @@ export function ProjectDetailLinkCard({ projectId, className }: ProjectDetailLin
               Ticket Board
             </Button>
           </Link>
+          <Link to={`/dashboard/projects/${projectId}/ci-integrations`}>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              CI & Integrations
+            </Button>
+          </Link>
           <Link to={`/dashboard/projects/${projectId}/detail`}>
             <Button variant="outline" size="sm" className="gap-1.5">
               View detail
