@@ -19,7 +19,7 @@ const aboutHeader: AboutHeaderData = {
   company: "LifeOps",
   mission:
     "LifeOps is a multi-agent AI operating system for teams who want to automate projects, content, finance, and health with safe, auditable workflows and human-in-the-loop controls.",
-  privacyUrl: "/privacy",
+  privacyUrl: "/privacy-policy",
   termsUrl: "/terms",
 };
 

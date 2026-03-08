@@ -5,7 +5,7 @@ import { ValidationMessage } from "./validation-message";
 import { cn } from "@/lib/utils";
 
 const TERMS_URL = "/docs#terms";
-const PRIVACY_URL = "/docs#privacy";
+const PRIVACY_URL = "/privacy-policy";
 
 export interface LegalConsentChecklistProps {
   name?: string;

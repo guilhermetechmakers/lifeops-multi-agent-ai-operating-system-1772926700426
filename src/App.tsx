@@ -67,6 +67,7 @@ import CronjobEditor from "@/pages/cronjob-editor";
 import CIIntegrationsPage from "@/pages/ci-integrations";
 import AgentTraceDebuggerPage from "@/pages/agent-trace-debugger";
 import { AnalyticsDashboardShell, AnalyticsReportsOverview } from "@/components/analytics-reports";
+import PrivacyPolicyPage from "@/pages/privacy-policy";
 import NotFound from "@/pages/not-found";
 import ServerErrorPage from "@/pages/server-error";
 import {
@@ -113,6 +114,8 @@ function App() {
           <Route path="/auth/reset" element={<PasswordResetPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
           <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />

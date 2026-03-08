@@ -32,7 +32,7 @@ const defaultSections: FooterSection[] = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "/privacy" },
+      { label: "Privacy", href: "/privacy-policy" },
       { label: "Terms", href: "/terms" },
       { label: "Cookies", href: "/cookies" },
     ],
