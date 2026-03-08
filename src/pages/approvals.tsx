@@ -1,318 +1,215 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+/**
+ * Approvals Queue page: list of items requiring review with detail panel.
+ * Filters in URL; two-pane layout (list | detail); responsive drawer on narrow.
+ */
+
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
-import { Check, X, ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  FiltersBar,
+  ItemCardRow,
+  EmptyState,
+  ApprovalDetailPanel,
+} from "@/components/approvals-queue";
 import {
   useApprovalsQueue,
-  useApproveItem,
-  useRejectItem,
-  useConditionalApproveItem,
-} from "@/hooks/use-notifications";
-import { Skeleton } from "@/components/ui/skeleton";
+  useApprovalsQueueFilters,
+  useApprovalItem,
+  useApproveApprovalItem,
+  useApproveWithConditionsApprovalItem,
+  useRejectApprovalItem,
+  useRequestChangesApprovalItem,
+  useRevertApprovalItem,
+  useAddApprovalComment,
+} from "@/hooks/use-approvals-queue";
 import { cn } from "@/lib/utils";
-import type { ApprovalItem } from "@/types/notification";
-import { formatDistanceToNow } from "date-fns";
 
-function DiffView({ diff }: { diff?: Record<string, unknown> }) {
-  const entries = diff && typeof diff === "object" ? Object.entries(diff) : [];
-  if (entries.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">No diff available</p>
-    );
-  }
-  return (
-    <div className="space-y-2 rounded-md border border-white/[0.03] bg-secondary/30 p-4 font-mono text-xs">
-      {entries.map(([key, value]) => (
-        <div key={key} className="flex gap-2">
-          <span className="text-muted-foreground">{key}:</span>
-          <span className="text-foreground">
-            {typeof value === "object" ? JSON.stringify(value) : String(value)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ApprovalDetailPanel({ item, onClose }: { item: ApprovalItem; onClose: () => void }) {
-  const [comments, setComments] = useState("");
-  const [showConditional, setShowConditional] = useState(false);
-  const [conditionalKey, setConditionalKey] = useState("");
-  const [conditionalValue, setConditionalValue] = useState("");
-
-  const approve = useApproveItem();
-  const reject = useRejectItem();
-  const conditionalApprove = useConditionalApproveItem();
-
-  const handleApprove = () => {
-    approve.mutate({ id: item.id, comments: comments || undefined });
-    onClose();
-  };
-
-  const handleReject = () => {
-    reject.mutate({ id: item.id, comments: comments || undefined });
-    onClose();
-  };
-
-  const handleConditionalApprove = () => {
-    const conditions = conditionalKey
-      ? { [conditionalKey]: conditionalValue }
-      : {};
-    conditionalApprove.mutate({
-      id: item.id,
-      conditions,
-      comments: comments || undefined,
-    });
-    onClose();
-  };
-
-  const isPending = approve.isPending || reject.isPending || conditionalApprove.isPending;
-
-  return (
-    <Card className="border-white/[0.03] bg-card">
-      <CardHeader className="flex flex-row items-start justify-between">
-        <div>
-          <CardTitle>{item.cronjob_name ?? "Approval"}</CardTitle>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {item.agent} · {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
-          </p>
-          {item.urgency && (
-            <Badge
-              variant={
-                item.urgency === "critical"
-                  ? "destructive"
-                  : item.urgency === "high"
-                    ? "warning"
-                    : "secondary"
-              }
-              className="mt-2"
-            >
-              {item.urgency}
-            </Badge>
-          )}
-        </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Close
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <Label className="text-muted-foreground">Agent rationale</Label>
-          <p className="mt-1 rounded-md border border-white/[0.03] bg-secondary/30 p-3 text-sm">
-            {item.rationale}
-          </p>
-        </div>
-        <div>
-          <Label className="text-muted-foreground">Diff / Changes</Label>
-          <div className="mt-2">
-            <DiffView diff={item.diff_blob} />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="comments">Comments (optional)</Label>
-          <Input
-            id="comments"
-            placeholder="Add a comment..."
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            className="mt-1 bg-input"
-          />
-        </div>
-        {showConditional && (
-          <div className="space-y-2 rounded-md border border-white/[0.03] bg-secondary/30 p-4">
-            <Label>Conditional approval</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Condition key"
-                value={conditionalKey}
-                onChange={(e) => setConditionalKey(e.target.value)}
-                className="bg-input"
-              />
-              <Input
-                placeholder="Value"
-                value={conditionalValue}
-                onChange={(e) => setConditionalValue(e.target.value)}
-                className="bg-input"
-              />
-            </div>
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            className="bg-primary hover:bg-primary/90"
-            onClick={handleApprove}
-            disabled={isPending}
-          >
-            <Check className="mr-1 h-4 w-4" />
-            Approve
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-destructive border-destructive/50"
-            onClick={handleReject}
-            disabled={isPending}
-          >
-            <X className="mr-1 h-4 w-4" />
-            Reject
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowConditional(!showConditional)}
-          >
-            Conditional approve
-          </Button>
-          {showConditional && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={handleConditionalApprove}
-              disabled={isPending}
-            >
-              Apply conditional
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+const ITEM_PARAM = "itemId";
 
 export default function Approvals() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedId = searchParams.get(ITEM_PARAM) ?? null;
 
-  const { items, isLoading, isError } = useApprovalsQueue();
-  const pendingItems = Array.isArray(items)
-    ? items.filter((a) => a.status === "pending")
-    : [];
-  const selectedItem = selectedId
-    ? (items ?? []).find((a) => a.id === selectedId)
-    : null;
+  const [filters, setFilters] = useApprovalsQueueFilters();
+  const { items, total, isLoading, isError } = useApprovalsQueue();
+  const { data: detailItem, isLoading: isDetailLoading } = useApprovalItem(selectedId);
 
-  const toggleExpanded = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const approveMutation = useApproveApprovalItem();
+  const conditionalApproveMutation = useApproveWithConditionsApprovalItem();
+  const rejectMutation = useRejectApprovalItem();
+  const requestChangesMutation = useRequestChangesApprovalItem();
+  const revertMutation = useRevertApprovalItem();
+  const addCommentMutation = useAddApprovalComment();
+
+  const selectedItem = useMemo(() => {
+    if (!selectedId) return null;
+    if (detailItem) return detailItem;
+    return (items ?? []).find((i) => i.id === selectedId) ?? null;
+  }, [selectedId, detailItem, items]);
+
+  const setSelectedId = (id: string | null) => {
+    if (id) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set(ITEM_PARAM, id);
+        return next;
+      });
+    } else {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete(ITEM_PARAM);
+        return next;
+      });
+    }
   };
+
+  const hasFilters = Boolean(
+    filters.search ?? filters.severity ?? filters.status ?? filters.owner ?? filters.cronName ?? filters.module
+  );
+
+  const handleApprove = (comment?: string) => {
+    if (!selectedId) return;
+    approveMutation.mutate(
+      { id: selectedId, payload: { comment } },
+      {
+        onSuccess: () => setSelectedId(null),
+      }
+    );
+  };
+
+  const handleApproveWithConditions = (
+    conditions: Record<string, unknown>,
+    comment?: string
+  ) => {
+    if (!selectedId) return;
+    conditionalApproveMutation.mutate(
+      { id: selectedId, payload: { conditions, comment } },
+      { onSuccess: () => setSelectedId(null) }
+    );
+  };
+
+  const handleReject = (comment?: string) => {
+    if (!selectedId) return;
+    rejectMutation.mutate(
+      { id: selectedId, payload: { comment } },
+      { onSuccess: () => setSelectedId(null) }
+    );
+  };
+
+  const handleRequestChanges = (comment?: string, _requiredChanges?: string[]) => {
+    if (!selectedId) return;
+    requestChangesMutation.mutate(
+      { id: selectedId, payload: { comment, requiredChanges: _requiredChanges } },
+      { onSuccess: () => setSelectedId(null) }
+    );
+  };
+
+  const handleRevert = (reason?: string) => {
+    if (!selectedId) return;
+    revertMutation.mutate({ id: selectedId, payload: { reason } });
+  };
+
+  const handleAddComment = (text: string) => {
+    if (!selectedId) return;
+    addCommentMutation.mutate({ id: selectedId, payload: { text } });
+  };
+
+  const isActionPending =
+    approveMutation.isPending ||
+    conditionalApproveMutation.isPending ||
+    rejectMutation.isPending ||
+    requestChangesMutation.isPending ||
+    revertMutation.isPending;
 
   return (
     <AnimatedPage className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Approvals queue</h1>
-        <p className="text-sm text-muted-foreground">
-          Review and approve actions that require human-in-the-loop
+        <p className="text-sm text-muted-foreground mt-1">
+          Review and approve scheduled actions and cron runs that require human review
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className={cn("space-y-4", selectedItem && "lg:col-span-1")}>
-          <Card className="border-white/[0.03] bg-card">
-            <CardHeader>
-              <CardTitle>Pending approvals</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {pendingItems.length} item(s) waiting for review
+      <FiltersBar filters={filters} onFiltersChange={setFilters} />
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <div className={cn("flex flex-col min-h-0", selectedItem && "lg:col-span-1")}>
+          <div className="rounded-lg border border-white/[0.03] bg-card p-4">
+            <h2 className="text-base font-semibold text-foreground">
+              Queue ({total})
+            </h2>
+            {isLoading ? (
+              <div className="mt-4 space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : isError ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Failed to load approvals
               </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 w-full rounded-lg" />
-                ))
-              ) : isError ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  Failed to load approvals
-                </p>
-              ) : pendingItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <AlertCircle className="h-12 w-12 text-muted-foreground" />
-                  <p className="mt-2 text-center text-sm text-muted-foreground">
-                    No pending approvals. When agents suggest actions that require approval,
-                    they'll appear here.
-                  </p>
-                </div>
-              ) : (
-                pendingItems.map((item) => (
-                  <div
+            ) : !items || items.length === 0 ? (
+              <EmptyState
+                hasFilters={hasFilters}
+                onClearFilters={() =>
+                  setFilters({
+                    search: undefined,
+                    severity: undefined,
+                    status: undefined,
+                    owner: undefined,
+                    cronName: undefined,
+                    module: undefined,
+                    page: 1,
+                  })
+                }
+                className="mt-4"
+              />
+            ) : (
+              <div className="mt-4 space-y-3 max-h-[70vh] overflow-y-auto">
+                {(items ?? []).map((item) => (
+                  <ItemCardRow
                     key={item.id}
-                    className={cn(
-                      "rounded-lg border border-white/[0.03] bg-secondary/50 transition-colors",
-                      selectedId === item.id && "ring-2 ring-primary"
-                    )}
-                  >
-                    <div
-                      className="flex cursor-pointer flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between"
-                      onClick={() => setSelectedId(item.id)}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-foreground">
-                          {item.cronjob_name ?? "Approval"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.agent} ·{" "}
-                          {formatDistanceToNow(new Date(item.created_at), {
-                            addSuffix: true,
-                          })}
-                        </p>
-                        {item.urgency && (
-                          <Badge
-                            variant={
-                              item.urgency === "critical"
-                                ? "destructive"
-                                : item.urgency === "high"
-                                  ? "warning"
-                                  : "secondary"
-                            }
-                            className="mt-2"
-                          >
-                            {item.urgency}
-                          </Badge>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpanded(item.id);
-                        }}
-                      >
-                        {expandedIds.has(item.id) ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                    {expandedIds.has(item.id) && (
-                      <div className="border-t border-white/[0.03] px-4 py-3">
-                        <p className="text-sm text-muted-foreground">{item.rationale}</p>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                    item={item}
+                    isSelected={selectedId === item.id}
+                    onClick={() => setSelectedId(item.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {selectedItem && (
-          <div className="lg:col-span-2">
+        <div
+          className={cn(
+            "min-h-0 flex flex-col",
+            selectedItem ? "lg:col-span-1" : "hidden lg:block"
+          )}
+        >
+          {selectedId && !selectedItem && isDetailLoading ? (
+            <div className="rounded-lg border border-white/[0.03] bg-card p-8">
+              <Skeleton className="h-8 w-48 mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-6" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          ) : (
             <ApprovalDetailPanel
               item={selectedItem}
               onClose={() => setSelectedId(null)}
+              onApprove={handleApprove}
+              onApproveWithConditions={handleApproveWithConditions}
+              onReject={handleReject}
+              onRequestChanges={handleRequestChanges}
+              onRevert={handleRevert}
+              onAddComment={handleAddComment}
+              isActionPending={isActionPending}
+              isCommentPending={addCommentMutation.isPending}
+              className="h-full min-h-[400px]"
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </AnimatedPage>
   );
