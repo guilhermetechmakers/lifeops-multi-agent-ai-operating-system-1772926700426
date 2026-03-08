@@ -26,6 +26,7 @@ import { FinanceDashboardShell, FinanceOverview } from "@/components/finance-das
 import FinanceSubscriptionsPage from "@/pages/finance-subscriptions";
 import CheckoutPage from "@/pages/checkout";
 import FinanceTransactionsPage from "@/pages/finance-transactions";
+import FinanceHistoryPage from "@/pages/finance-history";
 import ForecastingReportsPage from "@/pages/forecasting-reports";
 import { HealthDashboardShell, HealthDashboardOverview } from "@/components/health-dashboard";
 import HealthHabitsPage from "@/pages/health-habits";
@@ -143,6 +144,7 @@ function App() {
               <Route path="subscriptions" element={<FinanceSubscriptionsPage />} />
               <Route path="subscriptions-billing" element={<FinanceSubscriptionsPage />} />
               <Route path="transactions" element={<FinanceTransactionsPage />} />
+              <Route path="history" element={<FinanceHistoryPage />} />
               <Route path="forecasting" element={<ForecastingReportsPage />} />
             </Route>
             <Route path="health" element={<HealthDashboardShell />}>

@@ -4,7 +4,7 @@
  */
 
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, CreditCard, List, TrendingUp } from "lucide-react";
+import { LayoutDashboard, CreditCard, List, TrendingUp, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SUBSCRIPTIONS_PATHS = ["/dashboard/finance/subscriptions", "/dashboard/finance/subscriptions-billing"];
@@ -26,6 +26,7 @@ const navItems: Array<{
     isActive: (pathname) => SUBSCRIPTIONS_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")),
   },
   { to: "/dashboard/finance/transactions", label: "Transactions & Categorization", icon: List, end: false },
+  { to: "/dashboard/finance/history", label: "Order / Transaction History", icon: History, end: false },
 ];
 
 export interface FinanceNavPaneProps {
