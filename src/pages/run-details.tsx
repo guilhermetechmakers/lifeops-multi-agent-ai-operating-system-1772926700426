@@ -1,12 +1,13 @@
 /**
  * Run Details page — comprehensive view of a single cron/agent run.
- * Inputs, trace, logs, diffs, artifacts, timing, outcome, reversibility, audit trail.
+ * Tabbed sections: Inputs, Trace, Logs, Diffs, Artifacts, Timing, Outcome, Revert Actions.
  * LifeOps design system; runtime-safe array handling.
  */
 
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AnimatedPage } from "@/components/animated-page";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRunDetails, useRevertRun } from "@/hooks/use-run-details";
 import {
   RunDetailsHeader,
@@ -22,6 +23,17 @@ import {
 } from "@/components/run-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import {
+  FileInput,
+  GitBranch,
+  FileText,
+  Diff,
+  Paperclip,
+  Clock,
+  CheckCircle2,
+  RotateCcw,
+  History,
+} from "lucide-react";
 
 export default function RunDetailsPage() {
   const { id: cronjobId, runId } = useParams<{ id?: string; runId: string }>();
@@ -131,39 +143,109 @@ export default function RunDetailsPage() {
         isReverting={revertMutation.isPending}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <InputsPanel
-          inputs={run.inputs}
-          effectiveInputs={run.effectiveInputs}
-          scope={run.scope}
-          permissions={run.permissions}
-        />
-        <RelatedContextPanel run={run} />
-      </div>
+      <Tabs defaultValue="inputs" className="space-y-4">
+        <TabsList className="bg-secondary border border-white/[0.03] flex flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="inputs" className="gap-2">
+            <FileInput className="h-4 w-4" />
+            Inputs
+          </TabsTrigger>
+          <TabsTrigger value="trace" className="gap-2">
+            <GitBranch className="h-4 w-4" />
+            Trace
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Logs
+          </TabsTrigger>
+          <TabsTrigger value="diffs" className="gap-2">
+            <Diff className="h-4 w-4" />
+            Diffs
+          </TabsTrigger>
+          <TabsTrigger value="artifacts" className="gap-2">
+            <Paperclip className="h-4 w-4" />
+            Artifacts
+          </TabsTrigger>
+          <TabsTrigger value="timing" className="gap-2">
+            <Clock className="h-4 w-4" />
+            Timing
+          </TabsTrigger>
+          <TabsTrigger value="outcome" className="gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            Outcome
+          </TabsTrigger>
+          <TabsTrigger value="revert" className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Revert
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2">
+            <History className="h-4 w-4" />
+            Audit
+          </TabsTrigger>
+        </TabsList>
 
-      <MessageTraceViewer trace={trace} />
+        <TabsContent value="inputs" className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <InputsPanel
+              inputs={run.inputs}
+              effectiveInputs={run.effectiveInputs}
+              scope={run.scope}
+              permissions={run.permissions}
+            />
+            <RelatedContextPanel run={run} />
+          </div>
+        </TabsContent>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <LogsEventsPanel logs={logs} />
-        <RunDetailsDiffsViewer diffs={diffs} />
-      </div>
+        <TabsContent value="trace" className="space-y-4">
+          <MessageTraceViewer trace={trace} />
+        </TabsContent>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ArtifactsPanel artifacts={artifacts} />
-        <TimingPane timing={timing} durationMs={run.durationMs} />
-      </div>
+        <TabsContent value="logs" className="space-y-4">
+          <LogsEventsPanel logs={logs} />
+        </TabsContent>
 
-      <ReversibilityPanel
-        reversibleActions={reversibleActions}
-        canRevert={canRevert}
-        revertDisabledReason={revertDisabledReason}
-        onConfirmRevert={handleConfirmRevert}
-        isReverting={revertMutation.isPending}
-        revertDialogOpen={revertDialogOpen}
-        onRevertDialogOpenChange={setRevertDialogOpen}
-      />
+        <TabsContent value="diffs" className="space-y-4">
+          <RunDetailsDiffsViewer diffs={diffs} />
+        </TabsContent>
 
-      <AuditTrailPanel auditTrail={auditTrail} />
+        <TabsContent value="artifacts" className="space-y-4">
+          <ArtifactsPanel artifacts={artifacts} />
+        </TabsContent>
+
+        <TabsContent value="timing" className="space-y-4">
+          <TimingPane timing={timing} durationMs={run.durationMs} />
+        </TabsContent>
+
+        <TabsContent value="outcome" className="space-y-4">
+          <div className="rounded-lg border border-white/[0.03] bg-card p-4">
+            <h3 className="text-base font-medium text-foreground mb-2">Outcome</h3>
+            <p className="text-sm text-muted-foreground">
+              Status: {run.status}
+              {run.outcome?.summary != null && ` — ${run.outcome.summary}`}
+            </p>
+            {run.outcome?.details != null && (
+              <pre className="mt-2 rounded-md bg-secondary/50 p-3 text-xs font-mono text-foreground overflow-x-auto">
+                {run.outcome.details}
+              </pre>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="revert" className="space-y-4">
+          <ReversibilityPanel
+            reversibleActions={reversibleActions}
+            canRevert={canRevert}
+            revertDisabledReason={revertDisabledReason}
+            onConfirmRevert={handleConfirmRevert}
+            isReverting={revertMutation.isPending}
+            revertDialogOpen={revertDialogOpen}
+            onRevertDialogOpenChange={setRevertDialogOpen}
+          />
+        </TabsContent>
+
+        <TabsContent value="audit" className="space-y-4">
+          <AuditTrailPanel auditTrail={auditTrail} />
+        </TabsContent>
+      </Tabs>
     </AnimatedPage>
   );
 }

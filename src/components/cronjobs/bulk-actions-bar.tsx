@@ -3,7 +3,7 @@
  */
 
 import { Button } from "@/components/ui/button";
-import { Play, Power, PowerOff, Trash2 } from "lucide-react";
+import { Play, Power, PowerOff, Trash2, Copy } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ export interface BulkActionsBarProps {
   onEnable: () => void;
   onDisable: () => void;
   onRunNow: () => void;
+  onClone?: () => void;
   onDelete: () => void;
   isPending?: boolean;
   className?: string;
@@ -32,6 +33,7 @@ export function BulkActionsBar({
   onEnable,
   onDisable,
   onRunNow,
+  onClone,
   onDelete,
   isPending = false,
   className,
@@ -87,6 +89,18 @@ export function BulkActionsBar({
             <Play className="h-4 w-4" />
             Run now
           </Button>
+          {onClone && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClone}
+              disabled={isPending}
+              className="gap-2 transition-transform hover:scale-[1.02]"
+            >
+              <Copy className="h-4 w-4" />
+              Clone
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,12 +22,15 @@ import {
   useRevokeSession,
   useRevokeAllSessions,
   useTwoFactor,
-  useUpdateTwoFactor,
+  useTwoFactorDisable,
   useUpdatePassword,
 } from "@/hooks/use-profile";
 import { AuditTrailPanel } from "@/components/auth/audit-trail-panel";
+import { TwoFactorSetupModal } from "./two-factor-setup-modal";
+import { getPasswordStrength } from "@/lib/password-strength";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const passwordSchema = z
   .object({
@@ -45,13 +47,16 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 
 export function SecurityPanel() {
   const { items: sessions, isLoading: sessionsLoading } = useSessions();
-  const { config: twoFactor, isLoading: twoFactorLoading } = useTwoFactor();
+  const { config: twoFactor, isLoading: twoFactorLoading, refetch: refetchTwoFactor } = useTwoFactor();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
-  const update2FA = useUpdateTwoFactor();
+  const disable2FA = useTwoFactorDisable();
   const updatePassword = useUpdatePassword();
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [revokeAllOpen, setRevokeAllOpen] = useState(false);
+  const [setup2FAOpen, setSetup2FAOpen] = useState(false);
+  const [disable2FAOpen, setDisable2FAOpen] = useState(false);
+  const [disable2FAPassword, setDisable2FAPassword] = useState("");
 
   const form = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
@@ -72,6 +77,22 @@ export function SecurityPanel() {
   });
 
   const sessionsList = Array.isArray(sessions) ? sessions : [];
+  const newPassword = form.watch("newPassword") ?? "";
+  const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
+
+  const handleDisable2FA = () => {
+    if (!disable2FAPassword.trim()) return;
+    disable2FA.mutate(
+      { password: disable2FAPassword },
+      {
+        onSuccess: () => {
+          setDisable2FAOpen(false);
+          setDisable2FAPassword("");
+          refetchTwoFactor();
+        },
+      }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -109,6 +130,28 @@ export function SecurityPanel() {
                 {...form.register("newPassword")}
                 className="bg-input border-white/[0.03]"
               />
+              {newPassword.length > 0 && (
+                <div className="flex items-center gap-2" role="status" aria-live="polite">
+                  <div className="flex gap-0.5 flex-1 max-w-[120px]">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "h-1 flex-1 rounded-full transition-colors",
+                          i <= passwordStrength.level
+                            ? passwordStrength.level <= 1
+                              ? "bg-destructive"
+                              : passwordStrength.level <= 2
+                                ? "bg-amber-500"
+                                : "bg-green-500"
+                            : "bg-muted"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">{passwordStrength.label}</span>
+                </div>
+              )}
               {form.formState.errors.newPassword && (
                 <p className="text-xs text-destructive">
                   {form.formState.errors.newPassword.message}
@@ -144,31 +187,87 @@ export function SecurityPanel() {
             Two-Factor Authentication
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Add an extra layer of security with 2FA
+            Add an extra layer of security with TOTP (authenticator app)
           </p>
         </CardHeader>
         <CardContent>
           {twoFactorLoading ? (
             <Skeleton className="h-12 w-full" />
           ) : (
-            <div className="flex items-center justify-between rounded-lg border border-white/[0.03] bg-secondary/50 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-lg border border-white/[0.03] bg-secondary/50 p-4">
               <div>
                 <p className="font-medium text-foreground">Authenticator app (TOTP)</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {twoFactor?.enabled ? "2FA is enabled" : "2FA is disabled"}
                 </p>
               </div>
-              <Switch
-                checked={twoFactor?.enabled ?? false}
-                onCheckedChange={(v) => update2FA.mutate(v)}
-                disabled={update2FA.isPending}
-                aria-label="Toggle two-factor authentication"
-                aria-checked={twoFactor?.enabled ?? false}
-              />
+              <div className="flex gap-2 shrink-0">
+                {twoFactor?.enabled ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={() => setDisable2FAOpen(true)}
+                    disabled={disable2FA.isPending}
+                    aria-label="Disable two-factor authentication"
+                  >
+                    Disable 2FA
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => setSetup2FAOpen(true)}
+                    aria-label="Enable two-factor authentication"
+                  >
+                    Enable 2FA
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <TwoFactorSetupModal
+        open={setup2FAOpen}
+        onOpenChange={setSetup2FAOpen}
+        onSuccess={() => {
+          refetchTwoFactor();
+        }}
+      />
+
+      <AlertDialog open={disable2FAOpen} onOpenChange={(o) => { setDisable2FAOpen(o); if (!o) setDisable2FAPassword(""); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable 2FA?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter your password to disable two-factor authentication. Your account will be less secure.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Label htmlFor="disable-2fa-password">Password</Label>
+            <Input
+              id="disable-2fa-password"
+              type="password"
+              value={disable2FAPassword}
+              onChange={(e) => setDisable2FAPassword(e.target.value)}
+              className="mt-2 bg-input border-white/[0.03]"
+              placeholder="Your password"
+              autoComplete="current-password"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDisable2FA}
+              disabled={disable2FA.isPending || !disable2FAPassword.trim()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {disable2FA.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Disable 2FA"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card className="border-white/[0.03] bg-card">
         <CardHeader className="flex flex-row items-start justify-between gap-4">

@@ -11,8 +11,10 @@ import type {
   Billing,
   Session,
   TwoFactorConfig,
+  TwoFactorSetupResult,
   UserPreference,
   ModulePreferencesMap,
+  AuditLogEntry,
 } from "@/types/profile";
 
 const MOCK_USER_ID = "user-1";
@@ -284,6 +286,39 @@ export const profileMockApi = {
   updateTwoFactor: async (enabled: boolean): Promise<TwoFactorConfig> => {
     await new Promise((r) => setTimeout(r, 300));
     return { ...mockTwoFactor, enabled };
+  },
+
+  get2FASetup: async (): Promise<TwoFactorSetupResult> => {
+    await new Promise((r) => setTimeout(r, 400));
+    const secret = "JBSWY3DPEHPK3PXP";
+    const backupCodes = Array.from({ length: 10 }, (_, i) =>
+      `${String(i + 1).padStart(2, "0")}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+    );
+    return {
+      secret,
+      qrCodeDataUrl: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`,
+      backupCodes,
+    };
+  },
+
+  verify2FA: async (_input: { token: string }): Promise<TwoFactorConfig> => {
+    await new Promise((r) => setTimeout(r, 300));
+    return { ...mockTwoFactor, enabled: true };
+  },
+
+  disable2FA: async (_payload: { password: string }): Promise<TwoFactorConfig> => {
+    await new Promise((r) => setTimeout(r, 300));
+    return { ...mockTwoFactor, enabled: false };
+  },
+
+  getAudit: async (limit = 20): Promise<AuditLogEntry[]> => {
+    await new Promise((r) => setTimeout(r, 200));
+    const entries: AuditLogEntry[] = [
+      { id: "1", userId: MOCK_USER_ID, action: "profile_updated", targetType: "profile", timestamp: new Date().toISOString() },
+      { id: "2", userId: MOCK_USER_ID, action: "2fa_enabled", targetType: "security", timestamp: new Date(Date.now() - 86400000).toISOString() },
+      { id: "3", userId: MOCK_USER_ID, action: "session_revoked", targetType: "session", targetId: "sess-2", timestamp: new Date(Date.now() - 172800000).toISOString() },
+    ];
+    return (entries ?? []).slice(0, limit);
   },
 
   getPreferences: async (): Promise<UserPreference> => {

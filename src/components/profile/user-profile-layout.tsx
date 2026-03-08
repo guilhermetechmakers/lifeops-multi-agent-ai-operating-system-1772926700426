@@ -1,9 +1,11 @@
 /**
  * User Profile layout: left rail nav, profile summary, and main content outlet.
  * 220–260px sidebar rhythm; full-width content on large viewports.
+ * Wraps content in ProfileProvider so child modules can consume profile/preferences.
  */
 
 import { Outlet } from "react-router-dom";
+import { ProfileProvider } from "@/contexts/profile-context";
 import { LeftRailNav } from "./left-rail-nav";
 import { ProfileSummaryCard } from "./profile-summary-card";
 
@@ -11,6 +13,7 @@ const RAIL_WIDTH = 240;
 
 export function UserProfileLayout() {
   return (
+    <ProfileProvider>
     <div className="flex min-h-0 flex-1 flex-col gap-6 md:flex-row">
       <aside
         className="w-full shrink-0 md:w-[240px]"
@@ -26,5 +29,6 @@ export function UserProfileLayout() {
         <Outlet />
       </main>
     </div>
+    </ProfileProvider>
   );
 }

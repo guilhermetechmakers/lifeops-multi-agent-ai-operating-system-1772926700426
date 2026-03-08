@@ -46,17 +46,26 @@ export function ApiKeysPanel() {
   const [rotateId, setRotateId] = useState<string | null>(null);
   const [rotateResult, setRotateResult] = useState<ApiKeyCreateResult | null>(null);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const [revealConfirmId, setRevealConfirmId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const safeKeys = keys ?? [];
 
+  const handleConfirmReveal = (id: string) => {
+    setRevealedIds((prev) => new Set(prev).add(id));
+    setRevealConfirmId(null);
+  };
+
   const toggleReveal = (id: string) => {
-    setRevealedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    if (revealedIds.has(id)) {
+      setRevealedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      setRevealConfirmId(id);
+    }
   };
 
   const handleRotate = () => {
@@ -166,7 +175,7 @@ export function ApiKeysPanel() {
                       size="sm"
                       onClick={() => toggleReveal(key.id)}
                       aria-label={revealedIds.has(key.id) ? "Mask key" : "Reveal key"}
-                      title={revealedIds.has(key.id) ? "Mask key" : "Reveal key (masked by default)"}
+                      title={revealedIds.has(key.id) ? "Mask key" : "Reveal key (requires confirmation)"}
                     >
                       {revealedIds.has(key.id) ? (
                         <EyeOff className="h-4 w-4" />
@@ -331,6 +340,23 @@ export function ApiKeysPanel() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={!!revealConfirmId} onOpenChange={() => setRevealConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Show API key?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The key will be visible briefly. Anyone with access to your screen can see it. Only reveal in a private place.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => revealConfirmId && handleConfirmReveal(revealConfirmId)}>
+              Show key
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!revokeId} onOpenChange={() => setRevokeId(null)}>
         <AlertDialogContent>

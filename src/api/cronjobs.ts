@@ -34,6 +34,9 @@ function buildQuery(params: CronjobListParams): string {
   if (params.owner != null) q.set("owner", params.owner);
   if (params.status != null) q.set("status", params.status);
   if (params.tag != null) q.set("tag", params.tag);
+  if (params.triggerType != null && params.triggerType !== "") q.set("triggerType", params.triggerType);
+  if (params.targetType != null && params.targetType !== "") q.set("targetType", params.targetType);
+  if (params.automationLevel != null && params.automationLevel !== "") q.set("automationLevel", params.automationLevel);
   if (params.nextRunAfter != null) q.set("nextRunAfter", params.nextRunAfter);
   if (params.nextRunBefore != null) q.set("nextRunBefore", params.nextRunBefore);
   if (params.lastRunAfter != null) q.set("lastRunAfter", params.lastRunAfter);
@@ -72,7 +75,13 @@ export const cronjobsApi = {
 
   delete: (id: string) => api.delete<unknown>(`${BASE}/${id}`),
 
+  clone: (id: string) => api.post<Cronjob>(`${BASE}/${id}/clone`, {}),
+
   runNow: (id: string) => api.post<CronjobRun>(`${BASE}/${id}/run-now`, {}),
+
+  pause: (id: string) => api.post<Cronjob>(`${BASE}/${id}/pause`, {}),
+
+  resume: (id: string) => api.post<Cronjob>(`${BASE}/${id}/resume`, {}),
 
   bulk: (payload: BulkCronjobAction) =>
     api.post<{ updated: number; errors?: string[] }>(`${BASE}/bulk`, payload),
@@ -85,6 +94,11 @@ export const cronjobsApi = {
       .get<CronjobRun[]>(`${BASE}/${id}/runs${q}`)
       .then((r) => safeList<CronjobRun>(r ?? []));
   },
+
+  getStats: () =>
+    api.get<{ runsLast24h: number; totalCronjobs: number; enabledCount: number }>(
+      `${BASE}/stats`
+    ),
 
   getAlerts: () =>
     api

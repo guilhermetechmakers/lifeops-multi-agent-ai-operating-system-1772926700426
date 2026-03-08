@@ -14,6 +14,9 @@ import type {
   Session,
   UserPreference,
   ProfileUpdateInput,
+  TwoFactorSetupResult,
+  TwoFactorVerifyInput,
+  AuditLogEntry,
 } from "@/types/profile";
 
 const USE_MOCK = !import.meta.env.VITE_API_URL;
@@ -294,6 +297,64 @@ export function useUpdateTwoFactor() {
       toast.error(err instanceof Error ? err.message : "Failed to update 2FA");
     },
   });
+}
+
+export function useTwoFactorSetup() {
+  return useMutation({
+    mutationFn: async (): Promise<TwoFactorSetupResult> => {
+      if (USE_MOCK) return profileMockApi.get2FASetup();
+      return profileApi.get2FASetup();
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to start 2FA setup");
+    },
+  });
+}
+
+export function useTwoFactorVerify() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: TwoFactorVerifyInput) => {
+      if (USE_MOCK) return profileMockApi.verify2FA(input);
+      return profileApi.verify2FA(input);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKeys.twoFactor(), data);
+      toast.success("2FA enabled successfully");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Invalid verification code");
+    },
+  });
+}
+
+export function useTwoFactorDisable() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { password: string }) => {
+      if (USE_MOCK) return profileMockApi.disable2FA(payload);
+      return profileApi.disable2FA(payload);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKeys.twoFactor(), data);
+      toast.success("2FA disabled");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to disable 2FA");
+    },
+  });
+}
+
+export function useProfileAudit(limit = 20) {
+  const query = useQuery({
+    queryKey: ["profile", "audit", limit] as const,
+    queryFn: async () => {
+      if (USE_MOCK) return profileMockApi.getAudit(limit);
+      return profileApi.getAudit(limit);
+    },
+  });
+  const items = safeArray<AuditLogEntry>(query.data);
+  return { ...query, items };
 }
 
 export function usePreferences() {

@@ -144,3 +144,32 @@ export function formatNextRun(iso: string): string {
     return "—";
   }
 }
+
+/** Return next N run times (ISO strings) for a cron expression. */
+export function getNextNRunPreviews(
+  expression: string,
+  timezone: string,
+  count = 5
+): string[] {
+  const ex = (expression ?? "").trim();
+  if (!ex || !isValidCronExpression(ex)) return [];
+  const first = getNextRunPreview(ex, timezone);
+  if (!first) return [];
+  const results: string[] = [first];
+  const parts = ex.split(/\s+/);
+  if (parts.length < 5) return results;
+  let d = new Date(first);
+  for (let i = 1; i < count; i++) {
+    if (ex === "0 * * * *") d.setHours(d.getHours() + 1);
+    else if (ex === "0 0 * * *") d.setDate(d.getDate() + 1);
+    else if (ex === "0 0 * * 0") d.setDate(d.getDate() + 7);
+    else if (ex === "0 0 1 * *") d.setMonth(d.getMonth() + 1);
+    else if (ex === "0 9 * * 1-5") {
+      d.setDate(d.getDate() + 1);
+      while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+      d.setUTCHours(9, 0, 0, 0);
+    } else d.setDate(d.getDate() + 1);
+    results.push(d.toISOString());
+  }
+  return results;
+}

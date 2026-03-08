@@ -14,7 +14,10 @@ import type {
   Billing,
   Session,
   TwoFactorConfig,
+  TwoFactorSetupResult,
+  TwoFactorVerifyInput,
   UserPreference,
+  AuditLogEntry,
 } from "@/types/profile";
 
 const PROFILE_BASE = "/profile";
@@ -74,6 +77,19 @@ export const profileApi = {
 
   updateTwoFactor: (enabled: boolean) =>
     api.post<TwoFactorConfig>(`${PROFILE_BASE}/2fa`, { enabled }),
+
+  get2FASetup: () => api.post<TwoFactorSetupResult>(`${PROFILE_BASE}/2fa/setup`, {}),
+
+  verify2FA: (input: TwoFactorVerifyInput) =>
+    api.post<TwoFactorConfig>(`${PROFILE_BASE}/2fa/verify`, input),
+
+  disable2FA: (payload: { password: string }) =>
+    api.post<TwoFactorConfig>(`${PROFILE_BASE}/2fa/disable`, payload),
+
+  getAudit: (limit = 20) =>
+    api
+      .get<AuditLogEntry[]>(`/audit?limit=${limit}`)
+      .then((r) => (Array.isArray(r) ? r : [])),
 
   getPreferences: () => api.get<UserPreference>(`${PROFILE_BASE}/preferences`),
 

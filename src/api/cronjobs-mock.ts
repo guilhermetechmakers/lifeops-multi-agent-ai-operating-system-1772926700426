@@ -43,6 +43,7 @@ let MOCK_CRONJOBS: Cronjob[] = [
     updatedAt: new Date().toISOString(),
     lastRun: {
       status: "success",
+      runId: "run-1-1",
       startedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
       finishedAt: new Date(Date.now() - 2 * 60 * 1000 + 5000).toISOString(),
       durationMs: 5000,
@@ -73,6 +74,7 @@ let MOCK_CRONJOBS: Cronjob[] = [
     updatedAt: new Date().toISOString(),
     lastRun: {
       status: "success",
+      runId: "run-2-1",
       startedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
       finishedAt: new Date(Date.now() - 60 * 60 * 1000 + 12000).toISOString(),
       durationMs: 12000,
@@ -189,6 +191,15 @@ function applyFilters(list: Cronjob[], params: CronjobListParams): Cronjob[] {
   if (params.status === "paused") out = out.filter((c) => !c.enabled);
   if (params.tag)
     out = out.filter((c) => (c.tags ?? []).includes(params.tag as string));
+  const t = params.triggerType as string | undefined;
+  if (t && t !== "")
+    out = out.filter((c) => c.triggerType === params.triggerType);
+  const tg = params.targetType as string | undefined;
+  if (tg && tg !== "")
+    out = out.filter((c) => c.targetType === params.targetType);
+  const a = params.automationLevel as string | undefined;
+  if (a && a !== "")
+    out = out.filter((c) => c.automationLevel === params.automationLevel);
   return out;
 }
 
@@ -290,6 +301,41 @@ export async function mockRunNow(id: string): Promise<CronjobRun> {
   return run;
 }
 
+export async function mockCloneCronjob(id: string): Promise<Cronjob> {
+  const job = MOCK_CRONJOBS.find((c) => c.id === id);
+  if (!job) throw new Error("Cronjob not found");
+  const input: CreateCronjobInput = {
+    name: `${job.name} (copy)`,
+    enabled: job.enabled,
+    scheduleExpression: job.scheduleExpression,
+    scheduleUI: job.scheduleUI,
+    timezone: job.timezone,
+    triggerType: job.triggerType,
+    targetType: job.targetType,
+    targetId: job.targetId,
+    inputPayloadTemplate: job.inputPayloadTemplate,
+    permissionsLevel: job.permissionsLevel,
+    automationLevel: job.automationLevel,
+    constraints: job.constraints,
+    safetyRails: job.safetyRails,
+    retryPolicy: job.retryPolicy,
+    outputsConfig: job.outputsConfig,
+    ownerId: job.ownerId,
+    module: job.module,
+    tags: job.tags,
+  };
+  const cloned = await mockCreateCronjob(input);
+  return cloned;
+}
+
+export async function mockPauseCronjob(id: string): Promise<Cronjob | null> {
+  return mockUpdateCronjob(id, { enabled: false });
+}
+
+export async function mockResumeCronjob(id: string): Promise<Cronjob | null> {
+  return mockUpdateCronjob(id, { enabled: true });
+}
+
 export async function mockBulkCronjobs(
   payload: BulkCronjobAction
 ): Promise<{ updated: number; errors?: string[] }> {
@@ -312,6 +358,23 @@ export async function mockBulkCronjobs(
           j.updatedAt = new Date().toISOString();
           updated++;
         }
+      } else if (payload.action === "pause") {
+        const j = MOCK_CRONJOBS.find((c) => c.id === id);
+        if (j) {
+          j.enabled = false;
+          j.updatedAt = new Date().toISOString();
+          updated++;
+        }
+      } else if (payload.action === "resume") {
+        const j = MOCK_CRONJOBS.find((c) => c.id === id);
+        if (j) {
+          j.enabled = true;
+          j.updatedAt = new Date().toISOString();
+          updated++;
+        }
+      } else if (payload.action === "clone") {
+        await mockCloneCronjob(id);
+        updated++;
       } else if (payload.action === "delete") {
         MOCK_CRONJOBS = MOCK_CRONJOBS.filter((c) => c.id !== id);
         updated++;
@@ -332,6 +395,24 @@ export async function mockGetCronjobRuns(
 ): Promise<CronjobRun[]> {
   const runs = RUNS_BY_CRONJOB[id] ?? [];
   return [...runs];
+}
+
+export async function mockGetCronjobsStats(): Promise<{
+  runsLast24h: number;
+  totalCronjobs: number;
+  enabledCount: number;
+}> {
+  const now = Date.now();
+  const dayAgo = now - 24 * 60 * 60 * 1000;
+  let runsLast24h = 0;
+  for (const runs of Object.values(RUNS_BY_CRONJOB)) {
+    runsLast24h += (runs ?? []).filter(
+      (r) => new Date(r.startedAt).getTime() >= dayAgo
+    ).length;
+  }
+  const totalCronjobs = MOCK_CRONJOBS.length;
+  const enabledCount = MOCK_CRONJOBS.filter((c) => c.enabled).length;
+  return { runsLast24h, totalCronjobs, enabledCount };
 }
 
 export async function mockGetCronjobAlerts(): Promise<unknown[]> {

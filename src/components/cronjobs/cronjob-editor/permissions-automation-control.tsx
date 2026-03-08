@@ -27,6 +27,7 @@ const PERMISSIONS_OPTIONS: { value: PermissionsLevel; label: string }[] = [
 const AUTOMATION_OPTIONS: { value: AutomationLevel; label: string; desc: string }[] = [
   { value: "suggest-only", label: "Suggest only", desc: "AI suggests; user approves every action." },
   { value: "approval-required", label: "Approval required", desc: "Runs require explicit approval before execution." },
+  { value: "conditional-auto-execute", label: "Conditional auto-execute", desc: "Auto-execute when conditions are met; otherwise requires approval." },
   { value: "auto-execute", label: "Auto execute", desc: "Runs execute automatically within bounds." },
   { value: "bounded-autopilot", label: "Bounded autopilot", desc: "Auto with strict limits (max actions, spend)." },
 ];
@@ -43,7 +44,9 @@ export function PermissionsAutomationControl({
 }: PermissionsAutomationControlProps) {
   const bounds = automationBounds ?? {};
   const showBounds =
-    automationLevel === "auto-execute" || automationLevel === "bounded-autopilot";
+    automationLevel === "conditional-auto-execute" ||
+    automationLevel === "auto-execute" ||
+    automationLevel === "bounded-autopilot";
 
   return (
     <div className={cn("space-y-6", className)}>

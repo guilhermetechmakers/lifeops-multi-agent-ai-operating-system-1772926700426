@@ -12,6 +12,7 @@ import {
   CRON_PRESETS,
   isValidCronExpression,
   getNextRunPreview,
+  getNextNRunPreviews,
   formatNextRun,
 } from "@/lib/cron-utils";
 import { Clock, CheckCircle2, AlertCircle } from "lucide-react";
@@ -67,6 +68,10 @@ export function ScheduleBuilder({
     [expr, tz]
   );
   const nextRunLabel = !nextRunIso ? "—" : formatNextRun(nextRunIso);
+  const nextNRuns = useMemo(
+    () => getNextNRunPreviews(expr ?? "", tz, 5),
+    [expr, tz]
+  );
 
   const handleExpressionChange = (e: string) => {
     onChange({
@@ -301,11 +306,22 @@ export function ScheduleBuilder({
 
       <div
         id="cron-next-run"
-        className="flex items-center gap-2 rounded-md border border-white/[0.03] bg-secondary/50 px-3 py-2"
+        className="space-y-2 rounded-md border border-white/[0.03] bg-secondary/50 px-3 py-2"
       >
-        <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-xs text-muted-foreground">Next run (preview): </span>
-        <span className="text-sm font-medium text-foreground">{nextRunLabel}</span>
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground">Next run (preview): </span>
+          <span className="text-sm font-medium text-foreground">{nextRunLabel}</span>
+        </div>
+        {(nextNRuns ?? []).length > 1 && (
+          <ul className="text-xs text-muted-foreground space-y-0.5 pl-6">
+            {(nextNRuns ?? []).slice(1, 5).map((iso, i) => (
+              <li key={iso}>
+                {i + 2}. {formatNextRun(iso)}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

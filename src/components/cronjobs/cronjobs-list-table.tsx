@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,8 +98,11 @@ export function CronjobsListTable({
             <th className="sticky top-0 z-10 px-4 py-3 text-left font-medium text-muted-foreground">
               Name
             </th>
+            <th className="sticky top-0 z-10 w-16 px-4 py-3 text-left font-medium text-muted-foreground">
+              Enabled
+            </th>
             <th className="sticky top-0 z-10 px-4 py-3 text-left font-medium text-muted-foreground">
-              Status
+              Trigger
             </th>
             <th className="sticky top-0 z-10 px-4 py-3 text-left font-medium text-muted-foreground">
               Schedule
@@ -146,9 +150,14 @@ export function CronjobsListTable({
                 </Link>
               </td>
               <td className="px-4 py-3">
-                <Badge variant={job.enabled ? "success" : "secondary"}>
-                  {job.enabled ? "Enabled" : "Paused"}
-                </Badge>
+                <Switch
+                  checked={job.enabled}
+                  onCheckedChange={() => onToggleEnabled(job.id, !job.enabled)}
+                  aria-label={job.enabled ? "Disable" : "Enable"}
+                />
+              </td>
+              <td className="px-4 py-3 text-muted-foreground capitalize">
+                {job.triggerType ?? "—"}
               </td>
               <td className="px-4 py-3">
                 <span className="font-mono text-xs text-muted-foreground">
@@ -164,7 +173,21 @@ export function CronjobsListTable({
                   : "—"}
               </td>
               <td className="px-4 py-3">
-                <LastRunBadge status={job.lastRun?.status} />
+                <div className="flex items-center gap-2">
+                  <LastRunBadge status={job.lastRun?.status} />
+                  {job.lastRun?.runId && (
+                    <Link
+                      to={
+                        job.id
+                          ? `/dashboard/cronjobs/${job.id}/runs/${job.lastRun!.runId}`
+                          : `/dashboard/runs/${job.lastRun!.runId}`
+                      }
+                      className="text-xs text-primary hover:underline"
+                    >
+                      View
+                    </Link>
+                  )}
+                </div>
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {job.targetType}/{job.targetId || "—"}

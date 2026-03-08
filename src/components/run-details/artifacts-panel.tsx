@@ -1,11 +1,11 @@
 /**
- * ArtifactsPanel — list of run artifacts with download, view, checksum, copy link.
+ * ArtifactsPanel — list of run artifacts with download, filter by type, checksum, copy link.
  */
 
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Copy, Check, FileText } from "lucide-react";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatFileSize } from "@/lib/format";
 import type { RunArtifact } from "@/types/run-details";
@@ -83,7 +83,17 @@ export interface ArtifactsPanelProps {
 }
 
 export function ArtifactsPanel({ artifacts, className }: ArtifactsPanelProps) {
-  const list = Array.isArray(artifacts) ? artifacts : [];
+  const rawList = Array.isArray(artifacts) ? artifacts : [];
+  const [typeFilter, setTypeFilter] = useState<string>("");
+
+  const list = useMemo(() => {
+    if (!typeFilter) return rawList;
+    return rawList.filter((a) => (a.type ?? "") === typeFilter);
+  }, [rawList, typeFilter]);
+
+  const types = useMemo(() => {
+    return [...new Set(rawList.map((a) => a.type).filter(Boolean))].sort();
+  }, [rawList]);
 
   return (
     <Card className={cn("border-white/[0.03] bg-card", className)}>
@@ -92,6 +102,21 @@ export function ArtifactsPanel({ artifacts, className }: ArtifactsPanelProps) {
         <p className="text-sm text-muted-foreground">
           Generated outputs with provenance (run, agent, timestamp).
         </p>
+        {types.length > 0 && (
+          <div className="mt-3">
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Filter by type"
+            >
+              <option value="">All types</option>
+              {types.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-2 pt-0">
         {list.length === 0 ? (

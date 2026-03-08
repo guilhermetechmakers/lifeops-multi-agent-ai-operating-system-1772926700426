@@ -1,10 +1,12 @@
 /**
- * LogsEventsPanel — structured logs with level filter, source, time; expandable rows for details.
+ * LogsEventsPanel — structured logs with level filter, source, search; expandable rows for details.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight, Search, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LogEvent } from "@/types/run-details";
 
@@ -80,16 +82,32 @@ export interface LogsEventsPanelProps {
 export function LogsEventsPanel({ logs, className }: LogsEventsPanelProps) {
   const [levelFilter, setLevelFilter] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const list = useMemo(() => {
     const arr = Array.isArray(logs) ? logs : [];
+    const q = (searchQuery ?? "").trim().toLowerCase();
     return arr.filter((l) => {
       if (levelFilter && (l.level ?? "") !== levelFilter) return false;
       if (sourceFilter && (l.source ?? "") !== sourceFilter) return false;
+      if (q && !(l.message ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [logs, levelFilter, sourceFilter]);
+  }, [logs, levelFilter, sourceFilter, searchQuery]);
+
+  const handleExportLogs = useCallback(() => {
+    const lines = (list ?? []).map(
+      (l) => `[${l.timestamp}] ${l.level} ${l.source ?? ""} ${l.message}`
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "run-logs.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [list]);
 
   const levels = useMemo(() => {
     const arr = Array.isArray(logs) ? logs : [];
@@ -104,7 +122,17 @@ export function LogsEventsPanel({ logs, className }: LogsEventsPanelProps) {
     <Card className={cn("border-white/[0.03] bg-card", className)}>
       <CardHeader className="p-4 md:p-5">
         <CardTitle className="text-base">Logs & Events</CardTitle>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[160px] max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search logs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-9 bg-background"
+              aria-label="Search logs"
+            />
+          </div>
           <select
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
@@ -127,6 +155,17 @@ export function LogsEventsPanel({ logs, className }: LogsEventsPanelProps) {
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1"
+            onClick={handleExportLogs}
+            disabled={(list ?? []).length === 0}
+            aria-label="Export logs"
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto pt-0">

@@ -8,7 +8,18 @@ export type RunStatus =
   | "running"
   | "succeeded"
   | "failed"
-  | "aborted";
+  | "aborted"
+  | "reverted";
+
+/** Human-readable status labels for Run Details UI. */
+export const RUN_STATUS_LABELS: Record<RunStatus, string> = {
+  queued: "Scheduled",
+  running: "Running",
+  succeeded: "Completed",
+  failed: "Failed",
+  aborted: "Aborted",
+  reverted: "Reverted",
+};
 
 export interface TraceEvent {
   id: string;

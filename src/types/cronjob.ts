@@ -9,6 +9,7 @@ export type PermissionsLevel = "viewer" | "editor" | "admin";
 export type AutomationLevel =
   | "suggest-only"
   | "approval-required"
+  | "conditional-auto-execute"
   | "auto-execute"
   | "bounded-autopilot";
 
@@ -51,6 +52,7 @@ export interface CronjobOutputsConfig {
 
 export interface CronjobLastRun {
   status: string;
+  runId?: string;
   startedAt: string;
   finishedAt: string;
   durationMs: number;
@@ -101,6 +103,9 @@ export interface CronjobListFilters {
   owner?: string;
   status?: "enabled" | "paused" | "all";
   tag?: string;
+  triggerType?: TriggerType | "";
+  targetType?: TargetType | "";
+  automationLevel?: AutomationLevel | "";
   nextRunAfter?: string;
   nextRunBefore?: string;
   lastRunAfter?: string;
@@ -197,7 +202,7 @@ export type UpdateCronjobInput = Partial<CreateCronjobInput>;
 
 export interface BulkCronjobAction {
   ids: string[];
-  action: "enable" | "disable" | "delete" | "run-now";
+  action: "enable" | "disable" | "delete" | "run-now" | "clone" | "pause" | "resume";
   payload?: Record<string, unknown>;
 }
 

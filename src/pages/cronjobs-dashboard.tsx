@@ -25,6 +25,7 @@ import {
   useDeleteCronjob,
   useBulkCronjobs,
   useCreateCronjob,
+  useCronjobsStats,
 } from "@/hooks/use-cronjobs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Cronjob, CronjobFilters } from "@/types/cronjob";
@@ -65,6 +66,7 @@ export default function CronjobsDashboard() {
   const deleteCronjob = useDeleteCronjob();
   const bulkCronjobs = useBulkCronjobs();
   const createCronjob = useCreateCronjob();
+  const { runsLast24h } = useCronjobsStats();
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
   const enabledCount = useMemo(
@@ -165,6 +167,12 @@ export default function CronjobsDashboard() {
     setSelectedIds(new Set());
   }, [selectedIds, bulkCronjobs]);
 
+  const handleBulkClone = useCallback(() => {
+    const ids = Array.from(selectedIds);
+    bulkCronjobs.mutate({ ids, action: "clone" });
+    setSelectedIds(new Set());
+  }, [selectedIds, bulkCronjobs]);
+
   const clearFilters = useCallback(() => {
     setFilters({ status: "all" });
     setSearch("");
@@ -237,15 +245,11 @@ export default function CronjobsDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Next run
+              Runs (24h)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground">
-              {(items ?? []).length > 0
-                ? "See list"
-                : "—"}
-            </div>
+            <div className="text-2xl font-bold text-foreground">{runsLast24h}</div>
           </CardContent>
         </Card>
       </div>
@@ -263,6 +267,7 @@ export default function CronjobsDashboard() {
         onEnable={handleBulkEnable}
         onDisable={handleBulkDisable}
         onRunNow={handleBulkRunNow}
+        onClone={handleBulkClone}
         onDelete={handleBulkDelete}
         isPending={bulkCronjobs.isPending}
       />

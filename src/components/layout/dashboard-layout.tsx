@@ -160,7 +160,7 @@ export function DashboardLayout() {
               <span
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
-                  location.pathname === "/dashboard/settings" && "bg-primary text-primary-foreground"
+                  location.pathname.startsWith("/dashboard/settings") && "bg-primary text-primary-foreground"
                 )}
               >
                 <Settings className="h-5 w-5 shrink-0" />

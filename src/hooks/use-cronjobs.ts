@@ -75,6 +75,21 @@ export function useCronjobRuns(
   return { ...query, items };
 }
 
+export function useCronjobsStats() {
+  const query = useQuery({
+    queryKey: ["cronjobs", "stats"] as const,
+    queryFn: () =>
+      USE_MOCK ? mock.mockGetCronjobsStats() : cronjobsApi.getStats(),
+    staleTime: 60 * 1000,
+  });
+  return {
+    ...query,
+    runsLast24h: query.data?.runsLast24h ?? 0,
+    totalCronjobs: query.data?.totalCronjobs ?? 0,
+    enabledCount: query.data?.enabledCount ?? 0,
+  };
+}
+
 export function useCronjobAlerts() {
   const query = useQuery({
     queryKey: keys.alerts(),
@@ -153,6 +168,56 @@ export function useRunNowCronjob() {
 
 /** Alias for compatibility. */
 export const useRunCronjobNow = useRunNowCronjob;
+
+export function useCloneCronjob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      USE_MOCK ? mock.mockCloneCronjob(id) : cronjobsApi.clone(id),
+    onSuccess: (created) => {
+      qc.invalidateQueries({ queryKey: ["cronjobs"] });
+      if (created?.id) {
+        qc.invalidateQueries({ queryKey: keys.detail(created.id) });
+      }
+      toast.success("Cronjob cloned");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Clone failed");
+    },
+  });
+}
+
+export function usePauseCronjob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      USE_MOCK ? mock.mockPauseCronjob(id) : cronjobsApi.pause(id),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["cronjobs"] });
+      qc.invalidateQueries({ queryKey: keys.detail(id) });
+      toast.success("Cronjob paused");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Pause failed");
+    },
+  });
+}
+
+export function useResumeCronjob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      USE_MOCK ? mock.mockResumeCronjob(id) : cronjobsApi.resume(id),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["cronjobs"] });
+      qc.invalidateQueries({ queryKey: keys.detail(id) });
+      toast.success("Cronjob resumed");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Resume failed");
+    },
+  });
+}
 
 export function useBulkCronjobs() {
   const qc = useQueryClient();

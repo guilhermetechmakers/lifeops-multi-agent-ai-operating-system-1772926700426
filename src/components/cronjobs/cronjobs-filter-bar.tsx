@@ -1,13 +1,34 @@
 /**
- * CronjobsFilterBar: module, owner, status, tag filters.
+ * CronjobsFilterBar: module, owner, status, tag, triggerType, targetType, automationLevel filters.
  */
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MODULES, OWNERS } from "@/api/cronjobs-mock";
-import type { CronjobFilters } from "@/types/cronjob";
+import type { CronjobFilters, TriggerType, TargetType, AutomationLevel } from "@/types/cronjob";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const TRIGGER_TYPES: { value: TriggerType | ""; label: string }[] = [
+  { value: "", label: "All triggers" },
+  { value: "time", label: "Time" },
+  { value: "event", label: "Event" },
+  { value: "conditional", label: "Conditional" },
+];
+
+const TARGET_TYPES: { value: TargetType | ""; label: string }[] = [
+  { value: "", label: "All targets" },
+  { value: "agent", label: "Agent" },
+  { value: "workflow", label: "Workflow" },
+];
+
+const AUTOMATION_LEVELS: { value: AutomationLevel | ""; label: string }[] = [
+  { value: "", label: "All levels" },
+  { value: "suggest-only", label: "Suggest only" },
+  { value: "approval-required", label: "Approval required" },
+  { value: "auto-execute", label: "Auto execute" },
+  { value: "bounded-autopilot", label: "Bounded autopilot" },
+];
 
 export interface CronjobsFilterBarProps {
   filters: CronjobFilters;
@@ -31,6 +52,9 @@ export function CronjobsFilterBar({
     filters.owner ||
     (filters.status && filters.status !== "all") ||
     filters.tag ||
+    (String(filters.triggerType ?? "") !== "") ||
+    (String(filters.targetType ?? "") !== "") ||
+    (String(filters.automationLevel ?? "") !== "") ||
     search.trim();
 
   return (
@@ -92,6 +116,60 @@ export function CronjobsFilterBar({
         <option value="all">All status</option>
         <option value="enabled">Enabled</option>
         <option value="paused">Paused</option>
+      </select>
+
+      <select
+        value={filters.triggerType ?? ""}
+        onChange={(e) =>
+          onFiltersChange({
+            ...filters,
+            triggerType: (e.target.value as TriggerType | "") || undefined,
+          })
+        }
+        className="h-10 rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Filter by trigger type"
+      >
+        {(TRIGGER_TYPES ?? []).map(({ value, label }) => (
+          <option key={value || "all"} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={filters.targetType ?? ""}
+        onChange={(e) =>
+          onFiltersChange({
+            ...filters,
+            targetType: (e.target.value as TargetType | "") || undefined,
+          })
+        }
+        className="h-10 rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Filter by target type"
+      >
+        {(TARGET_TYPES ?? []).map(({ value, label }) => (
+          <option key={value || "all"} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={filters.automationLevel ?? ""}
+        onChange={(e) =>
+          onFiltersChange({
+            ...filters,
+            automationLevel: (e.target.value as AutomationLevel | "") || undefined,
+          })
+        }
+        className="h-10 rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Filter by automation level"
+      >
+        {(AUTOMATION_LEVELS ?? []).map(({ value, label }) => (
+          <option key={value || "all"} value={value}>
+            {label}
+          </option>
+        ))}
       </select>
 
       <Input

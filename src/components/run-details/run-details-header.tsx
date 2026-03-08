@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { RunDetail } from "@/types/run-details";
+import { RUN_STATUS_LABELS } from "@/types/run-details";
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
@@ -40,6 +41,7 @@ const STATUS_VARIANT: Record<
   succeeded: "success",
   failed: "destructive",
   aborted: "secondary",
+  reverted: "secondary",
 };
 
 export interface RunDetailsHeaderProps {
@@ -109,7 +111,7 @@ export function RunDetailsHeader({
                   {run.cronjobName}
                 </h1>
                 <Badge variant={statusVariant} className="shrink-0">
-                  {run.status}
+                  {RUN_STATUS_LABELS[run.status] ?? run.status}
                 </Badge>
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">

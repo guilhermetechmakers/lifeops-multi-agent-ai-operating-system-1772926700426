@@ -98,6 +98,20 @@ export interface TwoFactorSetupResult {
   backupCodes?: string[];
 }
 
+export interface TwoFactorVerifyInput {
+  token: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  userId: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface NotificationPrefs {
   email: boolean;
   sms: boolean;
