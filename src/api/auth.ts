@@ -200,6 +200,102 @@ export async function submitOnboarding(
   return result ?? ({} as OnboardingSession);
 }
 
+/** Verify email token from verification link */
+export interface VerifyEmailSuccess {
+  success: true;
+  user: { id: string; email: string; verified?: boolean; onboardingComplete?: boolean };
+  needsOnboarding: boolean;
+  next: "dashboard" | "onboarding";
+  /** Optional session to establish on success (token + user) */
+  session?: AuthResponse;
+}
+
+export interface VerifyEmailFailure {
+  success: false;
+  errorCode: "TOKEN_EXPIRED" | "TOKEN_INVALID" | "ALREADY_VERIFIED" | "USER_NOT_FOUND";
+  message: string;
+}
+
+export type VerifyEmailResponse = VerifyEmailSuccess | VerifyEmailFailure;
+
+export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 500));
+    if (!token || token.length < 6) {
+      return {
+        success: false,
+        errorCode: "TOKEN_INVALID",
+        message: "This verification link is invalid. Request a new one.",
+      };
+    }
+    const user = mockUser("verified@example.com");
+    return {
+      success: true,
+      user: { id: user.id, email: user.email, verified: true, onboardingComplete: false },
+      needsOnboarding: true,
+      next: "onboarding",
+      session: { token: "mock-token", user },
+    };
+  }
+  try {
+    const result = await api.post<VerifyEmailResponse>(`${AUTH_BASE}/verify-email`, { token });
+    const data = result ?? ({} as VerifyEmailResponse);
+    if (data?.success === true) {
+      return data as VerifyEmailSuccess;
+    }
+    return (data as VerifyEmailFailure) ?? {
+      success: false,
+      errorCode: "TOKEN_INVALID" as const,
+      message: "Verification failed. Please try again.",
+    };
+  } catch {
+    return {
+      success: false,
+      errorCode: "TOKEN_INVALID",
+      message: "Verification failed. Please try again.",
+    };
+  }
+}
+
+/** Resend verification email */
+export interface ResendVerificationResponse {
+  success: boolean;
+  nextRetryInSeconds?: number;
+  message?: string;
+}
+
+export async function resendVerification(params: {
+  email?: string;
+  userId?: string;
+}): Promise<ResendVerificationResponse> {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 400));
+    return {
+      success: true,
+      nextRetryInSeconds: 60,
+      message: "Verification email sent. Check your inbox.",
+    };
+  }
+  try {
+    const result = await api.post<ResendVerificationResponse>(
+      `${AUTH_BASE}/resend-verification`,
+      params
+    );
+    const data = result ?? {};
+    return {
+      success: data?.success ?? false,
+      nextRetryInSeconds: data?.nextRetryInSeconds ?? 60,
+      message: data?.message ?? "Verification email sent.",
+    };
+  } catch {
+    return {
+      success: false,
+      nextRetryInSeconds: 60,
+      message: "Failed to send verification email. Try again later.",
+    };
+  }
+}
+
 /** Exchange OAuth/SSO callback code or mock params for session */
 export async function exchangeOAuthCallback(
   provider: string,

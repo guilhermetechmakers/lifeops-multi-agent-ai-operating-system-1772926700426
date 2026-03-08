@@ -10,6 +10,7 @@ import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
 import AuthCallbackPage from "@/pages/auth-callback";
 import { PasswordResetPage } from "@/components/auth/password-reset";
+import VerifyEmailPage from "@/pages/verify-email";
 import DashboardMaster from "@/pages/dashboard-master";
 import CronjobsDashboard from "@/pages/cronjobs-dashboard";
 import Approvals from "@/pages/approvals";
@@ -51,6 +52,8 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/auth/forgot" element={<PasswordResetPage />} />
           <Route path="/auth/reset" element={<PasswordResetPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
