@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { AlertTriangle, Home, RefreshCw, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +79,19 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
               </Button>
+              <Link
+                to="/500"
+                state={
+                  this.state.correlationId
+                    ? { correlationId: this.state.correlationId, errorId: this.state.correlationId }
+                    : undefined
+                }
+              >
+                <Button variant="secondary" size="sm" aria-label="View full error page">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Error details
+                </Button>
+              </Link>
               <Link to="/">
                 <Button variant="default" size="sm" aria-label="Go to home">
                   <Home className="mr-2 h-4 w-4" />
