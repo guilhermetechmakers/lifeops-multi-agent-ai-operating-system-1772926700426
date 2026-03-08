@@ -52,7 +52,7 @@ function formatAmount(amount: number): string {
   })}`;
 }
 
-type SortKey = "date" | "merchant" | "amount" | "category" | "status";
+type SortKey = "date" | "merchant" | "amount" | "category" | "account" | "status";
 type SortDir = "asc" | "desc";
 
 export interface TransactionsTableProps {
@@ -100,6 +100,9 @@ export function TransactionsTable({
           cmp = (a.category ?? a.categorizedCategory ?? "").localeCompare(
             b.category ?? b.categorizedCategory ?? ""
           );
+          break;
+        case "account":
+          cmp = (a.accountId ?? "").localeCompare(b.accountId ?? "");
           break;
         case "status":
           cmp = (a.status ?? "").localeCompare(b.status ?? "");
@@ -189,17 +192,20 @@ export function TransactionsTable({
             ))}
           </div>
         ) : sorted.length === 0 ? (
-          <div className="py-12 text-center">
-            <Tag className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
+          <div className="py-12 px-4 text-center">
+            <Tag className="mx-auto mb-4 h-12 w-12 text-muted-foreground" aria-hidden />
+            <p className="text-sm font-medium text-foreground mb-1">
               No transactions match your filters
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Adjust filters or run ingestion to load transactions.
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full" role="table" aria-label="Transactions">
-              <thead>
-                <tr className="border-b border-white/[0.03]">
+          <div className="overflow-x-auto overflow-y-visible">
+            <table className="w-full border-collapse" role="table" aria-label="Transactions">
+              <thead className="sticky top-0 z-10 bg-card border-b border-white/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.03)]">
+                <tr>
                   <th className="w-10 px-2 py-3 text-left">
                     <Checkbox
                       checked={selectedIds.length === sorted.length && sorted.length > 0}
@@ -211,7 +217,7 @@ export function TransactionsTable({
                     <button
                       type="button"
                       onClick={() => toggleSort("date")}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
                     >
                       Date
                       <SortIcon column="date" />
@@ -221,7 +227,7 @@ export function TransactionsTable({
                     <button
                       type="button"
                       onClick={() => toggleSort("merchant")}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
                     >
                       Merchant
                       <SortIcon column="merchant" />
@@ -231,7 +237,7 @@ export function TransactionsTable({
                     <button
                       type="button"
                       onClick={() => toggleSort("amount")}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
                     >
                       Amount
                       <SortIcon column="amount" />
@@ -241,7 +247,7 @@ export function TransactionsTable({
                     <button
                       type="button"
                       onClick={() => toggleSort("category")}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
                     >
                       Category
                       <SortIcon column="category" />
@@ -250,14 +256,24 @@ export function TransactionsTable({
                   <th>
                     <button
                       type="button"
+                      onClick={() => toggleSort("account")}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
+                    >
+                      Account
+                      <SortIcon column="account" />
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
                       onClick={() => toggleSort("status")}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
                     >
                       Status
                       <SortIcon column="status" />
                     </button>
                   </th>
-                  <th className="w-12" aria-hidden />
+                  <th className="w-12" scope="col" aria-label="Row actions" />
                 </tr>
               </thead>
               <tbody>
@@ -357,6 +373,9 @@ export function TransactionsTable({
                           </Button>
                         </div>
                       )}
+                    </td>
+                    <td className="px-2 py-2 text-sm text-muted-foreground">
+                      {tx.accountId ?? "—"}
                     </td>
                     <td className="px-2 py-2">
                       <Badge

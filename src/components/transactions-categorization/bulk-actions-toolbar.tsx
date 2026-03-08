@@ -37,6 +37,8 @@ export interface BulkActionsToolbarProps {
   onExport: (ids: string[], format: "csv" | "json") => void;
   onFlagForReview: (ids: string[], notes?: string) => void;
   onAddNote: (ids: string[], note: string) => void;
+  /** When provided, Ctrl/Cmd+A selects all filtered transactions (e.g. pass ids of current filtered list). */
+  onSelectAllFiltered?: () => void;
   className?: string;
 }
 
@@ -49,6 +51,7 @@ export function BulkActionsToolbar({
   onExport,
   onFlagForReview,
   onAddNote,
+  onSelectAllFiltered,
   className,
 }: BulkActionsToolbarProps) {
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -63,15 +66,18 @@ export function BulkActionsToolbar({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClearSelection();
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === "a") {
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+        const target = e.target as HTMLElement;
+        const isInput = /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? "");
+        if (!isInput && onSelectAllFiltered) {
           e.preventDefault();
+          onSelectAllFiltered();
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClearSelection]);
+  }, [onClearSelection, onSelectAllFiltered]);
 
   const handleCategorize = useCallback(() => {
     if (category.trim() && count > 0) {

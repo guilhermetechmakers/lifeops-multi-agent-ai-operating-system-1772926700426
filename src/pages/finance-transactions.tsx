@@ -41,6 +41,7 @@ import {
   ExceptionsPanel,
   ReconciliationToolkit,
   AuditTrailPanel,
+  DashboardLinkers,
 } from "@/components/transactions-categorization";
 import type { TransactionEnriched } from "@/types/finance";
 
@@ -48,10 +49,21 @@ export default function FinanceTransactionsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const { transactions: txData, isLoading } = useTransactions();
+  const filters = useMemo(() => {
+    const f: { dateFrom?: string; dateTo?: string; category?: string; status?: string } = {};
+    if (dateFrom.trim()) f.dateFrom = dateFrom.trim();
+    if (dateTo.trim()) f.dateTo = dateTo.trim();
+    if (categoryFilter !== "all") f.category = categoryFilter;
+    if (statusFilter !== "all") f.status = statusFilter;
+    return f;
+  }, [dateFrom, dateTo, categoryFilter, statusFilter]);
+
+  const { transactions: txData, isLoading } = useTransactions(filters);
   const { rules } = useCategorizationRules();
   const { exceptions } = useExceptions();
   const { logs } = useAuditLogs();
@@ -205,28 +217,35 @@ export default function FinanceTransactionsPage() {
     [deleteRule]
   );
 
+  const handleSelectAllFiltered = useCallback(() => {
+    setSelectedIds(filtered.map((t) => t.id));
+  }, [filtered]);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">
-          Transactions & Categorization
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Manage transactions, create rules, mark exceptions
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">
+            Transactions & Categorization
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage transactions, create rules, mark exceptions
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            to="/dashboard/finance"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Finance Dashboard
+          </Link>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <Link
-          to="/dashboard/finance"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <LayoutDashboard className="h-4 w-4" />
-          Finance Dashboard
-        </Link>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 lg:grid-cols-[1fr_200px]">
+        <div className="space-y-6 min-w-0">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-white/[0.03] bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -266,21 +285,36 @@ export default function FinanceTransactionsPage() {
           onRerun={() => triggerIngestion.mutate()}
           isRerunning={triggerIngestion.isPending}
         />
-      </div>
+          </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             placeholder="Search merchant..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-9"
+            aria-label="Search by merchant"
           />
         </div>
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="w-[140px] h-9"
+          aria-label="Date from"
+        />
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="w-[140px] h-9"
+          aria-label="Date to"
+        />
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[140px] h-9">
-            <Filter className="h-4 w-4 mr-1" />
+            <Filter className="h-4 w-4 mr-1" aria-hidden />
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
@@ -302,15 +336,16 @@ export default function FinanceTransactionsPage() {
             <SelectItem value="exception">Exception</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+          </div>
 
-      <BulkActionsToolbar
+          <BulkActionsToolbar
         selectedIds={selectedIds}
         onClearSelection={() => setSelectedIds([])}
         onCategorize={handleBulkCategorize}
         onExport={handleBulkExport}
         onFlagForReview={handleBulkFlag}
         onAddNote={handleBulkNote}
+        onSelectAllFiltered={handleSelectAllFiltered}
       />
 
       <TransactionsTable
@@ -321,9 +356,9 @@ export default function FinanceTransactionsPage() {
         onFlagException={handleFlagException}
         onExport={(ids) => handleExport(ids, "csv")}
         isLoading={isLoading}
-      />
+          />
 
-      <Tabs defaultValue="rules">
+          <Tabs defaultValue="rules">
         <TabsList>
           <TabsTrigger value="rules" className="gap-1">
             <Tag className="h-4 w-4" />
@@ -366,7 +401,12 @@ export default function FinanceTransactionsPage() {
         <TabsContent value="audit" className="mt-4">
           <AuditTrailPanel logs={logs} />
         </TabsContent>
-      </Tabs>
+          </Tabs>
+        </div>
+        <Card className="border-white/[0.03] bg-card h-fit p-4">
+          <DashboardLinkers />
+        </Card>
+      </div>
     </div>
   );
 }

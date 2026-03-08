@@ -169,14 +169,15 @@ export async function fetchIngestionStatus(): Promise<IngestionStatusBilling> {
   const raw = await api.get<IngestionStatusBilling | { data?: IngestionStatusBilling }>(
     `${BASE}/ingestion-status`
   );
-  const data = (raw as { data?: IngestionStatusBilling })?.data ?? raw;
-  if (data && typeof data === "object") {
+  const wrapped = raw as { data?: IngestionStatusBilling };
+  const data = wrapped?.data ?? (typeof raw === "object" && raw !== null ? raw : null);
+  if (data && typeof data === "object" && "status" in data) {
     return {
-      status: data.status ?? "idle",
-      lastRun: data.lastRun ?? null,
-      newCount: data.newCount ?? 0,
-      updatedCount: data.updatedCount ?? 0,
-      error: data.error ?? null,
+      status: (data as IngestionStatusBilling).status ?? "idle",
+      lastRun: (data as IngestionStatusBilling).lastRun ?? null,
+      newCount: (data as IngestionStatusBilling).newCount ?? 0,
+      updatedCount: (data as IngestionStatusBilling).updatedCount ?? 0,
+      error: (data as IngestionStatusBilling).error ?? null,
     };
   }
   return { status: "idle", newCount: 0, updatedCount: 0 };

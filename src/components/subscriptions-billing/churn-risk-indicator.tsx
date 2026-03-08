@@ -1,104 +1,191 @@
 /**
- * ChurnRiskIndicator — Visual component showing risk score, trends, and recommended agent actions.
+ * ChurnRiskIndicator — Risk score, trends, recommended agent actions.
+ * Auto-remedial or approvals required.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TrendingDown, ArrowRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export interface ChurnAction {
+  id: string;
+  label: string;
+  type: "auto" | "approval";
+  rationale?: string;
+}
 
 export interface ChurnRiskData {
   subscriptionId: string;
   vendor: string;
   score: number;
-  trend?: "up" | "down" | "stable";
-  recommendedAction?: string;
-  requiresApproval?: boolean;
+  trend: "up" | "down" | "stable";
+  recommendedAction: string;
+  requiresApproval: boolean;
 }
 
-interface ChurnRiskIndicatorProps {
-  items: ChurnRiskData[];
-  isLoading?: boolean;
-  onApplyAction?: (subscriptionId: string, action: string) => void;
+export interface ChurnRiskIndicatorProps {
+  /** Legacy: aggregate risk score 0–1 */
+  riskScore?: number;
+  trend?: "up" | "down" | "stable";
+  atRiskCount?: number;
+  recommendedActions?: ChurnAction[];
+  onApplyAction?: (actionId: string) => void;
+  /** Per-subscription churn risk items */
+  items?: ChurnRiskData[];
+  onApplyToSubscription?: (subscriptionId: string) => void;
   className?: string;
 }
 
-function getRiskLabel(score: number): { label: string; variant: "destructive" | "warning" | "secondary" } {
-  if (score >= 0.5) return { label: "High", variant: "destructive" };
-  if (score >= 0.25) return { label: "Medium", variant: "warning" };
-  return { label: "Low", variant: "secondary" };
-}
-
 export function ChurnRiskIndicator({
-  items,
-  isLoading,
+  riskScore = 0,
+  trend = "stable",
+  atRiskCount = 0,
+  recommendedActions = [],
   onApplyAction,
+  items = [],
+  onApplyToSubscription,
   className,
 }: ChurnRiskIndicatorProps) {
   const list = Array.isArray(items) ? items : [];
-  const atRisk = list.filter((i) => (i.score ?? 0) >= 0.25);
+  const displayCount = list.length > 0 ? list.length : atRiskCount;
+  const scorePct =
+    list.length > 0
+      ? Math.round(
+          (list.reduce((s, x) => s + (x.score ?? 0), 0) / list.length) * 100
+        )
+      : Math.round((riskScore ?? 0) * 100);
+  const isHigh = scorePct >= 50;
+  const isMedium = scorePct >= 25 && scorePct < 50;
+  const actions = Array.isArray(recommendedActions) ? recommendedActions : [];
 
   return (
     <Card className={cn("border-white/[0.03] bg-card", className)}>
-      <CardHeader className="pb-2">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
-          <AlertTriangle className="h-5 w-5 text-amber" />
-          Churn Risk
+          <TrendingDown className="h-5 w-5 text-amber" aria-hidden />
+          Churn risk
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          {atRisk.length} subscription{atRisk.length !== 1 ? "s" : ""} at risk
+          {displayCount} subscription{displayCount !== 1 ? "s" : ""} at risk
         </p>
       </CardHeader>
-      <CardContent>
-        {isLoading ? (
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-lg font-bold",
+              isHigh && "bg-destructive/20 text-destructive",
+              isMedium && "bg-amber/20 text-amber",
+              !isHigh && !isMedium && "bg-teal/20 text-teal"
+            )}
+          >
+            {scorePct}%
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">
+              {isHigh ? "High" : isMedium ? "Medium" : "Low"} overall risk
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {trend === "up" && "Trending up"}
+              {trend === "down" && "Trending down"}
+              {trend === "stable" && "Stable"}
+            </p>
+          </div>
+        </div>
+
+        {list.length > 0 ? (
           <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-14 animate-pulse rounded-lg bg-secondary" />
-            ))}
-          </div>
-        ) : atRisk.length === 0 ? (
-          <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">No subscriptions at churn risk</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {atRisk.map((item) => {
-              const risk = getRiskLabel(item.score ?? 0);
-              const TrendIcon = item.trend === "up" ? TrendingUp : item.trend === "down" ? TrendingDown : null;
-              return (
+            <p className="text-xs font-medium text-muted-foreground">
+              At-risk subscriptions
+            </p>
+            <div className="space-y-2">
+              {list.map((item) => (
                 <div
                   key={item.subscriptionId}
-                  className="flex items-center justify-between rounded-lg border border-white/[0.03] bg-secondary/30 p-3 transition-all duration-200 hover:shadow-card-hover"
+                  className="flex items-center justify-between rounded-lg border border-white/[0.03] p-2"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{item.vendor ?? "—"}</span>
-                      <Badge variant={risk.variant} className="text-[10px] shrink-0">
-                        {risk.label}
-                      </Badge>
-                      {TrendIcon && (
-                        <TrendIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                      )}
-                    </div>
-                    {item.recommendedAction && (
-                      <p className="mt-1 text-xs text-muted-foreground">{item.recommendedAction}</p>
-                    )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {item.vendor ?? "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {item.recommendedAction ?? "—"}
+                    </p>
                   </div>
-                  {item.recommendedAction && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {item.requiresApproval && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        <Shield className="h-3 w-3 mr-0.5" />
+                        Approval
+                      </Badge>
+                    )}
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="h-7 text-xs shrink-0 ml-2"
-                      onClick={() => onApplyAction?.(item.subscriptionId, item.recommendedAction ?? "")}
+                      variant="ghost"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() =>
+                        onApplyToSubscription?.(item.subscriptionId)
+                      }
                     >
-                      {item.requiresApproval ? "Review" : "Apply"}
+                      Apply
+                      <ArrowRight className="h-3 w-3" />
                     </Button>
-                  )}
+                  </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
+        ) : (
+          actions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                Recommended actions
+              </p>
+              <div className="space-y-2">
+                {actions.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-lg border border-white/[0.03] p-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {a.label ?? "—"}
+                      </p>
+                      {a.rationale && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {a.rationale}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {a.type === "auto" && (
+                        <Badge variant="outline" className="text-[10px]">
+                          Auto
+                        </Badge>
+                      )}
+                      {a.type === "approval" && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          <Shield className="h-3 w-3 mr-0.5" />
+                          Approval
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => onApplyAction?.(a.id)}
+                      >
+                        Apply
+                        <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
         )}
       </CardContent>
     </Card>

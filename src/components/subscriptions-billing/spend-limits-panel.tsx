@@ -1,6 +1,5 @@
 /**
- * SpendLimitsPanel — Per-subscription spend limits, global cap.
- * Warning indicators when approaching limits; toggles to enforce; reset/recalculate.
+ * SpendLimitsPanel — Per-subscription spend limit controls, global spend cap, warning indicators.
  */
 
 import { useState } from "react";
@@ -9,184 +8,167 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { DollarSign, AlertTriangle, RotateCcw } from "lucide-react";
+import { DollarSign, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SubscriptionBilling } from "@/types/finance";
 
-export interface SpendLimitsPanelProps {
+interface SpendLimitsPanelProps {
   subscriptions: SubscriptionBilling[];
   globalCap?: number | null;
-  enforceCaps?: boolean;
+  enforceGlobalCap?: boolean;
   isLoading?: boolean;
-  onSetPerSubscriptionLimit?: (subscriptionId: string, limit: number) => void;
+  onSetSpendLimit?: (subscriptionId: string, limit: number, currency: string) => void;
   onSetGlobalCap?: (cap: number) => void;
   onToggleEnforce?: (enforce: boolean) => void;
   onReset?: () => void;
   className?: string;
 }
 
+function formatCurrency(amount: number, currency: string): string {
+  return `${currency} ${amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
 export function SpendLimitsPanel({
   subscriptions,
-  globalCap = null,
-  enforceCaps = false,
+  globalCap,
+  enforceGlobalCap = false,
   isLoading,
-  onSetPerSubscriptionLimit,
+  onSetSpendLimit,
   onSetGlobalCap,
   onToggleEnforce,
   onReset,
   className,
 }: SpendLimitsPanelProps) {
-  const [localGlobalCap, setLocalGlobalCap] = useState<string>(
-    globalCap != null ? String(globalCap) : ""
-  );
-  const [editingLimitId, setEditingLimitId] = useState<string | null>(null);
-  const [editingLimitValue, setEditingLimitValue] = useState<string>("");
+  const [editingLimit, setEditingLimit] = useState<{ id: string; value: string } | null>(null);
+  const [globalCapInput, setGlobalCapInput] = useState(globalCap?.toString() ?? "");
 
   const items = Array.isArray(subscriptions) ? subscriptions : [];
   const totalMonthly = items.reduce((sum, s) => sum + (s.amount ?? 0), 0);
-  const capNum = globalCap ?? 0;
-  const isNearCap = capNum > 0 && totalMonthly >= capNum * 0.9;
-  const isOverCap = capNum > 0 && totalMonthly > capNum;
+  const cap = globalCap ?? 0;
+  const isNearLimit = cap > 0 && totalMonthly >= cap * 0.9;
+  const isOverLimit = cap > 0 && totalMonthly > cap;
 
-  const handleSaveLimit = (subId: string) => {
-    const val = parseFloat(editingLimitValue);
-    if (!Number.isNaN(val) && val > 0) {
-      onSetPerSubscriptionLimit?.(subId, val);
-      setEditingLimitId(null);
-      setEditingLimitValue("");
-    }
-  };
-
-  const handleSaveGlobalCap = () => {
-    const val = parseFloat(localGlobalCap);
-    if (!Number.isNaN(val) && val >= 0) {
-      onSetGlobalCap?.(val);
+  const handleSaveLimit = (subscriptionId: string, currency: string) => {
+    const val = editingLimit?.id === subscriptionId ? parseFloat(editingLimit.value) : NaN;
+    if (!isNaN(val) && val > 0 && onSetSpendLimit) {
+      onSetSpendLimit(subscriptionId, val, currency);
+      setEditingLimit(null);
     }
   };
 
   return (
     <Card className={cn("border-white/[0.03] bg-card", className)}>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
-          <DollarSign className="h-5 w-5 text-muted-foreground" />
-          Spend limits
+          <DollarSign className="h-5 w-5" />
+          Spend Limits
         </CardTitle>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 gap-1 text-muted-foreground"
-            onClick={onReset}
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          Per-subscription and global caps
+        </p>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Global cap */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="global-cap">Global monthly cap</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Enforce caps</span>
-              <Switch
-                checked={enforceCaps}
-                onCheckedChange={onToggleEnforce}
-                aria-label="Enforce spend caps"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Input
-              id="global-cap"
-              type="number"
-              step="1"
-              min="0"
-              placeholder="e.g. 500"
-              value={localGlobalCap}
-              onChange={(e) => setLocalGlobalCap(e.target.value)}
-              onBlur={handleSaveGlobalCap}
-              className={cn(
-                "flex-1",
-                isOverCap && "border-destructive"
-              )}
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between rounded-lg border border-white/[0.03] p-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={enforceGlobalCap}
+              onCheckedChange={onToggleEnforce}
+              aria-label="Enforce global cap"
             />
-            <Button size="sm" variant="outline" onClick={handleSaveGlobalCap}>
-              Set
-            </Button>
+            <Label className="text-sm">Enforce global cap</Label>
           </div>
-          {isNearCap && !isOverCap && (
-            <p className="flex items-center gap-1.5 text-xs text-amber">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              Approaching limit ({totalMonthly.toFixed(0)} / {capNum})
-            </p>
-          )}
-          {isOverCap && (
-            <p className="flex items-center gap-1.5 text-xs text-destructive">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              Over limit ({totalMonthly.toFixed(0)} / {capNum})
-            </p>
-          )}
         </div>
 
-        {/* Per-subscription limits */}
+        {enforceGlobalCap && (
+          <div className="space-y-2">
+            <Label className="text-sm">Global cap (USD)</Label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={0}
+                step={10}
+                value={globalCapInput}
+                onChange={(e) => setGlobalCapInput(e.target.value)}
+                className="max-w-[140px]"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const v = parseFloat(globalCapInput);
+                  if (!isNaN(v) && v >= 0) onSetGlobalCap?.(v);
+                }}
+              >
+                Set
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {(isNearLimit || isOverLimit) && (
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-lg p-3 text-sm",
+              isOverLimit ? "bg-destructive/10 text-destructive" : "bg-amber/10 text-amber"
+            )}
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>
+              {isOverLimit
+                ? `Total spend (${formatCurrency(totalMonthly, "USD")}) exceeds global cap (${formatCurrency(cap, "USD")})`
+                : `Approaching global cap: ${formatCurrency(totalMonthly, "USD")} of ${formatCurrency(cap, "USD")}`}
+            </span>
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label className="text-muted-foreground">Per-subscription limits</Label>
+          <Label className="text-sm">Per-subscription limits</Label>
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-12 animate-pulse rounded-lg bg-secondary"
-                  aria-hidden
-                />
+                <div key={i} className="h-12 animate-pulse rounded-lg bg-secondary" />
               ))}
             </div>
-          ) : items.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">
-              No subscriptions to configure
-            </p>
           ) : (
             <div className="space-y-2">
-              {items.map((sub) => {
-                const isEditing = editingLimitId === sub.id;
-                const limit = sub.spendLimit ?? sub.amount ?? 0;
-                const isOver = limit > 0 && (sub.amount ?? 0) > limit;
+              {items.filter((s) => s.status === "active").map((sub) => {
+                const isEditing = editingLimit?.id === sub.id;
+                const limit = sub.spendLimit ?? 0;
+                const isNear = limit > 0 && (sub.amount ?? 0) >= limit * 0.9;
                 return (
                   <div
                     key={sub.id}
                     className="flex items-center justify-between rounded-lg border border-white/[0.03] p-3"
                   >
-                    <span className="text-sm font-medium truncate">
-                      {sub.vendor ?? "—"}
-                    </span>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{sub.vendor ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCurrency(sub.amount ?? 0, sub.currency ?? "USD")} / {formatCurrency(limit || 0, sub.currency ?? "USD")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isNear && limit > 0 && (
+                        <AlertTriangle className="h-4 w-4 text-amber shrink-0" />
+                      )}
                       {isEditing ? (
                         <>
                           <Input
                             type="number"
-                            step="0.01"
-                            min="0"
-                            className="w-24 h-8 text-sm"
-                            value={editingLimitValue}
+                            min={0}
+                            step={1}
+                            className="w-24 h-8"
+                            value={editingLimit?.value ?? ""}
                             onChange={(e) =>
-                              setEditingLimitValue(e.target.value)
+                              setEditingLimit({ id: sub.id, value: e.target.value })
                             }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter")
-                                handleSaveLimit(sub.id);
-                              if (e.key === "Escape") {
-                                setEditingLimitId(null);
-                                setEditingLimitValue("");
-                              }
-                            }}
                           />
                           <Button
                             size="sm"
-                            variant="ghost"
                             className="h-8"
-                            onClick={() => handleSaveLimit(sub.id)}
+                            onClick={() => handleSaveLimit(sub.id, sub.currency ?? "USD")}
                           >
                             Save
                           </Button>
@@ -194,34 +176,25 @@ export function SpendLimitsPanel({
                             size="sm"
                             variant="ghost"
                             className="h-8"
-                            onClick={() => {
-                              setEditingLimitId(null);
-                              setEditingLimitValue("");
-                            }}
+                            onClick={() => setEditingLimit(null)}
                           >
                             Cancel
                           </Button>
                         </>
                       ) : (
-                        <>
-                          {isOver && (
-                            <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-                          )}
-                          <span className="text-sm text-muted-foreground">
-                            {sub.currency ?? "USD"} {limit.toFixed(2)}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                              setEditingLimitId(sub.id);
-                              setEditingLimitValue(String(limit));
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        </>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8"
+                          onClick={() =>
+                            setEditingLimit({
+                              id: sub.id,
+                              value: (sub.spendLimit ?? 0).toString() || "",
+                            })
+                          }
+                        >
+                          Set limit
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -230,6 +203,12 @@ export function SpendLimitsPanel({
             </div>
           )}
         </div>
+
+        {onReset && (
+          <Button size="sm" variant="ghost" className="w-full text-muted-foreground" onClick={onReset}>
+            Reset / Recalculate
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

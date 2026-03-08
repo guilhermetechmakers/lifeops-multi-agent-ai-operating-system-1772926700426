@@ -106,8 +106,12 @@ function ExceptionList({
 
   if (list.length === 0) {
     return (
-      <div className="py-6 text-center text-sm text-muted-foreground">
-        No open exceptions
+      <div className="py-8 px-4 text-center">
+        <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground mb-3" aria-hidden />
+        <p className="text-sm font-medium text-foreground mb-1">No open exceptions</p>
+        <p className="text-sm text-muted-foreground">
+          Transactions flagged for review will appear here. Use &quot;Quick add exception&quot; below to flag items.
+        </p>
       </div>
     );
   }

@@ -3,7 +3,7 @@
  * Create, edit, delete, drag-reorder rules; live preview against transactions.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,8 +24,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MoreHorizontal, GripVertical, Settings2 } from "lucide-react";
+import { MoreHorizontal, GripVertical, Settings2, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   CategorizationRuleFull,
@@ -70,11 +80,14 @@ export function CategorizationRulesPanel({
   rules,
   transactions,
   onCreateRule,
-  onUpdateRule: _onUpdateRule,
+  onUpdateRule,
   onDeleteRule,
   className,
 }: CategorizationRulesPanelProps) {
+  const [tabValue, setTabValue] = useState("rules");
   const [previewRuleId, setPreviewRuleId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
 
   const items = Array.isArray(rules) ? rules : [];
   const txList = Array.isArray(transactions) ? transactions : [];
@@ -86,6 +99,11 @@ export function CategorizationRulesPanel({
     return txList.filter((t) => matchesRule(t, rule));
   }, [previewRuleId, items, txList]);
 
+  const handleDeleteConfirm = (id: string) => {
+    onDeleteRule(id);
+    setDeleteConfirmId(null);
+  };
+
   return (
     <Card className={cn("border-white/[0.03] bg-card", className)}>
       <CardHeader className="pb-2">
@@ -95,13 +113,13 @@ export function CategorizationRulesPanel({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="rules" className="w-full">
+        <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="rules" className="flex-1">
               Rules
             </TabsTrigger>
             <TabsTrigger value="create" className="flex-1">
-              Create Rule
+              {editingRuleId ? "Edit Rule" : "Create Rule"}
             </TabsTrigger>
             <TabsTrigger value="preview" className="flex-1">
               Preview
@@ -110,23 +128,48 @@ export function CategorizationRulesPanel({
           <TabsContent value="rules" className="mt-4">
             <RulesList
               rules={items}
-              onDelete={onDeleteRule}
+              onEdit={(id) => {
+                setEditingRuleId(id);
+                setTabValue("create");
+              }}
+              onDelete={(id) => setDeleteConfirmId(id)}
               onPreview={setPreviewRuleId}
             />
           </TabsContent>
           <TabsContent value="create" className="mt-4">
             <CreateRuleForm
+              key={editingRuleId ?? "create"}
+              editingRule={editingRuleId ? items.find((r) => r.id === editingRuleId) ?? null : null}
+              onCancelEdit={() => {
+                setEditingRuleId(null);
+                setTabValue("rules");
+              }}
               onSubmit={(data) => {
-                onCreateRule({
-                  name: data.name,
-                  pattern: data.pattern,
-                  conditions: { merchantContains: data.pattern },
-                  targetCategory: data.targetCategory,
-                  targetSubcategory: data.targetSubcategory ?? null,
-                  priority: data.priority,
-                  enabled: true,
-                  createdBy: "u1",
-                });
+                if (editingRuleId) {
+                  onUpdateRule(editingRuleId, {
+                    name: data.name,
+                    pattern: data.pattern,
+                    conditions: { merchantContains: data.pattern },
+                    targetCategory: data.targetCategory,
+                    targetSubcategory: data.targetSubcategory ?? null,
+                    priority: data.priority,
+                    enabled: true,
+                  });
+                  setEditingRuleId(null);
+                  setTabValue("rules");
+                } else {
+                  onCreateRule({
+                    name: data.name,
+                    pattern: data.pattern,
+                    conditions: { merchantContains: data.pattern },
+                    targetCategory: data.targetCategory,
+                    targetSubcategory: data.targetSubcategory ?? null,
+                    priority: data.priority,
+                    enabled: true,
+                    createdBy: "u1",
+                  });
+                  setTabValue("rules");
+                }
               }}
             />
           </TabsContent>
@@ -141,13 +184,36 @@ export function CategorizationRulesPanel({
           </TabsContent>
         </Tabs>
       </CardContent>
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete categorization rule?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The rule will be removed and will no longer apply to transactions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirmId && handleDeleteConfirm(deleteConfirmId)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
 
 function CreateRuleForm({
+  editingRule,
+  onCancelEdit,
   onSubmit,
 }: {
+  editingRule: CategorizationRuleFull | null;
+  onCancelEdit: () => void;
   onSubmit: (data: FormData) => void;
 }) {
   const {
@@ -166,6 +232,16 @@ function CreateRuleForm({
       priority: 0,
     },
   });
+
+  useEffect(() => {
+    if (editingRule) {
+      setValue("name", editingRule.name ?? "");
+      setValue("pattern", editingRule.pattern ?? "");
+      setValue("targetCategory", editingRule.targetCategory ?? "");
+      setValue("targetSubcategory", editingRule.targetSubcategory ?? "");
+      setValue("priority", editingRule.priority ?? 0);
+    }
+  }, [editingRule, setValue]);
 
   const targetCategory = watch("targetCategory");
 
@@ -233,19 +309,28 @@ function CreateRuleForm({
           {...register("priority")}
         />
       </div>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Creating…" : "Create rule"}
-      </Button>
+      <div className="flex gap-2">
+        {editingRule && (
+          <Button type="button" variant="outline" onClick={onCancelEdit}>
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving…" : editingRule ? "Update rule" : "Create rule"}
+        </Button>
+      </div>
     </form>
   );
 }
 
 function RulesList({
   rules,
+  onEdit,
   onDelete,
   onPreview,
 }: {
   rules: CategorizationRuleFull[];
+  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onPreview: (id: string | null) => void;
 }) {
@@ -253,8 +338,12 @@ function RulesList({
 
   if (list.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        No rules yet. Create one in the "Create Rule" tab.
+      <div className="py-8 px-4 text-center">
+        <Settings2 className="mx-auto h-10 w-10 text-muted-foreground mb-3" aria-hidden />
+        <p className="text-sm font-medium text-foreground mb-1">No rules yet</p>
+        <p className="text-sm text-muted-foreground">
+          Create a rule in the &quot;Create Rule&quot; tab to auto-categorize transactions.
+        </p>
       </div>
     );
   }
@@ -264,9 +353,9 @@ function RulesList({
       {(list ?? []).map((rule) => (
         <div
           key={rule.id}
-          className="flex items-center gap-2 rounded-lg border border-white/[0.03] p-3 transition-colors hover:bg-secondary/50"
+          className="flex items-center gap-2 rounded-lg border border-white/[0.03] p-3 transition-colors hover:bg-secondary/50 hover:shadow-sm"
         >
-          <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{rule.name ?? "—"}</p>
             <p className="text-xs text-muted-foreground">
@@ -285,12 +374,20 @@ function RulesList({
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0">
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" aria-label="Rule actions">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onDelete(rule.id)}>
+                <DropdownMenuItem onClick={() => onEdit(rule.id)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onDelete(rule.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>

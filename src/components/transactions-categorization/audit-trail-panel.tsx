@@ -55,8 +55,12 @@ export function AuditTrailPanel({
       </CardHeader>
       <CardContent>
         {list.length === 0 ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            No activity yet
+          <div className="py-8 px-4 text-center">
+            <History className="mx-auto h-10 w-10 text-muted-foreground mb-3" aria-hidden />
+            <p className="text-sm font-medium text-foreground mb-1">No activity yet</p>
+            <p className="text-sm text-muted-foreground">
+              Categorization changes, rule edits, and exception actions will appear here.
+            </p>
           </div>
         ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto">

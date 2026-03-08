@@ -102,6 +102,7 @@ function App() {
             <Route path="finance" element={<FinanceDashboardShell />}>
               <Route index element={<FinanceOverview />} />
               <Route path="subscriptions" element={<FinanceSubscriptionsPage />} />
+              <Route path="subscriptions-billing" element={<FinanceSubscriptionsPage />} />
               <Route path="transactions" element={<FinanceTransactionsPage />} />
             </Route>
             <Route path="health" element={<DashboardHealth />} />

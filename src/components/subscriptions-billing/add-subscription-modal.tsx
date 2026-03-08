@@ -1,8 +1,7 @@
 /**
- * EditSubscriptionModal — Edit subscription with validation (vendor, cadence, amount, dates).
+ * AddSubscriptionModal — Create new subscription with validation.
  */
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { SubscriptionBilling } from "@/types/finance";
 
 const schema = z.object({
   vendor: z.string().min(1, "Vendor is required"),
@@ -34,28 +32,24 @@ const schema = z.object({
   currency: z.string().min(1, "Currency is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().optional().nullable(),
-  status: z.enum(["active", "paused", "canceled"]),
   isTracked: z.boolean(),
-  nextChargeDate: z.string().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
 
-interface EditSubscriptionModalProps {
+interface AddSubscriptionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  subscription: SubscriptionBilling | null;
-  onSave: (id: string, data: Partial<SubscriptionBilling>) => void;
-  isSaving?: boolean;
+  onCreate: (data: FormData) => void;
+  isCreating?: boolean;
 }
 
-export function EditSubscriptionModal({
+export function AddSubscriptionModal({
   open,
   onOpenChange,
-  subscription,
-  onSave,
-  isSaving,
-}: EditSubscriptionModalProps) {
+  onCreate,
+  isCreating,
+}: AddSubscriptionModalProps) {
   const {
     register,
     handleSubmit,
@@ -70,43 +64,15 @@ export function EditSubscriptionModal({
       cadence: "monthly",
       amount: 0,
       currency: "USD",
-      startDate: "",
+      startDate: new Date().toISOString().slice(0, 10),
       endDate: null,
-      status: "active",
       isTracked: true,
-      nextChargeDate: null,
     },
   });
 
-  useEffect(() => {
-    if (subscription) {
-      reset({
-        vendor: subscription.vendor ?? "",
-        cadence: (subscription.cadence ?? "monthly") as "monthly" | "quarterly" | "yearly",
-        amount: subscription.amount ?? 0,
-        currency: subscription.currency ?? "USD",
-        startDate: subscription.startDate ?? "",
-        endDate: subscription.endDate ?? null,
-        status: (subscription.status ?? "active") as "active" | "paused" | "canceled",
-        isTracked: subscription.isTracked ?? true,
-        nextChargeDate: subscription.nextChargeDate ?? null,
-      });
-    }
-  }, [subscription, reset]);
-
   const onSubmit = (data: FormData) => {
-    if (!subscription?.id) return;
-    onSave(subscription.id, {
-      vendor: data.vendor,
-      cadence: data.cadence,
-      amount: data.amount,
-      currency: data.currency,
-      startDate: data.startDate,
-      endDate: data.endDate || undefined,
-      status: data.status,
-      isTracked: data.isTracked,
-      nextChargeDate: data.nextChargeDate || undefined,
-    });
+    onCreate(data);
+    reset();
     onOpenChange(false);
   };
 
@@ -114,9 +80,9 @@ export function EditSubscriptionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Subscription</DialogTitle>
+          <DialogTitle>Add Subscription</DialogTitle>
           <DialogDescription>
-            Update subscription details. Changes are audited.
+            Add a new subscription to track. You can connect a billing processor to import automatically.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -170,24 +136,6 @@ export function EditSubscriptionModal({
               <Input id="currency" {...register("currency")} placeholder="USD" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={watch("status")}
-                onValueChange={(v) => setValue("status", v as "active" | "paused" | "canceled")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
               <Input
                 id="startDate"
@@ -198,14 +146,6 @@ export function EditSubscriptionModal({
               {errors.startDate && (
                 <p className="text-xs text-destructive">{errors.startDate.message}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="nextChargeDate">Next Charge</Label>
-              <Input
-                id="nextChargeDate"
-                type="date"
-                {...register("nextChargeDate")}
-              />
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -223,8 +163,8 @@ export function EditSubscriptionModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving…" : "Save"}
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </form>
