@@ -19,6 +19,7 @@ import { ProjectsDashboardShell } from "@/components/projects-dashboard";
 import ProjectDetail from "@/pages/project-detail";
 import TicketBoardPage from "@/pages/ticket-board";
 import ContentDashboardPage from "@/pages/content-dashboard";
+import ContentLibraryPage from "@/pages/content-library";
 import ContentEditorPage from "@/pages/content-editor";
 import ContentCalendarPage from "@/pages/content-calendar";
 import ArtifactsPage from "@/pages/artifacts";
@@ -135,6 +136,7 @@ function App() {
               <Route path=":projectId/ticket-board" element={<TicketBoardPage />} />
             </Route>
             <Route path="content" element={<ContentDashboardPage />} />
+            <Route path="content/library" element={<ContentLibraryPage />} />
             <Route path="content/editor" element={<ContentEditorPage />} />
             <Route path="content/calendar" element={<ContentCalendarPage />} />
             <Route path="artifacts" element={<ArtifactsPage />} />
