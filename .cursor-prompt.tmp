@@ -847,402 +847,327 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Content Calendar Prompt for AI Development Tool
+ for bestpractices and # Content Editor
 
-This prompt is designed to guide an AI development tool to build a robust, production-ready Content Calendar feature within the LifeOps system. It covers the page, components, frontend/backend/integration requirements, UX flows, data models, security, validation, acceptance criteria, and UI/UX guidelines, all aligned with the project context and strict runtime safety rules.
-
----
-
-## Content Calendar
-
-### Overview
-Build a calendar-based scheduling UI for content items that supports publishing slots, drag-to-schedule, and conflict detection. This page sits at the nexus of Content Pipeline Automation (idea → research → drafting → editing → scheduling → publishing with LLM-assisted workflows and publishing connectors) and the Content Editor workflow (end-to-end editor with collaboration, versioning, and publishing integrations). The UI must be fast, keyboard-friendly, accessible, and highly responsive, with a dark, dense, power-user aesthetic consistent with LifeOps design language.
-
----
+## Overview
+Develop a complete Content Editor within LifeOps that enables end-to-end content workflows from idea to publish. The editor must support LLM-assisted writing, versioning, collaboration, and publishing integrations, while tying into a File Upload & Artifacts Storage system and a Content Pipeline Automation engine. The solution should provide a cohesive UX across the Content Editor page, a Content Dashboard, and a Content Calendar, with robust data integrity, audit trails, and security. All code and interfaces must be resilient to null/undefined values and follow runtime safety rules: use data ?? [] for Supabase results, guard all array methods, initialize useState with appropriate array/object types, validate API responses, and use optional chaining where appropriate.
 
 ## Page Description (Full Detail)
-
 What this page is:
-- A central Content Calendar that visualizes content items across time (month/week/day views) and channels, enabling drag-and-drop scheduling of publish slots, rescheduling, and conflict detection (team capacity, slot overlaps, channel restrictions).
+- The Content Editor page is the primary, end-to-end workspace for creating, refining, and publishing content. It supports ideation, research, drafting, editing, scheduling, and publishing in a single integrated interface, with optional LLM-assisted writing, live collaboration, version history, and publishing connectors to channels (CMS, social, email, etc.).
 
 Goals:
-- Provide an at-a-glance calendar with scalable views (Month, Week, Day) that render content cards as scheduled items.
-- Support drag-and-drop of content cards between slots, days, or channels, with live conflict detection and automated suggestions.
-- Show a Conflicts Panel listing overlapping slots, capacity warnings, and actionable next steps.
-- Include a Quick Create flow to rapidly add a content card with essential metadata (title, type, target channel, tentative publish window).
-- Connect with Content Pipeline Automation to automatically seed ideas, research tasks, drafts, edits, and scheduling where appropriate.
-- Integrate with the Content Editor for deeper editing, versioning, and publishing connectors.
-- Ensure all actions are logged, reversible, and traceable with an audit trail.
+- Provide a fluid, distraction-minimized editor that lets teams move content through the lifecycle: idea → research → draft → edit → schedule → publish.
+- Deliver real-time collaboration, autosave, and a robust LLM assistant pane for expansion, rewriting, tone adjustments, and structured prompts.
+- Integrate version control (diffs, snapshots, revert), artifact/file attachments with lifecycle/versioning, and secure access to assets.
+- Expose publish controls, metadata (SEO, tags), and channels with scheduling capabilities.
+- Surface a cohesive view of pipelines, current drafts, review status, and performance insights via connected dashboards and calendars.
 
-UI elements and how they need to look:
-- Month/Week/Day Views: horizontally laid-out timeline with days/weeks and vertical lanes per publishing channel or team.
-- Drag & Drop Scheduling: draggable content cards that snap to slots; when dragged over a slot, show live slot feasibility and conflict indicators.
-- Conflicts Panel: side panel listing conflicts with severity badges, suggested resolutions, and one-click actions (reschedule, reassign, escalate).
-- Quick Create: modal or in-view inline form to create content items with minimal metadata, auto-populating from templates when possible.
-- Visual guidance: high-contrast white typography on near-black background; subtle card elevation, gradient card backs, and accent pills for statuses.
+Features connected:
+- File Upload & Artifacts Storage: Upload, store, and serve artifacts (run outputs, content attachments) with versioning and secure access. Ensure artifact metadata (version, creator, timestamp, access controls) is captured and auditable.
+- Content Pipeline Automation: Orchestrate ideation, research, drafting, editing, scheduling, and publishing with LLM assistance and publishing connectors. Include per-step state, approvals, and traceable agent-to-agent handoffs in the orchestration layer.
+- UI Panels:
+  - Editor pane (WYSIWYG + Markdown toggle, autosave, and inline comments)
+  - LLM Assistant Pane (suggestions, expansions, rewrite, tone controls)
+  - Research Pane (linked sources, citation manager)
+  - Versioning History (diff views, snapshots, revert)
+  - Publish Controls (channels, schedule, metadata, and status)
+- Connected Pages:
+  - Content Dashboard: Overview for content pipelines, content calendar, drafts in progress, publishing status, pending approvals, and SEO/performance insights.
+  - Content Calendar: Calendar-based scheduling UI for content items with publishing slots, drag-to-schedule, and conflict detection.
 
-Connected Pages:
-- Content Editor: Full workflow from ideation to publish with LLM-assisted writing, versioning, and publishing integrations.
-- Content Pipeline Automation: End-to-end automation spanning ideation → research → drafting → editing → scheduling → publishing with LLM assistance and publishing connectors.
+UI guidance:
+- Follow the provided visual style: dark UI, high contrast for primary actions, restrained accents, and dense, information-rich panels optimized for power users.
+- Ensure consistent typography, spacing, and component states as described in the design system.
+- Provide keyboard accessibility, clear focus states, and responsive behavior for editor, panes, and dashboards.
 
-UI guidance and constraints:
-- Dense, keyboard-navigable, accessible controls.
-- Drag-and-drop must be robust with proper aria attributes and keyboard equivalents.
-- Conflicts should be detectable in real time with clear visual indicators and accessible messaging.
-
----
+Note: The API endpoints themselves are not specified in this task; the prompt should define the expected API contracts, data shapes, and integration points to accommodate future wiring to your backend, including Supabase or other data layers.
 
 ## Components to Build
+1) Content Editor Page (Main Editor Surface)
+- Subcomponents:
+  - EditorWorkspace: canvas for content editing with WYSIWYG and Markdown toggle
+  - LiveCollaborationPanel: cursors, presence indicators, per-section comments
+  - AutosaveEngine: saves draft versions at configurable intervals; exposes save status
+  - VersionBadgeStrip: shows current version, last modified, authors
+  - LLMAssistantPanel: panel with prompts, tone controls, expansion, rewrite, summarize, and outline features
+  - ResearchPanel: linked sources, citation manager, export/import citations
+  - AttachmentsPanel: file upload area with drag-and-drop, artifact versioning, secure access tokens
+  - PublishControlsPanel: channel selectors, scheduling UI, metadata (SEO, tags), publish vs. test run
+  - DiffViewer: side-by-side or inline diffs between versions
+  - HistoryPanel: historical diffs, snapshots, revert actions
+- Data handling:
+  - Draft content, versions, authors, timestamps
+  - Attachments with versioning and access controls
+  - Collaboration presence and comments tied to content piece
+- Interactions:
+  - Real-time collaboration (presence, cursors)
+  - Tone/style controls; prompts to LLM; preview rendering
+  - Autosave state indicators; manual save button
+  - Validation for publish readiness (policy checks, approvals)
 
-1. CalendarView (Main Page)
-   - Props: timeRange (Month/Week/Day), channels[], items[], viewDate
-   - State: selectedSlot, draggingItem, viewMode, filters
-   - Features: render calendar grid, render content cards, drag-and-drop support, conflict detection overlays, responsive layout
-   - Data handling: consume sanitized items via API; ensure data ?? [] usage; guard array operations
+2) File Upload & Artifacts Storage Component
+- Features:
+  - Drag-and-drop and browse file picker
+  - Versioning support per artifact (semver-like or timestamped)
+  - Secure, revocable access tokens and per-user permission checks
+  - Metadata: filename, mime type, size, uploader, version, createdAt
+  - API surface: uploadArtifact(draftId, file, metadata) -> artifactId; fetchArtifact(artifactId) -> file blob/URL; listArtifacts(draftId) -> artifacts[]
+- Safety:
+  - Guard all results with data ?? [] when listing artifacts
+  - Validate file types and size; enforce allowedMimeTypes
+- UI/UX:
+  - Thumbs/thumbnails, file type icons, version chips, download/view actions
+  - Delete/replace/version bump with confirmation
+- Data integrity:
+  - Ensure artifact references are stored in a way that they survive draft version changes
+  - Audit trail for artifact uploads, views, and shares
 
-2. ContentCard
-   - Props: item { id, title, type, status, channel, publishAt, duration, assignees, priority, metadata }
-   - UI: icon/thumbnail, title, channel badge, publish time, status pill, assignees
-   - Interactions: click to open in Content Editor, drag handle, quick actions (reschedule, reassign)
+3) Content Pipeline Automation Orchestrator (LLM-assisted automation)
+- Features:
+  - Orchestrator that sequences steps: ideation, research, drafting, editing, scheduling, publishing
+  - Agent-based handoffs with traceable messages
+  - Prompt templates for each stage; variables for scope, audience, channel rules
+  - Publishing connectors; ability to push to CMS, social, and email channels
+  - Approvals queue integration with conditional auto-execute or require approvals
+  - Constraints: max actions, spend limits, allowed tools, safety rails and required confirmations
+  - Run history, logs, inter-agent traces, diffs, artifacts created
+- API surface:
+  - startPipeline(contentId, plan, scope) -> pipelineRunId
+  - advancePipeline(runId, step, payload) -> updatedState
+  - getPipelineState(runId) -> state including step, status, logs
+  - requestApproval(runId, reviewerId) -> approvalId
+  - publishToChannel(runId, channel) -> publishResult
+- Data safety:
+  - Validate all inputs; ensure all array-like data is guarded
+  - Use Array.isArray checks and data ?? [] for lists
+- UI integration:
+  - Pipeline status widgets on Editor page and in Content Dashboard
+  - Controls to pause/resume, rerun steps, view per-step diffs and logs
 
-3. ChannelLane
-   - Props: channel, items[]
-   - UI: vertical lane for each channel, slot grid within lane
-   - Features: drop target for ContentCard, slot locking/availability states
+4) Content Dashboard Page
+- Features:
+  - Overview panels: content pipelines, drafts in progress, publishing status, pending approvals
+  - SEO/performance insights: basic metrics with sparklines or small charts
+  - Quick-create widgets to start ideation pipelines
+  - Filters: status, author, channel, publish window
+- Components:
+  - PipelineSummaryCard: shows progress, ETA, last action
+  - DraftListView: dense list with version, last updated, status
+  - ApprovalsQueuePanel: items requiring review with approve/reject actions
+  - SEOInsightsPanel: key metrics
+- Data handling:
+  - Lists of pipelines, drafts, approvals with null-safe mapping and guards
+  - Use data ?? [] and Array.isArray() guards for all lists
 
-4. ConflictsPanel
-   - Props: conflicts[] (each with type: overlap, capacity, channel, items[])
-   - UI: list with severity badges, concise details, actions (suggested reschedule, reassign, approve)
-   - Behavior: filterable by severity, prioritized stacking, accessible via keyboard
-
-5. QuickCreateModal
-   - Props: onCreate
-   - Fields: title, type, channel, tentativePublishAt, duration
-   - Validation: required fields, sensible defaults, auto-suggestion for templates
-
-6. Drag-and-Drop Engine
-   - Libraries: react-dnd or native pointer-based system with accessible fallbacks
-   - Requirements: snapshot of drag state, collision detection with slots, live feedback
-
-7. ConflictDetector
-   - Inputs: items, slots, channelCapacity
-   - Outputs: conflicts list with reason codes (overlap, capacity, tool restriction)
-   - Real-time updates as item positions change
-
-8. API Bridge (Frontend Services)
-   - fetchCalendarItems(query): GET calendar items within range
-   - createCalendarItem(payload): POST new item
-   - updateCalendarItem(id, payload): PATCH/PUT
-   - bulkReschedule(ids, newSlot): POST
-   - fetchChannelCapacity(): GET capacity per channel and time slot
-   - logAudit(action, details): POST audit trail
-
-9. AuditTrail & RunArtifactsPanel
-   - Show per-action logs, diffs, and artifacts related to scheduling actions
-
-10. Tooltip/Popovers
-    - Contextual hints for drag targets, conflicts, and quick actions
-
----
+5) Content Calendar Page
+- Features:
+  - Calendar UI with publishing slots
+  - Drag-to-schedule items; conflict detection and resolution prompts
+  - Views: month/week/day; thumbnails for each item
+  - Quick actions from calendar: reschedule, edit, publish
+- Components:
+  - CalendarGrid: rendering of days/weeks with slots
+  - ContentCardInCalendar: compact card with title, status, and tags
+  - DragDropScheduler: handles dragging items between slots with conflict checks
+  - ConflictDialog: informs user of conflicts and options
+- Data handling:
+  - Content items with publishDate, status, and channel metadata
+  - Use guarded lists: (items ?? []).map(...) and Array.isArray checks
 
 ## Implementation Requirements
 
 ### Frontend
-
-- Architecture:
-  - Component-driven with clear separation: CalendarView composed of ChannelLane, ContentCard, ConflictsPanel, and QuickCreateModal.
-  - State management: local UI state for drag/drop, plus global state for calendar data via a lightweight store (e.g., React Context or Zustand) to facilitate cross-component updates.
-  - Data safety: use data ?? [] for any API results; verify Array.isArray(results) before mapping; default useState<Type[]>([]) for array states.
-
-- UI/UX:
-  - Implement Month/Week/Day views with responsive breakpoints. Ensure layout gracefully degrades to a stacked vertical list on narrow viewports.
-  - Drag-and-drop: smooth drag visuals, snap to grid, and live conflict feedback. Ensure keyboard alternative: arrow keys to nudge, Enter to drop.
-  - Conflict indicators: inline indicators on slots and a dedicated ConflictsPanel with searchable/sortable conflicts by severity.
-  - Quick Create: accessible modal with focus trapping; form validation and inline hints.
-
+- Frameworks: React with TypeScript; state management via React hooks or a lightweight store
+- Components:
+  - EditorSurface with WYSIWYG and Markdown toggle
+  - LLMAssistantPanel with configurable prompts (tone, length, style)
+  - ResearchPanel with citation manager
+  - AttachmentsPanel for artifact uploads
+  - Versioning UI (diffs, snapshots)
+  - PublishControlsPanel for channels, scheduling, and metadata
+  - Dashboard widgets for Content Dashboard and Content Calendar
+- State & Data Modeling:
+  - useState<Type[]>([]) defaults for arrays; appropriate typing
+  - Guards for all API results: consistently use data ?? [] and Array.isArray() checks
+  - Persisted autosave keys per draft; reconcile on load
+  - Real-time collaboration presence signals
 - Accessibility:
-  - ARIA roles for calendar regions, drag-and-drop, and modal dialogs.
-  - Keyboard focus management during drag, drop, and modal open.
-  - Color contrast checks comply with WCAG AA for text on backgrounds.
-
+  - Keyboard navigable, screen-reader friendly labels
+  - Focus traps for modals; ensure visible focus states
 - Performance:
-  - Virtualization for large calendars (only render visible rows/slots).
-  - Debounce rapid updates; batch API calls for consecutive edits.
-  - Efficient re-renders: use memoization where appropriate.
-
-- Runtime Safety:
-  - All API results accessed with nullish coalescing and guards:
-    - const items = data ?? [];
-    - Array.isArray(items) ? items.map(...) : []
-  - Initialize React state with correct types:
-    - const [items, setItems] = useState<Item[]>([]);
-  - Access nested API responses with optional chaining:
-    - response?.data?.items ?? []
-  - Destructure with defaults:
-    - const { items = [], conflicts = [] } = response ?? {};
-
-- Data flows:
-  - On load: fetchCalendarItems for the visible range; render items per channel lane.
-  - On drag: compute potential drop slot; if conflict detected, show warning and disable drop if critical.
-  - On drop/confirm: call updateCalendarItem or createCalendarItem; push audit trail entry.
-  - When a conflict is detected, update ConflictsPanel in real-time.
+  - Debounced autosave; virtualization for long lists; pagination where needed
+- Testing:
+  - Unit tests for data helpers (guards), integration tests for API contracts, E2E flows for typical editor lifecycle
 
 ### Backend
-
-- Data models (schemata):
-  - ContentItem
-    - id: string
-    - title: string
-    - type: string (ideation, research, draft, edit, schedule, publish)
-    - channelId: string
-    - publishAt: string (ISO datetime)
-    - durationMinutes: number
-    - status: string (planned, in-progress, published, blocked)
-    - assignees: string[]
-    - version: number
-    - metadata: object
-    - createdAt: string
-    - updatedAt: string
-  - Channel
-    - id: string
-    - name: string
-    - capacityPerSlot: number
-    - color: string
-  - Conflict
-    - id: string
-    - channelId: string
-    - slotStart: string
-    - slotEnd: string
-    - reason: string
-    - severity: string (low|medium|high)
-    - itemIds: string[]
-  - AuditLog
-    - id: string
-    - action: string
-    - actorId: string
-    - targetItemId: string
-    - details: string
-    - createdAt: string
-
-- API endpoints:
-  - GET /api/calendar/items?start=...&end=...&channels=...
-    - Returns: { data: ContentItem[], meta: { total } }
-  - POST /api/calendar/items
-    - Body: { title, type, channelId, publishAt, durationMinutes, assignees, metadata }
-    - Returns: Created ContentItem
-  - PATCH /api/calendar/items/{id}
-    - Body: partial ContentItem fields to update
-  - POST /api/calendar/items/bulk-reschedule
-    - Body: { itemIds: string[], newPublishAt: string, newChannelId?: string }
-  - GET /api/channels
-    - Returns: Channel[]
-  - GET /api/channels/capacity
-    - Returns: { [channelId]: capacityPerSlot }
-  - POST /api/audit
-    - Body: { action, actorId, targetItemId, details }
-
-- Business logic:
-  - Conflict detection: two or more items overlapping on the same channel/time with capacity constraints triggers a conflict.
-  - Slot snapping: when dragging, snap to nearest valid slot; if none, show unavailable state.
-  - Conflict resolution: suggest rescheduling to the next available slot or reassigning to another channel; allow approvals where required.
-
+- Data Models (drafts, versions, artifacts, pipelines, approvals, logs)
+  - Draft: id, title, content, format (markdown/html), version, authorId, createdAt, updatedAt, isPublished
+  - Version: id, draftId, content, diff, createdAt, authorId
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status, steps, logs, startedAt, endedAt
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status, comments, requestedAt, decidedAt
+- Endpoints (examples; ensure runtime safety)
+  - POST /api/drafts with { title, content, format } -> Draft
+  - GET /api/drafts/{id} -> Draft with data?. The response data may be null; validate
+  - GET /api/drafts/{id}/versions -> Version[] | []
+  - POST /api/drafts/{id}/versions with { content, note } -> Version
+  - POST /api/drafts/{id}/artifacts with multipart/form-data -> Artifact
+  - GET /api/drafts/{id}/artifacts -> Artifact[]
+  - POST /api/pipelines with { draftId, plan, scope } -> PipelineRun
+  - GET /api/pipelines/{runId} -> PipelineRun
+  - POST /api/pipelines/{runId}/advance with { step, payload } -> PipelineRun
+  - POST /api/pipelines/{runId}/approvals/{approvalId}/decide with { status, comments } -> Approval
+  - POST /api/publish with { runId, channel, schedule } -> PublishResult
 - Security:
-  - Authentication: JWT-based or session-based per LifeOps auth strategy.
-  - Authorization: ensure only users with scheduling rights and appropriate roles can create/update calendar items; enforce per-channel permissions.
-  - Audit trails: every create/update/delete/action logged with reversible capability.
-
+  - JWT/OAuth authentication; authorization checks for write access to drafts, artifacts, pipelines
+  - Access controls on artifacts (per-user/per-role)
+  - Audit trails for all create/update/delete actions
 - Validation:
-  - Server-side validation for required fields, types, valid channelId, and publishAt in ISO format.
-  - Validate arrays (assignees) and nested metadata safely; ensure no nulls cause runtime errors.
+  - Validate all inputs server-side; ensure arrays are validated via Array.isArray
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
+  - Use nullish coalescing for optional fields
 
 ### Integration
-
-- Data flows:
-  - Frontend fetches calendar items and channels; backend returns validated structures.
-  - On scheduling actions, frontend updates are persisted via API and then reflected in UI immediately; audit logs stored for traceability.
-  - Content Pipeline Automation hooks are triggered on key state transitions (e.g., idea → research → draft) as part of the broader LifeOps orchestration, with events emitted to agent orchestration layer.
-
-- Inter-module connections:
-  - Content Calendar consumes signals from Content Pipeline Automation for upcoming items and templates.
-  - Content Editor integration: selecting a calendar item navigates to the Editor with preloaded item context; edits and versioning flow back to calendar state.
-
----
+- Data Flow:
+  - Editor writes content -> autosave creates new DraftVersion; attach metadata
+  - Attach artifacts uploaded in AttachmentsPanel are versioned and linked to draft/version
+  - LLMAssistantPane executes prompts via an LLM service; results saved as Suggestions or Draft updates
+  - Content Pipeline Automator consumes a Draft to create a PipelineRun; steps progress with logs and artifacts
+  - PublishControlsPanel triggers publisher connectors; results saved to PipelineRun and PublishResult
+- Synchronization:
+  - Ensure consistent IDs across panels (draftId, versionId, runId)
+  - When a draft version is created, all panels reflect the latest version; provide diffs against previous versions
+- Reuse:
+  - Centralized helper utilities for null-safe array handling, API response normalization, and date handling
+  - Shared UI primitives: Button, Card, Tabs, Modal, Tooltip with styles aligned to the design system
 
 ## User Experience Flow
+1) Idea → Research:
+- User creates a new Draft with a title and initial idea summary.
+- Editor autosaves to Draft, creates Version 1.
+- LLM Assistant provides outline and expansion suggestions; user accepts/refines.
+- ResearchPane collects sources; user marks citations; citations are linked to the draft version.
 
-1. User lands on Content Calendar main page.
-   - See a multi-channel calendar with days/weeks/month views.
-   - All items pre-populated for the visible range; channels display order and capacity indicators.
+2) Draft Writing:
+- User writes content in EditorSurface; Markdown toggle available; autosave continuously.
+- Real-time collaboration shows collaborators editing the same draft.
+- LLM Assistant suggests rewrites or tone adjustments; user applies changes.
 
-2. User switches to Week or Day view for granular scheduling.
-   - Cards appear in their respective channel lanes with clear time blocks.
-   - Slot grid indicates available publishing slots.
+3) Editing & Review:
+- User triggers Edition pass; Versioned diffs are shown in DiffViewer.
+- Reviewer/Collaborator adds comments; approvals queue is populated if needed.
+- Version history stores snapshots; user can revert to prior version if necessary.
 
-3. User drags a ContentCard to a new time slot or channel.
-   - Live drag feedback shows potential drop target.
-   - If the target slot is valid and within capacity, the card snaps and a subtle confirmation appears.
-   - If the target creates a conflict, a warning badge appears; drop is prevented or requires a confirm.
+4) Artifacts & Attachments:
+- User uploads artifacts (data runs, attachments) via AttachmentsPanel; artifacts are versioned and accessible via secure links.
+- Artifact metadata is visible in the artifact list and can be attached to the draft version.
 
-4. User opens ConflictsPanel to review conflicts.
-   - Conflicts are listed with severity and recommended actions.
-   - User can choose to reschedule, reassign, or approve an automatic resolution if permitted.
+5) Scheduling & Publishing:
+- PublishControlsPanel allows scheduling publish date/time and selecting channels (CMS, social, email).
+- In Content Calendar, user drags a draft into a slot; conflict detection alerts if the slot is occupied.
+- PipelineAutomation runs, logging steps; on success, content is published via connectors and status is updated.
 
-5. User uses Quick Create to add a new content item.
-   - Minimal metadata form; upon submit, item appears in the calendar at the current view location or a chosen default slot.
+6) Dashboard & Insights:
+- Content Dashboard shows pipeline progress, drafts in progress, approvals, and SEO/performance metrics.
+- Content Calendar provides a weekly/monthly view with color-coded statuses and quick actions.
 
-6. User clicks a calendar item to open the Content Editor workflow.
-   - Opens the Editor with idea → research → draft → edit → schedule → publish workflow steps.
-   - User can edit content, trigger LLM-assisted writing, manage versions, and connect to publishing connectors.
-
-7. System logs audit trails for every action.
-   - Users can review run artifacts and diffs in AuditTrail panels.
-
-8. All actions are reversible where possible.
-   - Users can revert scheduling changes to previous states; audit logs store diffs.
-
----
+7) Audit & Revisions:
+- All actions produce an audit trail; users can view run logs, agent messages, and generated artifacts.
+- Reverts and diffs are easily accessible; permissions ensure only authorized users can revert/publish.
 
 ## Technical Specifications
 
-### Data Models
-- ContentItem
-  - id: string
-  - title: string
-  - type: string (idea, research, draft, edit, schedule, publish)
-  - channelId: string
-  - publishAt: string (ISO datetime)
-  - durationMinutes: number
-  - status: string
-  - assignees: string[]
-  - version: number
-  - metadata: object
-  - createdAt: string
-  - updatedAt: string
+- Data Models: Draft, Version, Artifact, PipelineRun, StepLog, Approval, PublishResult
+  - Draft: id, title, content, format ('markdown'|'html'), currentVersionId, authorId, createdAt, updatedAt, isPublished, seoMetadata
+  - Version: id, draftId, content, changeSummary, authorId, createdAt
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status ('pending'|'running'|'completed'|'failed'), startedAt, endedAt, summary
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status ('pending'|'approved'|'rejected'), comments, requestedAt, decidedAt
+  - PublishResult: id, runId, channel, success, details, publishedAt
 
-- Channel
-  - id: string
-  - name: string
-  - capacityPerSlot: number
-  - color: string
+- API Endpoints (illustrative; implement as per your stack)
+  - Drafts
+    - POST /api/drafts
+    - GET /api/drafts/{draftId}
+    - GET /api/drafts/{draftId}/versions
+    - POST /api/drafts/{draftId}/versions
+  - Artifacts
+    - POST /api/drafts/{draftId}/artifacts
+    - GET /api/drafts/{draftId}/artifacts
+  - Pipelines
+    - POST /api/pipelines
+    - GET /api/pipelines/{runId}
+    - POST /api/pipelines/{runId}/advance
+  - Approvals
+    - POST /api/pipelines/{runId}/approvals
+    - POST /api/pipelines/{runId}/approvals/{approvalId}/decide
+  - Publish
+    - POST /api/publish
 
-- Conflict
-  - id: string
-  - channelId: string
-  - slotStart: string
-  - slotEnd: string
-  - reason: string
-  - severity: string
-  - itemIds: string[]
+- Security
+  - JWT/OAuth 2.0; middleware enforcing authorization on drafts, artifacts, pipelines
+  - Per-resource permissions; audit logs for all mutations
+  - Access controls for artifact downloads
+  - Rate limiting for LLM prompts to avoid abuse
 
-- AuditLog
-  - id: string
-  - action: string
-  - actorId: string
-  - targetItemId: string
-  - details: string
-  - createdAt: string
-
-### API Endpoints
-- GET /api/calendar/items?start=&end=&channels=
-- POST /api/calendar/items
-- PATCH /api/calendar/items/{id}
-- POST /api/calendar/items/bulk-reschedule
-- GET /api/channels
-- GET /api/channels/capacity
-- POST /api/audit
-
-### Security
-- Authentication: token/session-based per LifeOps standard (JWT recommended for stateless APIs)
-- Authorization: per-channel permissions for create/update; enforce safety rails and approvals where applicable
-- Data validation and sanitization on server for all inputs
-- Audit trail preserved for all scheduling actions
-
-### Validation Rules
-- Required: title, channelId, publishAt for create; channelId exists and is valid
-- publishAt must be ISO 8601
-- durationMinutes > 0
-- assignees must be an array of strings
-- Optional nested metadata must be sanitized
-- All API responses guarded with data ?? [] prior to mapping or iteration
-
----
+- Validation & Runtime Safety
+  - Always guard arrays: const items = data ?? []; items.map(...) guarded with Array.isArray
+  - API responses validated: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: obj?.property?.nested
+  - Destructuring defaults: const { items = [], count = 0 } = response ?? {}
+  - Use useState<Type[]>([]) for array state; useRef for mutable objects where needed
+  - Supabase results: const items = data ?? [] per requirement
 
 ## Acceptance Criteria
-
-- [ ] The Content Calendar renders correctly in Month, Week, and Day views with all channels and items for the visible date range.
-- [ ] Drag-and-drop scheduling updates publishAt and channelId with real-time conflict detection; conflicts panel updates instantly.
-- [ ] Quick Create creates a ContentItem with minimal metadata and appears in the correct slot, with server-side validation and audit logging.
-- [ ] ConflictsPanel surfaces all overlaps and capacity issues, with actionable resolution paths (reschedule/reassign/approve).
-- [ ] Opening a calendar item navigates to Content Editor with the item context and supports the full idea→publish workflow.
-- [ ] All API responses are validated defensively (data ?? [], Array.isArray checks) and all arrays initialized with useState([]).
-- [ ] Comprehensive unit and integration tests cover: calendar rendering, drag/drop, conflict detection, API routes, and audit logs.
-- [ ] Accessibility checks pass (ARIA roles, keyboard navigation, focus management in modals and drag/drop).
-
----
+- [ ] End-to-end user flows from idea to publish operate without runtime errors; drafts persist across sessions; autosave and versioning are functional
+- [ ] LLM Assistant pane can generate, apply, and revert prompts; tone and style controls work; prompts honor content scope
+- [ ] Attachment upload supports versioning, secure access, and per-artifact metadata; artifacts are retrievable and auditable
+- [ ] Content Pipeline Automation can initialize a pipeline, progress through ideation, research, drafting, editing, scheduling, and publishing with proper logs and per-step statuses
+- [ ] Scheduling/Calendar supports drag-to-schedule, conflict detection, and per-slot publishing actions
+- [ ] Content Dashboard shows accurate counts, statuses, and SEO metrics; Approvals queue gates publish actions when required
+- [ ] All API responses validated; all lists guarded with null-safe patterns; no runtime crashes due to undefined/null arrays
 
 ## UI/UX Guidelines
+Apply the project's design system:
+- Maintain the dark, dense, highly scannable UI with minimal accents
+- Use the specified color palette for depth, status, and highlights
+- Ensure typography hierarchy and spacing adhere to the 8px baseline grid and responsive rules
+- Use rounded 8–12px radii for cards; 1px borders with rgba(255,255,255,0.03)
+- Cards: elevated, gradient backgrounds, top icons, bold titles, metadata beneath
+- Navigation: left sidebar with collapse/expand sections; active states marked with accent pill (#FF3B30)
+- Data Visualization: subtle grids, consistent data colors from the accent palette
+- Interactive Elements: responsive hover states, accessible focus outlines, and clear affordances for actions
 
-Apply the LifeOps design system precisely.
+## Visual Style
 
-- Color palette and typography:
-  - Primary background #0B0B0C, secondary #151718, panel outlines #1F1F20
-  - Text: #FFFFFF; secondary meta #9DA3A6; disabled #56595B
-  - Accent: #FF3B30 for active/alerts
-  - Charts: teal #00C2A8, amber #FFB020, purple #8B5CF6
-  - Gradients: #111213 → #1A1A1B for depth
+Color Palette and Typography are defined above; implement across components with a consistent theme:
+- Font: Inter or SF Pro Display, fallback to Roboto
+- Weights: headings 600–700, titles 500–600, body 400, microcopy 300–400
+- Spacing: 8px grid; card paddings 16–20px; gutters 8–24px
+- Layout: left sidebar width 220–260px; content area uses flexible grid
 
-- Typography and layout:
-  - Font: Inter, SF Pro Display, or Roboto
-  - Headings 600–700 weight, 20–28px; titles 14–16px; body 12–14px; captions 11–12px
-  - 8px baseline grid; gutters 220–260px; header height 56–64px
-  - Card radii 8–12px; shadows; borders subtle
-
-- Card design:
-  - Dark elevated cards with top inner highlight, rounded corners
-  - Icon/thumbnail at top, then title, then metadata
-  - Hover: translateY(-2px), border tint to #2A2A2B
-
-- Navigation:
-  - Left sidebar with icons; active state uses vertical accent pill #FF3B30
-  - Collapsible sections with carets; selection uses rounded background
-
-- Data visualization:
-  - Minimal grids, low-contrast axes, colored lines with rounded caps
-  - Tooltips: dark panels with white text, 8–10px radius
-
-- Interactions:
-  - Buttons: Primary, Secondary; hover lift; destructive actions emphasized
-  - Form elements: dark inputs, subtle borders, focused ring in accent color
-  - Toggles/chips/pills: rounded; active state uses accent
-  - Micro-interactions: 120–200ms transitions; clear affordances for actions
-
-- Design philosophy:
-  - Dense, screen-focused UI for power users; high readability with restrained accent usage
-  - Clear auditability and reversibility; traceable agent actions and run artifacts
-
----
+Key Design Elements (summary):
+- Card Design: dark, rounded, gradient, subtle borders, hover lift
+- Navigation: compact left rail with active accent pill
+- Data Visualization: muted axes, colored lines/areas with restrained saturation
+- Interactive Elements: primary/secondary actions, hover/focus states, toggles, chips, badges
+- Transformations: smooth 120–200ms transitions, subtle shadows
 
 ## Mandatory Coding Standards — Runtime Safety
-
-CRITICAL: Enforce in ALL generated code.
-
-1. Supabase-like results handling:
-   - const items = data ?? []
-2. Array method safety:
-   - (items ?? []).map(...)
-   - Array.isArray(items) ? items.map(...) : []
-3. React useState initialization for arrays:
-   - const [items, setItems] = useState<Item[]>([])
-4. API response validation:
-   - const list = Array.isArray(response?.data) ? response.data : []
-5. Optional chaining:
-   - obj?.property?.nested
-6. Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {}
+- Supabase query results: Always use nullish coalescing — const items = data ?? []
+- Array methods: Guard all calls
+  - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+- React useState for arrays/objects: Initialize with proper type, e.g., useState<Type[]>([])
+- API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining: use obj?.property?.nested
+- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
 ---
 
-If you need this prompt tailored to a specific tech stack (e.g., Next.js + React + Prisma + Supabase, or Remix, or a custom in-house stack), specify constraints such as preferred state management library, testing framework, CI/CD setup, and any existing code conventions. This prompt is designed to be implementation-agnostic while providing concrete, actionable guidance for building the Content Calendar within LifeOps. for style.
+If you need, I can convert this into a machine-readable prompt file (JSON/YAML) with explicit field mappings for an AI development tool, or tailor it to a specific tech stack (Next.js + Prisma, Remix + PostgreSQL, etc.). for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1264,402 +1189,327 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Content Calendar Prompt for AI Development Tool
+# Content Editor
 
-This prompt is designed to guide an AI development tool to build a robust, production-ready Content Calendar feature within the LifeOps system. It covers the page, components, frontend/backend/integration requirements, UX flows, data models, security, validation, acceptance criteria, and UI/UX guidelines, all aligned with the project context and strict runtime safety rules.
-
----
-
-## Content Calendar
-
-### Overview
-Build a calendar-based scheduling UI for content items that supports publishing slots, drag-to-schedule, and conflict detection. This page sits at the nexus of Content Pipeline Automation (idea → research → drafting → editing → scheduling → publishing with LLM-assisted workflows and publishing connectors) and the Content Editor workflow (end-to-end editor with collaboration, versioning, and publishing integrations). The UI must be fast, keyboard-friendly, accessible, and highly responsive, with a dark, dense, power-user aesthetic consistent with LifeOps design language.
-
----
+## Overview
+Develop a complete Content Editor within LifeOps that enables end-to-end content workflows from idea to publish. The editor must support LLM-assisted writing, versioning, collaboration, and publishing integrations, while tying into a File Upload & Artifacts Storage system and a Content Pipeline Automation engine. The solution should provide a cohesive UX across the Content Editor page, a Content Dashboard, and a Content Calendar, with robust data integrity, audit trails, and security. All code and interfaces must be resilient to null/undefined values and follow runtime safety rules: use data ?? [] for Supabase results, guard all array methods, initialize useState with appropriate array/object types, validate API responses, and use optional chaining where appropriate.
 
 ## Page Description (Full Detail)
-
 What this page is:
-- A central Content Calendar that visualizes content items across time (month/week/day views) and channels, enabling drag-and-drop scheduling of publish slots, rescheduling, and conflict detection (team capacity, slot overlaps, channel restrictions).
+- The Content Editor page is the primary, end-to-end workspace for creating, refining, and publishing content. It supports ideation, research, drafting, editing, scheduling, and publishing in a single integrated interface, with optional LLM-assisted writing, live collaboration, version history, and publishing connectors to channels (CMS, social, email, etc.).
 
 Goals:
-- Provide an at-a-glance calendar with scalable views (Month, Week, Day) that render content cards as scheduled items.
-- Support drag-and-drop of content cards between slots, days, or channels, with live conflict detection and automated suggestions.
-- Show a Conflicts Panel listing overlapping slots, capacity warnings, and actionable next steps.
-- Include a Quick Create flow to rapidly add a content card with essential metadata (title, type, target channel, tentative publish window).
-- Connect with Content Pipeline Automation to automatically seed ideas, research tasks, drafts, edits, and scheduling where appropriate.
-- Integrate with the Content Editor for deeper editing, versioning, and publishing connectors.
-- Ensure all actions are logged, reversible, and traceable with an audit trail.
+- Provide a fluid, distraction-minimized editor that lets teams move content through the lifecycle: idea → research → draft → edit → schedule → publish.
+- Deliver real-time collaboration, autosave, and a robust LLM assistant pane for expansion, rewriting, tone adjustments, and structured prompts.
+- Integrate version control (diffs, snapshots, revert), artifact/file attachments with lifecycle/versioning, and secure access to assets.
+- Expose publish controls, metadata (SEO, tags), and channels with scheduling capabilities.
+- Surface a cohesive view of pipelines, current drafts, review status, and performance insights via connected dashboards and calendars.
 
-UI elements and how they need to look:
-- Month/Week/Day Views: horizontally laid-out timeline with days/weeks and vertical lanes per publishing channel or team.
-- Drag & Drop Scheduling: draggable content cards that snap to slots; when dragged over a slot, show live slot feasibility and conflict indicators.
-- Conflicts Panel: side panel listing conflicts with severity badges, suggested resolutions, and one-click actions (reschedule, reassign, escalate).
-- Quick Create: modal or in-view inline form to create content items with minimal metadata, auto-populating from templates when possible.
-- Visual guidance: high-contrast white typography on near-black background; subtle card elevation, gradient card backs, and accent pills for statuses.
+Features connected:
+- File Upload & Artifacts Storage: Upload, store, and serve artifacts (run outputs, content attachments) with versioning and secure access. Ensure artifact metadata (version, creator, timestamp, access controls) is captured and auditable.
+- Content Pipeline Automation: Orchestrate ideation, research, drafting, editing, scheduling, and publishing with LLM assistance and publishing connectors. Include per-step state, approvals, and traceable agent-to-agent handoffs in the orchestration layer.
+- UI Panels:
+  - Editor pane (WYSIWYG + Markdown toggle, autosave, and inline comments)
+  - LLM Assistant Pane (suggestions, expansions, rewrite, tone controls)
+  - Research Pane (linked sources, citation manager)
+  - Versioning History (diff views, snapshots, revert)
+  - Publish Controls (channels, schedule, metadata, and status)
+- Connected Pages:
+  - Content Dashboard: Overview for content pipelines, content calendar, drafts in progress, publishing status, pending approvals, and SEO/performance insights.
+  - Content Calendar: Calendar-based scheduling UI for content items with publishing slots, drag-to-schedule, and conflict detection.
 
-Connected Pages:
-- Content Editor: Full workflow from ideation to publish with LLM-assisted writing, versioning, and publishing integrations.
-- Content Pipeline Automation: End-to-end automation spanning ideation → research → drafting → editing → scheduling → publishing with LLM assistance and publishing connectors.
+UI guidance:
+- Follow the provided visual style: dark UI, high contrast for primary actions, restrained accents, and dense, information-rich panels optimized for power users.
+- Ensure consistent typography, spacing, and component states as described in the design system.
+- Provide keyboard accessibility, clear focus states, and responsive behavior for editor, panes, and dashboards.
 
-UI guidance and constraints:
-- Dense, keyboard-navigable, accessible controls.
-- Drag-and-drop must be robust with proper aria attributes and keyboard equivalents.
-- Conflicts should be detectable in real time with clear visual indicators and accessible messaging.
-
----
+Note: The API endpoints themselves are not specified in this task; the prompt should define the expected API contracts, data shapes, and integration points to accommodate future wiring to your backend, including Supabase or other data layers.
 
 ## Components to Build
+1) Content Editor Page (Main Editor Surface)
+- Subcomponents:
+  - EditorWorkspace: canvas for content editing with WYSIWYG and Markdown toggle
+  - LiveCollaborationPanel: cursors, presence indicators, per-section comments
+  - AutosaveEngine: saves draft versions at configurable intervals; exposes save status
+  - VersionBadgeStrip: shows current version, last modified, authors
+  - LLMAssistantPanel: panel with prompts, tone controls, expansion, rewrite, summarize, and outline features
+  - ResearchPanel: linked sources, citation manager, export/import citations
+  - AttachmentsPanel: file upload area with drag-and-drop, artifact versioning, secure access tokens
+  - PublishControlsPanel: channel selectors, scheduling UI, metadata (SEO, tags), publish vs. test run
+  - DiffViewer: side-by-side or inline diffs between versions
+  - HistoryPanel: historical diffs, snapshots, revert actions
+- Data handling:
+  - Draft content, versions, authors, timestamps
+  - Attachments with versioning and access controls
+  - Collaboration presence and comments tied to content piece
+- Interactions:
+  - Real-time collaboration (presence, cursors)
+  - Tone/style controls; prompts to LLM; preview rendering
+  - Autosave state indicators; manual save button
+  - Validation for publish readiness (policy checks, approvals)
 
-1. CalendarView (Main Page)
-   - Props: timeRange (Month/Week/Day), channels[], items[], viewDate
-   - State: selectedSlot, draggingItem, viewMode, filters
-   - Features: render calendar grid, render content cards, drag-and-drop support, conflict detection overlays, responsive layout
-   - Data handling: consume sanitized items via API; ensure data ?? [] usage; guard array operations
+2) File Upload & Artifacts Storage Component
+- Features:
+  - Drag-and-drop and browse file picker
+  - Versioning support per artifact (semver-like or timestamped)
+  - Secure, revocable access tokens and per-user permission checks
+  - Metadata: filename, mime type, size, uploader, version, createdAt
+  - API surface: uploadArtifact(draftId, file, metadata) -> artifactId; fetchArtifact(artifactId) -> file blob/URL; listArtifacts(draftId) -> artifacts[]
+- Safety:
+  - Guard all results with data ?? [] when listing artifacts
+  - Validate file types and size; enforce allowedMimeTypes
+- UI/UX:
+  - Thumbs/thumbnails, file type icons, version chips, download/view actions
+  - Delete/replace/version bump with confirmation
+- Data integrity:
+  - Ensure artifact references are stored in a way that they survive draft version changes
+  - Audit trail for artifact uploads, views, and shares
 
-2. ContentCard
-   - Props: item { id, title, type, status, channel, publishAt, duration, assignees, priority, metadata }
-   - UI: icon/thumbnail, title, channel badge, publish time, status pill, assignees
-   - Interactions: click to open in Content Editor, drag handle, quick actions (reschedule, reassign)
+3) Content Pipeline Automation Orchestrator (LLM-assisted automation)
+- Features:
+  - Orchestrator that sequences steps: ideation, research, drafting, editing, scheduling, publishing
+  - Agent-based handoffs with traceable messages
+  - Prompt templates for each stage; variables for scope, audience, channel rules
+  - Publishing connectors; ability to push to CMS, social, and email channels
+  - Approvals queue integration with conditional auto-execute or require approvals
+  - Constraints: max actions, spend limits, allowed tools, safety rails and required confirmations
+  - Run history, logs, inter-agent traces, diffs, artifacts created
+- API surface:
+  - startPipeline(contentId, plan, scope) -> pipelineRunId
+  - advancePipeline(runId, step, payload) -> updatedState
+  - getPipelineState(runId) -> state including step, status, logs
+  - requestApproval(runId, reviewerId) -> approvalId
+  - publishToChannel(runId, channel) -> publishResult
+- Data safety:
+  - Validate all inputs; ensure all array-like data is guarded
+  - Use Array.isArray checks and data ?? [] for lists
+- UI integration:
+  - Pipeline status widgets on Editor page and in Content Dashboard
+  - Controls to pause/resume, rerun steps, view per-step diffs and logs
 
-3. ChannelLane
-   - Props: channel, items[]
-   - UI: vertical lane for each channel, slot grid within lane
-   - Features: drop target for ContentCard, slot locking/availability states
+4) Content Dashboard Page
+- Features:
+  - Overview panels: content pipelines, drafts in progress, publishing status, pending approvals
+  - SEO/performance insights: basic metrics with sparklines or small charts
+  - Quick-create widgets to start ideation pipelines
+  - Filters: status, author, channel, publish window
+- Components:
+  - PipelineSummaryCard: shows progress, ETA, last action
+  - DraftListView: dense list with version, last updated, status
+  - ApprovalsQueuePanel: items requiring review with approve/reject actions
+  - SEOInsightsPanel: key metrics
+- Data handling:
+  - Lists of pipelines, drafts, approvals with null-safe mapping and guards
+  - Use data ?? [] and Array.isArray() guards for all lists
 
-4. ConflictsPanel
-   - Props: conflicts[] (each with type: overlap, capacity, channel, items[])
-   - UI: list with severity badges, concise details, actions (suggested reschedule, reassign, approve)
-   - Behavior: filterable by severity, prioritized stacking, accessible via keyboard
-
-5. QuickCreateModal
-   - Props: onCreate
-   - Fields: title, type, channel, tentativePublishAt, duration
-   - Validation: required fields, sensible defaults, auto-suggestion for templates
-
-6. Drag-and-Drop Engine
-   - Libraries: react-dnd or native pointer-based system with accessible fallbacks
-   - Requirements: snapshot of drag state, collision detection with slots, live feedback
-
-7. ConflictDetector
-   - Inputs: items, slots, channelCapacity
-   - Outputs: conflicts list with reason codes (overlap, capacity, tool restriction)
-   - Real-time updates as item positions change
-
-8. API Bridge (Frontend Services)
-   - fetchCalendarItems(query): GET calendar items within range
-   - createCalendarItem(payload): POST new item
-   - updateCalendarItem(id, payload): PATCH/PUT
-   - bulkReschedule(ids, newSlot): POST
-   - fetchChannelCapacity(): GET capacity per channel and time slot
-   - logAudit(action, details): POST audit trail
-
-9. AuditTrail & RunArtifactsPanel
-   - Show per-action logs, diffs, and artifacts related to scheduling actions
-
-10. Tooltip/Popovers
-    - Contextual hints for drag targets, conflicts, and quick actions
-
----
+5) Content Calendar Page
+- Features:
+  - Calendar UI with publishing slots
+  - Drag-to-schedule items; conflict detection and resolution prompts
+  - Views: month/week/day; thumbnails for each item
+  - Quick actions from calendar: reschedule, edit, publish
+- Components:
+  - CalendarGrid: rendering of days/weeks with slots
+  - ContentCardInCalendar: compact card with title, status, and tags
+  - DragDropScheduler: handles dragging items between slots with conflict checks
+  - ConflictDialog: informs user of conflicts and options
+- Data handling:
+  - Content items with publishDate, status, and channel metadata
+  - Use guarded lists: (items ?? []).map(...) and Array.isArray checks
 
 ## Implementation Requirements
 
 ### Frontend
-
-- Architecture:
-  - Component-driven with clear separation: CalendarView composed of ChannelLane, ContentCard, ConflictsPanel, and QuickCreateModal.
-  - State management: local UI state for drag/drop, plus global state for calendar data via a lightweight store (e.g., React Context or Zustand) to facilitate cross-component updates.
-  - Data safety: use data ?? [] for any API results; verify Array.isArray(results) before mapping; default useState<Type[]>([]) for array states.
-
-- UI/UX:
-  - Implement Month/Week/Day views with responsive breakpoints. Ensure layout gracefully degrades to a stacked vertical list on narrow viewports.
-  - Drag-and-drop: smooth drag visuals, snap to grid, and live conflict feedback. Ensure keyboard alternative: arrow keys to nudge, Enter to drop.
-  - Conflict indicators: inline indicators on slots and a dedicated ConflictsPanel with searchable/sortable conflicts by severity.
-  - Quick Create: accessible modal with focus trapping; form validation and inline hints.
-
+- Frameworks: React with TypeScript; state management via React hooks or a lightweight store
+- Components:
+  - EditorSurface with WYSIWYG and Markdown toggle
+  - LLMAssistantPanel with configurable prompts (tone, length, style)
+  - ResearchPanel with citation manager
+  - AttachmentsPanel for artifact uploads
+  - Versioning UI (diffs, snapshots)
+  - PublishControlsPanel for channels, scheduling, and metadata
+  - Dashboard widgets for Content Dashboard and Content Calendar
+- State & Data Modeling:
+  - useState<Type[]>([]) defaults for arrays; appropriate typing
+  - Guards for all API results: consistently use data ?? [] and Array.isArray() checks
+  - Persisted autosave keys per draft; reconcile on load
+  - Real-time collaboration presence signals
 - Accessibility:
-  - ARIA roles for calendar regions, drag-and-drop, and modal dialogs.
-  - Keyboard focus management during drag, drop, and modal open.
-  - Color contrast checks comply with WCAG AA for text on backgrounds.
-
+  - Keyboard navigable, screen-reader friendly labels
+  - Focus traps for modals; ensure visible focus states
 - Performance:
-  - Virtualization for large calendars (only render visible rows/slots).
-  - Debounce rapid updates; batch API calls for consecutive edits.
-  - Efficient re-renders: use memoization where appropriate.
-
-- Runtime Safety:
-  - All API results accessed with nullish coalescing and guards:
-    - const items = data ?? [];
-    - Array.isArray(items) ? items.map(...) : []
-  - Initialize React state with correct types:
-    - const [items, setItems] = useState<Item[]>([]);
-  - Access nested API responses with optional chaining:
-    - response?.data?.items ?? []
-  - Destructure with defaults:
-    - const { items = [], conflicts = [] } = response ?? {};
-
-- Data flows:
-  - On load: fetchCalendarItems for the visible range; render items per channel lane.
-  - On drag: compute potential drop slot; if conflict detected, show warning and disable drop if critical.
-  - On drop/confirm: call updateCalendarItem or createCalendarItem; push audit trail entry.
-  - When a conflict is detected, update ConflictsPanel in real-time.
+  - Debounced autosave; virtualization for long lists; pagination where needed
+- Testing:
+  - Unit tests for data helpers (guards), integration tests for API contracts, E2E flows for typical editor lifecycle
 
 ### Backend
-
-- Data models (schemata):
-  - ContentItem
-    - id: string
-    - title: string
-    - type: string (ideation, research, draft, edit, schedule, publish)
-    - channelId: string
-    - publishAt: string (ISO datetime)
-    - durationMinutes: number
-    - status: string (planned, in-progress, published, blocked)
-    - assignees: string[]
-    - version: number
-    - metadata: object
-    - createdAt: string
-    - updatedAt: string
-  - Channel
-    - id: string
-    - name: string
-    - capacityPerSlot: number
-    - color: string
-  - Conflict
-    - id: string
-    - channelId: string
-    - slotStart: string
-    - slotEnd: string
-    - reason: string
-    - severity: string (low|medium|high)
-    - itemIds: string[]
-  - AuditLog
-    - id: string
-    - action: string
-    - actorId: string
-    - targetItemId: string
-    - details: string
-    - createdAt: string
-
-- API endpoints:
-  - GET /api/calendar/items?start=...&end=...&channels=...
-    - Returns: { data: ContentItem[], meta: { total } }
-  - POST /api/calendar/items
-    - Body: { title, type, channelId, publishAt, durationMinutes, assignees, metadata }
-    - Returns: Created ContentItem
-  - PATCH /api/calendar/items/{id}
-    - Body: partial ContentItem fields to update
-  - POST /api/calendar/items/bulk-reschedule
-    - Body: { itemIds: string[], newPublishAt: string, newChannelId?: string }
-  - GET /api/channels
-    - Returns: Channel[]
-  - GET /api/channels/capacity
-    - Returns: { [channelId]: capacityPerSlot }
-  - POST /api/audit
-    - Body: { action, actorId, targetItemId, details }
-
-- Business logic:
-  - Conflict detection: two or more items overlapping on the same channel/time with capacity constraints triggers a conflict.
-  - Slot snapping: when dragging, snap to nearest valid slot; if none, show unavailable state.
-  - Conflict resolution: suggest rescheduling to the next available slot or reassigning to another channel; allow approvals where required.
-
+- Data Models (drafts, versions, artifacts, pipelines, approvals, logs)
+  - Draft: id, title, content, format (markdown/html), version, authorId, createdAt, updatedAt, isPublished
+  - Version: id, draftId, content, diff, createdAt, authorId
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status, steps, logs, startedAt, endedAt
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status, comments, requestedAt, decidedAt
+- Endpoints (examples; ensure runtime safety)
+  - POST /api/drafts with { title, content, format } -> Draft
+  - GET /api/drafts/{id} -> Draft with data?. The response data may be null; validate
+  - GET /api/drafts/{id}/versions -> Version[] | []
+  - POST /api/drafts/{id}/versions with { content, note } -> Version
+  - POST /api/drafts/{id}/artifacts with multipart/form-data -> Artifact
+  - GET /api/drafts/{id}/artifacts -> Artifact[]
+  - POST /api/pipelines with { draftId, plan, scope } -> PipelineRun
+  - GET /api/pipelines/{runId} -> PipelineRun
+  - POST /api/pipelines/{runId}/advance with { step, payload } -> PipelineRun
+  - POST /api/pipelines/{runId}/approvals/{approvalId}/decide with { status, comments } -> Approval
+  - POST /api/publish with { runId, channel, schedule } -> PublishResult
 - Security:
-  - Authentication: JWT-based or session-based per LifeOps auth strategy.
-  - Authorization: ensure only users with scheduling rights and appropriate roles can create/update calendar items; enforce per-channel permissions.
-  - Audit trails: every create/update/delete/action logged with reversible capability.
-
+  - JWT/OAuth authentication; authorization checks for write access to drafts, artifacts, pipelines
+  - Access controls on artifacts (per-user/per-role)
+  - Audit trails for all create/update/delete actions
 - Validation:
-  - Server-side validation for required fields, types, valid channelId, and publishAt in ISO format.
-  - Validate arrays (assignees) and nested metadata safely; ensure no nulls cause runtime errors.
+  - Validate all inputs server-side; ensure arrays are validated via Array.isArray
+  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
+  - Use nullish coalescing for optional fields
 
 ### Integration
-
-- Data flows:
-  - Frontend fetches calendar items and channels; backend returns validated structures.
-  - On scheduling actions, frontend updates are persisted via API and then reflected in UI immediately; audit logs stored for traceability.
-  - Content Pipeline Automation hooks are triggered on key state transitions (e.g., idea → research → draft) as part of the broader LifeOps orchestration, with events emitted to agent orchestration layer.
-
-- Inter-module connections:
-  - Content Calendar consumes signals from Content Pipeline Automation for upcoming items and templates.
-  - Content Editor integration: selecting a calendar item navigates to the Editor with preloaded item context; edits and versioning flow back to calendar state.
-
----
+- Data Flow:
+  - Editor writes content -> autosave creates new DraftVersion; attach metadata
+  - Attach artifacts uploaded in AttachmentsPanel are versioned and linked to draft/version
+  - LLMAssistantPane executes prompts via an LLM service; results saved as Suggestions or Draft updates
+  - Content Pipeline Automator consumes a Draft to create a PipelineRun; steps progress with logs and artifacts
+  - PublishControlsPanel triggers publisher connectors; results saved to PipelineRun and PublishResult
+- Synchronization:
+  - Ensure consistent IDs across panels (draftId, versionId, runId)
+  - When a draft version is created, all panels reflect the latest version; provide diffs against previous versions
+- Reuse:
+  - Centralized helper utilities for null-safe array handling, API response normalization, and date handling
+  - Shared UI primitives: Button, Card, Tabs, Modal, Tooltip with styles aligned to the design system
 
 ## User Experience Flow
+1) Idea → Research:
+- User creates a new Draft with a title and initial idea summary.
+- Editor autosaves to Draft, creates Version 1.
+- LLM Assistant provides outline and expansion suggestions; user accepts/refines.
+- ResearchPane collects sources; user marks citations; citations are linked to the draft version.
 
-1. User lands on Content Calendar main page.
-   - See a multi-channel calendar with days/weeks/month views.
-   - All items pre-populated for the visible range; channels display order and capacity indicators.
+2) Draft Writing:
+- User writes content in EditorSurface; Markdown toggle available; autosave continuously.
+- Real-time collaboration shows collaborators editing the same draft.
+- LLM Assistant suggests rewrites or tone adjustments; user applies changes.
 
-2. User switches to Week or Day view for granular scheduling.
-   - Cards appear in their respective channel lanes with clear time blocks.
-   - Slot grid indicates available publishing slots.
+3) Editing & Review:
+- User triggers Edition pass; Versioned diffs are shown in DiffViewer.
+- Reviewer/Collaborator adds comments; approvals queue is populated if needed.
+- Version history stores snapshots; user can revert to prior version if necessary.
 
-3. User drags a ContentCard to a new time slot or channel.
-   - Live drag feedback shows potential drop target.
-   - If the target slot is valid and within capacity, the card snaps and a subtle confirmation appears.
-   - If the target creates a conflict, a warning badge appears; drop is prevented or requires a confirm.
+4) Artifacts & Attachments:
+- User uploads artifacts (data runs, attachments) via AttachmentsPanel; artifacts are versioned and accessible via secure links.
+- Artifact metadata is visible in the artifact list and can be attached to the draft version.
 
-4. User opens ConflictsPanel to review conflicts.
-   - Conflicts are listed with severity and recommended actions.
-   - User can choose to reschedule, reassign, or approve an automatic resolution if permitted.
+5) Scheduling & Publishing:
+- PublishControlsPanel allows scheduling publish date/time and selecting channels (CMS, social, email).
+- In Content Calendar, user drags a draft into a slot; conflict detection alerts if the slot is occupied.
+- PipelineAutomation runs, logging steps; on success, content is published via connectors and status is updated.
 
-5. User uses Quick Create to add a new content item.
-   - Minimal metadata form; upon submit, item appears in the calendar at the current view location or a chosen default slot.
+6) Dashboard & Insights:
+- Content Dashboard shows pipeline progress, drafts in progress, approvals, and SEO/performance metrics.
+- Content Calendar provides a weekly/monthly view with color-coded statuses and quick actions.
 
-6. User clicks a calendar item to open the Content Editor workflow.
-   - Opens the Editor with idea → research → draft → edit → schedule → publish workflow steps.
-   - User can edit content, trigger LLM-assisted writing, manage versions, and connect to publishing connectors.
-
-7. System logs audit trails for every action.
-   - Users can review run artifacts and diffs in AuditTrail panels.
-
-8. All actions are reversible where possible.
-   - Users can revert scheduling changes to previous states; audit logs store diffs.
-
----
+7) Audit & Revisions:
+- All actions produce an audit trail; users can view run logs, agent messages, and generated artifacts.
+- Reverts and diffs are easily accessible; permissions ensure only authorized users can revert/publish.
 
 ## Technical Specifications
 
-### Data Models
-- ContentItem
-  - id: string
-  - title: string
-  - type: string (idea, research, draft, edit, schedule, publish)
-  - channelId: string
-  - publishAt: string (ISO datetime)
-  - durationMinutes: number
-  - status: string
-  - assignees: string[]
-  - version: number
-  - metadata: object
-  - createdAt: string
-  - updatedAt: string
+- Data Models: Draft, Version, Artifact, PipelineRun, StepLog, Approval, PublishResult
+  - Draft: id, title, content, format ('markdown'|'html'), currentVersionId, authorId, createdAt, updatedAt, isPublished, seoMetadata
+  - Version: id, draftId, content, changeSummary, authorId, createdAt
+  - Artifact: id, draftId, versionId, filename, mimeType, size, url, version, uploadedBy, createdAt
+  - PipelineRun: id, draftId, planId, status ('pending'|'running'|'completed'|'failed'), startedAt, endedAt, summary
+  - StepLog: id, runId, stepName, status, message, timestamp
+  - Approval: id, runId, reviewerId, status ('pending'|'approved'|'rejected'), comments, requestedAt, decidedAt
+  - PublishResult: id, runId, channel, success, details, publishedAt
 
-- Channel
-  - id: string
-  - name: string
-  - capacityPerSlot: number
-  - color: string
+- API Endpoints (illustrative; implement as per your stack)
+  - Drafts
+    - POST /api/drafts
+    - GET /api/drafts/{draftId}
+    - GET /api/drafts/{draftId}/versions
+    - POST /api/drafts/{draftId}/versions
+  - Artifacts
+    - POST /api/drafts/{draftId}/artifacts
+    - GET /api/drafts/{draftId}/artifacts
+  - Pipelines
+    - POST /api/pipelines
+    - GET /api/pipelines/{runId}
+    - POST /api/pipelines/{runId}/advance
+  - Approvals
+    - POST /api/pipelines/{runId}/approvals
+    - POST /api/pipelines/{runId}/approvals/{approvalId}/decide
+  - Publish
+    - POST /api/publish
 
-- Conflict
-  - id: string
-  - channelId: string
-  - slotStart: string
-  - slotEnd: string
-  - reason: string
-  - severity: string
-  - itemIds: string[]
+- Security
+  - JWT/OAuth 2.0; middleware enforcing authorization on drafts, artifacts, pipelines
+  - Per-resource permissions; audit logs for all mutations
+  - Access controls for artifact downloads
+  - Rate limiting for LLM prompts to avoid abuse
 
-- AuditLog
-  - id: string
-  - action: string
-  - actorId: string
-  - targetItemId: string
-  - details: string
-  - createdAt: string
-
-### API Endpoints
-- GET /api/calendar/items?start=&end=&channels=
-- POST /api/calendar/items
-- PATCH /api/calendar/items/{id}
-- POST /api/calendar/items/bulk-reschedule
-- GET /api/channels
-- GET /api/channels/capacity
-- POST /api/audit
-
-### Security
-- Authentication: token/session-based per LifeOps standard (JWT recommended for stateless APIs)
-- Authorization: per-channel permissions for create/update; enforce safety rails and approvals where applicable
-- Data validation and sanitization on server for all inputs
-- Audit trail preserved for all scheduling actions
-
-### Validation Rules
-- Required: title, channelId, publishAt for create; channelId exists and is valid
-- publishAt must be ISO 8601
-- durationMinutes > 0
-- assignees must be an array of strings
-- Optional nested metadata must be sanitized
-- All API responses guarded with data ?? [] prior to mapping or iteration
-
----
+- Validation & Runtime Safety
+  - Always guard arrays: const items = data ?? []; items.map(...) guarded with Array.isArray
+  - API responses validated: const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: obj?.property?.nested
+  - Destructuring defaults: const { items = [], count = 0 } = response ?? {}
+  - Use useState<Type[]>([]) for array state; useRef for mutable objects where needed
+  - Supabase results: const items = data ?? [] per requirement
 
 ## Acceptance Criteria
-
-- [ ] The Content Calendar renders correctly in Month, Week, and Day views with all channels and items for the visible date range.
-- [ ] Drag-and-drop scheduling updates publishAt and channelId with real-time conflict detection; conflicts panel updates instantly.
-- [ ] Quick Create creates a ContentItem with minimal metadata and appears in the correct slot, with server-side validation and audit logging.
-- [ ] ConflictsPanel surfaces all overlaps and capacity issues, with actionable resolution paths (reschedule/reassign/approve).
-- [ ] Opening a calendar item navigates to Content Editor with the item context and supports the full idea→publish workflow.
-- [ ] All API responses are validated defensively (data ?? [], Array.isArray checks) and all arrays initialized with useState([]).
-- [ ] Comprehensive unit and integration tests cover: calendar rendering, drag/drop, conflict detection, API routes, and audit logs.
-- [ ] Accessibility checks pass (ARIA roles, keyboard navigation, focus management in modals and drag/drop).
-
----
+- [ ] End-to-end user flows from idea to publish operate without runtime errors; drafts persist across sessions; autosave and versioning are functional
+- [ ] LLM Assistant pane can generate, apply, and revert prompts; tone and style controls work; prompts honor content scope
+- [ ] Attachment upload supports versioning, secure access, and per-artifact metadata; artifacts are retrievable and auditable
+- [ ] Content Pipeline Automation can initialize a pipeline, progress through ideation, research, drafting, editing, scheduling, and publishing with proper logs and per-step statuses
+- [ ] Scheduling/Calendar supports drag-to-schedule, conflict detection, and per-slot publishing actions
+- [ ] Content Dashboard shows accurate counts, statuses, and SEO metrics; Approvals queue gates publish actions when required
+- [ ] All API responses validated; all lists guarded with null-safe patterns; no runtime crashes due to undefined/null arrays
 
 ## UI/UX Guidelines
+Apply the project's design system:
+- Maintain the dark, dense, highly scannable UI with minimal accents
+- Use the specified color palette for depth, status, and highlights
+- Ensure typography hierarchy and spacing adhere to the 8px baseline grid and responsive rules
+- Use rounded 8–12px radii for cards; 1px borders with rgba(255,255,255,0.03)
+- Cards: elevated, gradient backgrounds, top icons, bold titles, metadata beneath
+- Navigation: left sidebar with collapse/expand sections; active states marked with accent pill (#FF3B30)
+- Data Visualization: subtle grids, consistent data colors from the accent palette
+- Interactive Elements: responsive hover states, accessible focus outlines, and clear affordances for actions
 
-Apply the LifeOps design system precisely.
+## Visual Style
 
-- Color palette and typography:
-  - Primary background #0B0B0C, secondary #151718, panel outlines #1F1F20
-  - Text: #FFFFFF; secondary meta #9DA3A6; disabled #56595B
-  - Accent: #FF3B30 for active/alerts
-  - Charts: teal #00C2A8, amber #FFB020, purple #8B5CF6
-  - Gradients: #111213 → #1A1A1B for depth
+Color Palette and Typography are defined above; implement across components with a consistent theme:
+- Font: Inter or SF Pro Display, fallback to Roboto
+- Weights: headings 600–700, titles 500–600, body 400, microcopy 300–400
+- Spacing: 8px grid; card paddings 16–20px; gutters 8–24px
+- Layout: left sidebar width 220–260px; content area uses flexible grid
 
-- Typography and layout:
-  - Font: Inter, SF Pro Display, or Roboto
-  - Headings 600–700 weight, 20–28px; titles 14–16px; body 12–14px; captions 11–12px
-  - 8px baseline grid; gutters 220–260px; header height 56–64px
-  - Card radii 8–12px; shadows; borders subtle
-
-- Card design:
-  - Dark elevated cards with top inner highlight, rounded corners
-  - Icon/thumbnail at top, then title, then metadata
-  - Hover: translateY(-2px), border tint to #2A2A2B
-
-- Navigation:
-  - Left sidebar with icons; active state uses vertical accent pill #FF3B30
-  - Collapsible sections with carets; selection uses rounded background
-
-- Data visualization:
-  - Minimal grids, low-contrast axes, colored lines with rounded caps
-  - Tooltips: dark panels with white text, 8–10px radius
-
-- Interactions:
-  - Buttons: Primary, Secondary; hover lift; destructive actions emphasized
-  - Form elements: dark inputs, subtle borders, focused ring in accent color
-  - Toggles/chips/pills: rounded; active state uses accent
-  - Micro-interactions: 120–200ms transitions; clear affordances for actions
-
-- Design philosophy:
-  - Dense, screen-focused UI for power users; high readability with restrained accent usage
-  - Clear auditability and reversibility; traceable agent actions and run artifacts
-
----
+Key Design Elements (summary):
+- Card Design: dark, rounded, gradient, subtle borders, hover lift
+- Navigation: compact left rail with active accent pill
+- Data Visualization: muted axes, colored lines/areas with restrained saturation
+- Interactive Elements: primary/secondary actions, hover/focus states, toggles, chips, badges
+- Transformations: smooth 120–200ms transitions, subtle shadows
 
 ## Mandatory Coding Standards — Runtime Safety
-
-CRITICAL: Enforce in ALL generated code.
-
-1. Supabase-like results handling:
-   - const items = data ?? []
-2. Array method safety:
-   - (items ?? []).map(...)
-   - Array.isArray(items) ? items.map(...) : []
-3. React useState initialization for arrays:
-   - const [items, setItems] = useState<Item[]>([])
-4. API response validation:
-   - const list = Array.isArray(response?.data) ? response.data : []
-5. Optional chaining:
-   - obj?.property?.nested
-6. Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {}
+- Supabase query results: Always use nullish coalescing — const items = data ?? []
+- Array methods: Guard all calls
+  - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+- React useState for arrays/objects: Initialize with proper type, e.g., useState<Type[]>([])
+- API response shapes: const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining: use obj?.property?.nested
+- Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
 
 ---
 
-If you need this prompt tailored to a specific tech stack (e.g., Next.js + React + Prisma + Supabase, or Remix, or a custom in-house stack), specify constraints such as preferred state management library, testing framework, CI/CD setup, and any existing code conventions. This prompt is designed to be implementation-agnostic while providing concrete, actionable guidance for building the Content Calendar within LifeOps.
+If you need, I can convert this into a machine-readable prompt file (JSON/YAML) with explicit field mappings for an AI development tool, or tailor it to a specific tech stack (Next.js + Prisma, Remix + PostgreSQL, etc.).
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist

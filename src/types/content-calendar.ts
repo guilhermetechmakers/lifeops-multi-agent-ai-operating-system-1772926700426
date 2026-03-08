@@ -1,9 +1,9 @@
 /**
- * Content Calendar data models — channels, items, conflicts, audit.
+ * Content Calendar data models — aligned with API schemas.
  */
 
-export type ContentType =
-  | "idea"
+export type ContentItemType =
+  | "ideation"
   | "research"
   | "draft"
   | "edit"
@@ -16,10 +16,10 @@ export type ContentItemStatus =
   | "published"
   | "blocked";
 
-export interface CalendarContentItem {
+export interface ContentItem {
   id: string;
   title: string;
-  type: ContentType;
+  type: ContentItemType;
   channelId: string;
   publishAt: string;
   durationMinutes: number;
@@ -40,7 +40,11 @@ export interface Channel {
 
 export type ConflictSeverity = "low" | "medium" | "high";
 
-export type ConflictReason = "overlap" | "capacity" | "channel";
+export type ConflictReason =
+  | "overlap"
+  | "capacity"
+  | "channel"
+  | "tool-restriction";
 
 export interface Conflict {
   id: string;
@@ -61,17 +65,27 @@ export interface AuditLog {
   createdAt: string;
 }
 
-export interface CalendarItemsQuery {
-  start: string;
-  end: string;
-  channels?: string[];
-}
-
 export interface CalendarItemsResponse {
-  data: CalendarContentItem[];
+  data: ContentItem[];
   meta: { total: number };
 }
 
-export interface ChannelCapacityResponse {
+export interface ChannelCapacityMap {
   [channelId: string]: number;
+}
+
+export interface CreateCalendarItemPayload {
+  title: string;
+  type: ContentItemType;
+  channelId: string;
+  publishAt: string;
+  durationMinutes: number;
+  assignees?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface BulkReschedulePayload {
+  itemIds: string[];
+  newPublishAt: string;
+  newChannelId?: string;
 }
