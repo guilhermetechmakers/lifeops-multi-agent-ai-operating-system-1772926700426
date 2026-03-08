@@ -47,7 +47,7 @@ export function AdapterConfigEditor({
 
   useEffect(() => {
     if (open) setItems(list.map((a) => ({ ...a })));
-  }, [open]);
+  }, [open, adapters]);
 
   const handleOpen = (isOpen: boolean) => {
     onOpenChange(isOpen);

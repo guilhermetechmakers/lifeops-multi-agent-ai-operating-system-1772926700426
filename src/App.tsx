@@ -18,7 +18,8 @@ import Approvals from "@/pages/approvals";
 import { ProjectsDashboardShell } from "@/components/projects-dashboard";
 import ProjectDetail from "@/pages/project-detail";
 import TicketBoardPage from "@/pages/ticket-board";
-import DashboardContent from "@/pages/dashboard-content";
+import ContentDashboardPage from "@/pages/content-dashboard";
+import ContentEditorPage from "@/pages/content-editor";
 import ArtifactsPage from "@/pages/artifacts";
 import DashboardFinance from "@/pages/dashboard-finance";
 import DashboardHealth from "@/pages/dashboard-health";
@@ -88,7 +89,8 @@ function App() {
               <Route path=":projectId/ci-integrations" element={<CIIntegrationsPage />} />
               <Route path=":projectId/ticket-board" element={<TicketBoardPage />} />
             </Route>
-            <Route path="content" element={<DashboardContent />} />
+            <Route path="content" element={<ContentDashboardPage />} />
+            <Route path="content/editor" element={<ContentEditorPage />} />
             <Route path="artifacts" element={<ArtifactsPage />} />
             <Route path="finance" element={<DashboardFinance />} />
             <Route path="health" element={<DashboardHealth />} />

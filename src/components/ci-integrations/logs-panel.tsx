@@ -80,6 +80,7 @@ export function LogsPanel({
       <DialogContent
         className="max-w-2xl max-h-[85vh] flex flex-col border-white/[0.03] bg-card"
         showClose={true}
+        aria-label={`Logs for ${integrationName}`}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

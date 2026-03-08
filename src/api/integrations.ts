@@ -47,9 +47,16 @@ export const integrationsApi = {
 
   getRuns: (integrationId: string, params?: { page?: number; limit?: number }) => {
     const q = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : "";
-    return api.get<{ data: RunRecord[]; count: number }>(`integrations/${integrationId}/runs${q}`).then((r) =>
-      safePaginated<RunRecord>(r)
-    );
+    return api
+      .get<{ data?: RunRecord[]; items?: RunRecord[]; count?: number }>(`integrations/${integrationId}/runs${q}`)
+      .then((r) => {
+        const raw = r ?? {};
+        if (typeof raw === "object" && Array.isArray((raw as { items?: unknown }).items)) {
+          const o = raw as { items: RunRecord[]; count?: number };
+          return { items: o.items ?? [], count: typeof o.count === "number" ? o.count : (o.items?.length ?? 0) };
+        }
+        return safePaginated<RunRecord>(r);
+      });
   },
 
   getLogs: (integrationId: string, params?: { runId?: string; level?: string; limit?: number }) => {

@@ -18,8 +18,10 @@ import { LogsPanel } from "./logs-panel";
 import { RunHistoryPanel } from "./run-history-panel";
 import { AdapterConfigEditor } from "./adapter-config-editor";
 import { RepoLinksManager } from "./repo-links-manager";
+import { CiCdConnectorsManager } from "./cicd-connectors-manager";
 import { DeploymentTargetsManager } from "./deployment-targets-manager";
 import { ActivityAuditTrail } from "./activity-audit-trail";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useIntegrationsList,
   useTriggerRun,
@@ -27,6 +29,7 @@ import {
   useIntegrationRuns,
   useAdapters,
   useSaveAdapters,
+  useConnectors,
   useDeploymentTargets,
   useRepoLinks,
   useSaveRepoLink,
@@ -70,8 +73,9 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
     undefined,
     logsOpen && Boolean(intId)
   );
-  const { items: runs } = useIntegrationRuns(intId, logsOpen || runHistoryOpen);
+  const { items: runs, isLoading: runsLoading } = useIntegrationRuns(intId, logsOpen || runHistoryOpen);
   const { items: adapters } = useAdapters(intId, adapterEditorOpen && Boolean(intId));
+  const { items: connectors } = useConnectors(intId, Boolean(selectedIntegration));
   const triggerRun = useTriggerRun(intId ?? "");
   const saveAdapters = useSaveAdapters(intId ?? "");
 
@@ -107,6 +111,16 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
   const handleEdit = useCallback((integration: Integration) => {
     setSelectedIntegration(integration);
     setAdapterEditorOpen(true);
+  }, []);
+
+  const handleSelectRun = useCallback((run: import("@/types/integrations").RunRecord) => {
+    if (selectedIntegration) setSelectedRun({ run, integration: selectedIntegration });
+  }, [selectedIntegration]);
+
+  const handleViewRunHistory = useCallback((integration: Integration) => {
+    setSelectedIntegration(integration);
+    setSelectedRun(null);
+    setRunHistoryOpen(true);
   }, []);
 
   const handleTriggerRun = useCallback(
@@ -213,8 +227,27 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {isLoading ? (
-            <div className="rounded-lg border border-white/[0.03] bg-card p-8 text-center text-muted-foreground">
-              Loading integrations…
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-white/[0.03] bg-card p-5 space-y-4"
+                  aria-hidden
+                >
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-full rounded-md" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 flex-1 rounded-md" />
+                    <Skeleton className="h-8 flex-1 rounded-md" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredAndSorted.length === 0 ? (
             <div className="rounded-lg border border-white/[0.03] bg-card p-8 text-center">
@@ -234,10 +267,7 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
                   onViewLogs={() => handleViewLogs(integration)}
                   onRerun={() => handleTriggerRun(integration)}
                   onEdit={() => handleEdit(integration)}
-                  onViewRunHistory={() => {
-                    setSelectedIntegration(integration);
-                    setRunHistoryOpen(true);
-                  }}
+                  onViewRunHistory={() => handleViewRunHistory(integration)}
                   isRunning={
                     selectedIntegration?.id === integration.id && triggerRun.isPending
                   }
@@ -251,6 +281,13 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
             repoLinks={repoLinks ?? []}
             onSave={handleSaveRepoLink}
           />
+          {selectedIntegration && (
+            <CiCdConnectorsManager
+              connectors={connectors ?? []}
+              onValidate={() => {}}
+              onRotateToken={() => {}}
+            />
+          )}
           <DeploymentTargetsManager targets={deploymentTargets ?? []} />
           <ActivityAuditTrail entries={auditEntries ?? []} />
         </div>
@@ -271,8 +308,11 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
           setRunHistoryOpen(open);
           if (!open) setSelectedRun(null);
         }}
-        run={selectedRun?.run ?? (selectedIntegration && runs?.[0] ? runs[0] : null)}
-        integrationName={selectedRun?.integration?.name ?? selectedIntegration?.name}
+        run={selectedRun?.run ?? null}
+        runs={runs ?? []}
+        isLoadingRuns={runsLoading}
+        integrationName={selectedRun?.integration?.name ?? selectedIntegration?.name ?? "Integration"}
+        onSelectRun={handleSelectRun}
       />
 
       <AdapterConfigEditor

@@ -1,0 +1,11 @@
+export { ContentDashboardShell } from "./content-dashboard-shell";
+export { ContentCalendarPanel } from "./content-calendar-panel";
+export { DraftsPanel } from "./drafts-panel";
+export { PublishingQueuePanel } from "./publishing-queue-panel";
+export { AgentRecommendationsPanel } from "./agent-recommendations-panel";
+export { SEOPerformancePanel } from "./seo-performance-panel";
+export { GlobalSearchBar } from "./global-search-bar";
+export { ModuleFiltersBar } from "./module-filters-bar";
+export { ContentEditorShortcutHub } from "./content-editor-shortcut-hub";
+export { DataVizDrawer } from "./data-viz-drawer";
+export { AuditTrailPanel } from "./audit-trail-panel";

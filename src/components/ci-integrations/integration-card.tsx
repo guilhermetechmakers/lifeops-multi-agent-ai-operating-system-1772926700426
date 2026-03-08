@@ -69,7 +69,14 @@ export function IntegrationCard({
   const statusVariant = STATUS_VARIANTS[integration.status] ?? "outline";
 
   return (
-    <Card className={cn("border-white/[0.03] bg-card transition-all hover:shadow-card-hover", className)}>
+    <Card
+      className={cn(
+        "border-white/[0.03] bg-card transition-all duration-200 hover:shadow-card-hover hover:border-white/[0.06]",
+        "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
+        className
+      )}
+      aria-labelledby={`integration-name-${integration.id}`}
+    >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
@@ -77,7 +84,9 @@ export function IntegrationCard({
               <Icon className="h-5 w-5 text-muted-foreground" aria-hidden />
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-foreground truncate">{integration.name}</h3>
+              <h3 id={`integration-name-${integration.id}`} className="text-base font-semibold text-foreground truncate">
+                {integration.name}
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {integration.provider} · Last run {formatRelativeTime(integration.lastRunAt)}
               </p>
