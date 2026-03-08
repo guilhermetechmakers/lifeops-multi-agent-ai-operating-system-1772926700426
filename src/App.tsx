@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { CentralErrorProvider } from "@/contexts/error-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { CommandPaletteProvider } from "@/contexts/command-palette-context";
 import { ErrorBoundary } from "@/components/error";
 import { SessionGuard } from "@/components/auth/session-guard";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -66,7 +67,7 @@ function App() {
           <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
-          <Route path="/dashboard" element={<SessionGuard><DashboardLayout /></SessionGuard>}>
+          <Route path="/dashboard" element={<SessionGuard><CommandPaletteProvider><DashboardLayout /></CommandPaletteProvider></SessionGuard>}>
             <Route index element={<DashboardMaster />} />
             <Route path="cronjobs" element={<CronjobsDashboard />} />
             <Route path="cronjobs/new" element={<CronjobEditor />} />

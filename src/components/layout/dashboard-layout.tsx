@@ -19,7 +19,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNotificationsList } from "@/hooks/use-notifications";
-import { Input } from "@/components/ui/input";
+import { useCommandPalette } from "@/contexts/command-palette-context";
+import { GlobalSearchCommandPalette } from "@/components/master-dashboard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
@@ -42,12 +43,14 @@ export function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { items: notifications } = useNotificationsList();
+  const { setOpen: setCommandOpen } = useCommandPalette();
   const unreadCount = Array.isArray(notifications)
     ? notifications.filter((n) => n.status !== "read").length
     : 0;
 
   return (
     <div className="flex min-h-screen bg-background">
+      <GlobalSearchCommandPalette />
       {/* Sidebar - desktop */}
       <aside
         className={cn(
@@ -197,13 +200,18 @@ export function DashboardLayout() {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex flex-1 items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search cronjobs, runs, agents..."
-                className="pl-9 bg-secondary border-0"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => setCommandOpen(true)}
+              className="relative flex flex-1 max-w-md items-center gap-2 rounded-md border-0 bg-secondary px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Open global search"
+            >
+              <Search className="h-4 w-4 shrink-0" />
+              <span>Search cronjobs, runs, agents, templates...</span>
+              <kbd className="pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border border-white/10 bg-muted px-1.5 font-mono text-[10px] font-medium sm:inline-flex">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
           </div>
           <Link to="/dashboard">
             <Button variant="ghost" size="icon" className="relative">
