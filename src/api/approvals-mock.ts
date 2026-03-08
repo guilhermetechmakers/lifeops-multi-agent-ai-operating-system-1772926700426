@@ -189,6 +189,14 @@ function filterItems(
         (i.rationale ?? "").toLowerCase().includes(s)
     );
   }
+  if (filters.dateFrom) {
+    const from = new Date(filters.dateFrom).setHours(0, 0, 0, 0);
+    out = out.filter((i) => new Date(i.scheduledTime ?? i.createdAt).getTime() >= from);
+  }
+  if (filters.dateTo) {
+    const to = new Date(filters.dateTo).setHours(23, 59, 59, 999);
+    out = out.filter((i) => new Date(i.scheduledTime ?? i.createdAt).getTime() <= to);
+  }
   return out;
 }
 
@@ -396,5 +404,12 @@ export const approvalsMockApi = {
     };
     queueItems[idx] = updated;
     return updated;
+  },
+
+  getAuditTrail: async (refId: string): Promise<AuditEvent[]> => {
+    await delay(100, null);
+    const item = queueItems.find((i) => i.id === refId) ?? null;
+    const audit = item?.audit ?? [];
+    return Array.isArray(audit) ? [...audit] : [];
   },
 };

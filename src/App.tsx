@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { CentralErrorProvider } from "@/contexts/error-context";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ConsentProvider } from "@/contexts/consent-context";
+import { ScopedMemoryStoreProvider } from "@/contexts/scoped-memory-context";
 import { CommandPaletteProvider } from "@/contexts/command-palette-context";
 import { ErrorBoundary } from "@/components/error";
 import { SessionGuard } from "@/components/auth/session-guard";
@@ -102,6 +103,7 @@ function App() {
         <AuthProvider>
         <BrowserRouter>
           <ConsentProvider>
+          <ScopedMemoryStoreProvider>
           <ErrorBoundary>
             <Routes>
           <Route path="/" element={<Landing />} />
@@ -209,6 +211,7 @@ function App() {
           <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </ErrorBoundary>
+          </ScopedMemoryStoreProvider>
           </ConsentProvider>
         </BrowserRouter>
         </AuthProvider>

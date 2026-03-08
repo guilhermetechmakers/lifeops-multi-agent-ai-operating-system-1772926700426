@@ -43,7 +43,7 @@ export const memoriesApi = {
 
   delete: (memoryId: string) => api.delete<void>(`${BASE}/${memoryId}`),
 
-  list: (scopeType: string, scopeId: string, filters?: MemoryListFilters) =>
+  list: (scopeType: string, scopeId: string, _filters?: MemoryListFilters) =>
     api
       .get<Memory[]>(`${BASE}?scopeType=${scopeType}&scopeId=${scopeId}`)
       .then((r) => safeArray<Memory>(r ?? [])),
@@ -51,7 +51,7 @@ export const memoriesApi = {
   getDiffs: (runId: string) =>
     api
       .get<MemoryDiff[]>(`runs/${runId}/memory-diffs`)
-      .then((r) => safeArray<MemoryDiff>(r ?? [])),
+      .then((r) => (Array.isArray(r) ? (r as MemoryDiff[]) : [])),
 
-  purgeExpired: () => api.post<{ purged: number }>(`${BASE}/purge`),
+  purgeExpired: () => api.post<{ purged: number }>(`${BASE}/purge`, {}),
 };

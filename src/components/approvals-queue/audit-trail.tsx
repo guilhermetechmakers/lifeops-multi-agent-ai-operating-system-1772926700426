@@ -31,6 +31,13 @@ export function AuditTrail({
 }: AuditTrailProps) {
   const commentList = Array.isArray(comments) ? comments : [];
   const auditList = Array.isArray(audit) ? audit : [];
+  const sortedAudit = [...auditList].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  const lastUpdated =
+    sortedAudit.length > 0
+      ? formatDistanceToNow(new Date(sortedAudit[0].timestamp), { addSuffix: true })
+      : null;
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -85,18 +92,29 @@ export function AuditTrail({
       </div>
 
       <div className="rounded-lg border border-white/[0.03] bg-secondary/20 p-4">
-        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-          <History className="h-4 w-4 text-muted-foreground" />
-          Approval history
-        </h4>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <History className="h-4 w-4 text-muted-foreground" />
+            Approval history
+          </h4>
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground" aria-live="polite">
+              Last updated {lastUpdated}
+            </span>
+          )}
+        </div>
         {auditList.length === 0 ? (
           <p className="text-sm text-muted-foreground">No audit events yet.</p>
         ) : (
-          <ul className="space-y-2">
-            {[...auditList].reverse().map((e) => (
+          <ul
+            className="space-y-1 max-h-[280px] overflow-y-auto overflow-x-hidden pr-2"
+            role="list"
+            aria-label="Audit trail"
+          >
+            {sortedAudit.map((e) => (
               <li
                 key={e.id}
-                className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground border-l-2 border-white/[0.06] pl-3 py-1"
+                className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground border-l-2 border-white/[0.06] pl-3 py-1.5"
               >
                 <span className="font-medium text-foreground">{e.authorName}</span>
                 <span>{e.type}</span>

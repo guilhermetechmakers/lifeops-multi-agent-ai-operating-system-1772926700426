@@ -75,6 +75,8 @@ export default function Approvals() {
       filters.priority ??
       filters.slaUrgency ??
       filters.assignedApprover ??
+      filters.dateFrom ??
+      filters.dateTo ??
       filters.owner ??
       filters.cronName ??
       filters.module
@@ -205,6 +207,8 @@ export default function Approvals() {
                     priority: undefined,
                     slaUrgency: undefined,
                     assignedApprover: undefined,
+                    dateFrom: undefined,
+                    dateTo: undefined,
                     owner: undefined,
                     cronName: undefined,
                     module: undefined,

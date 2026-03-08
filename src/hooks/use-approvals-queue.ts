@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
   getApprovalsQueue,
   getApprovalItem,
+  getAuditTrail,
   approveItem,
   approveWithConditionsItem,
   rejectItem,
@@ -40,6 +41,7 @@ const approvalsKeys = {
   queue: (filters: ApprovalQueueFilters) =>
     ["approvals", "queue", filters] as const,
   item: (id: string | null) => ["approvals", "item", id] as const,
+  audit: (refId: string | null) => ["approvals", "audit", refId] as const,
 };
 
 function parseFiltersFromSearchParams(
@@ -137,6 +139,20 @@ export function useApprovalItem(id: string | null) {
     enabled: !!id,
   });
   return query;
+}
+
+export function useAuditTrail(refId: string | null) {
+  const query = useQuery({
+    queryKey: approvalsKeys.audit(refId),
+    queryFn: async () => {
+      if (!refId) return [];
+      if (USE_MOCK) return approvalsMockApi.getAuditTrail(refId);
+      return getAuditTrail(refId);
+    },
+    enabled: !!refId,
+  });
+  const events = Array.isArray(query.data) ? query.data : [];
+  return { ...query, events };
 }
 
 export function useApproveApprovalItem() {

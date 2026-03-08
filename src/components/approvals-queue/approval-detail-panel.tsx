@@ -2,7 +2,7 @@
  * Approval detail panel: tabs for Rationale, Payload, Diffs, Artifacts, Trace, Comments.
  */
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,6 +65,8 @@ export function ApprovalDetailPanel({
   const [showConditionalEditor, setShowConditionalEditor] = useState(false);
   const [commentForAction, setCommentForAction] = useState("");
   const [newComment, setNewComment] = useState("");
+  const rejectHintId = useId();
+  const rejectRequiresComment = !commentForAction.trim();
 
   if (!item) {
     return (
@@ -155,20 +157,30 @@ export function ApprovalDetailPanel({
           onRevert={onRevert}
           isPending={isActionPending}
           canRevert
+          rejectDisabled={rejectRequiresComment}
+          rejectDescriptionId={rejectHintId}
           runId={item.runId}
           runDetailsUrl={runDetailsUrl}
         />
 
         <div className="space-y-2">
-          <Label htmlFor="action-comment">Comment (optional) for approve / reject</Label>
+          <Label htmlFor="action-comment">
+            Comment (required for reject, optional for approve)
+          </Label>
           <input
             id="action-comment"
             type="text"
             value={commentForAction}
             onChange={(e) => setCommentForAction(e.target.value)}
-            placeholder="Add a comment..."
-            className="flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground"
+            placeholder="Add a comment (required for rejection)..."
+            className="flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors"
+            aria-describedby={rejectHintId}
           />
+          {rejectRequiresComment && (
+            <p id={rejectHintId} className="text-xs text-muted-foreground">
+              Enter a comment to enable the Reject button.
+            </p>
+          )}
         </div>
 
         {showConditionalEditor && (

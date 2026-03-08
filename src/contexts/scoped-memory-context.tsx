@@ -18,7 +18,6 @@ import type {
   Memory,
   MemoryScopeType,
   CreateMemoryPayload,
-  UpdateMemoryPayload,
 } from "@/types/scoped-memory";
 
 const USE_MOCK =

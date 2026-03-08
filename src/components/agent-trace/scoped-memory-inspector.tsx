@@ -1,12 +1,14 @@
 /**
- * ScopedMemoryInspector — key/value store with encryption indicators, scope filter, secure viewer.
+ * ScopedMemoryInspector — key/value store with encryption indicators, scope filter,
+ * redact controls, export/import memory snapshots.
  */
 
-import { useMemo, useState } from "react";
-import { Search, Eye, EyeOff } from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Search, Eye, EyeOff, Download, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EncryptionStatusBadge } from "./encryption-status-badge";
 import type { MemoryScope, MemoryEntry } from "@/types/agent-trace";
@@ -16,6 +18,8 @@ export interface ScopedMemoryInspectorProps {
   entries: MemoryEntry[];
   selectedScopeId?: string | null;
   onScopeChange?: (scopeId: string) => void;
+  onImportSnapshot?: (snapshot: { scopes: MemoryScope[]; entries: MemoryEntry[] }) => void;
+  runId?: string;
   className?: string;
 }
 
@@ -35,10 +39,14 @@ export function ScopedMemoryInspector({
   entries,
   selectedScopeId,
   onScopeChange,
+  onImportSnapshot,
+  runId,
   className,
 }: ScopedMemoryInspectorProps) {
   const [search, setSearch] = useState("");
   const [revealSensitive, setRevealSensitive] = useState(false);
+  const [redactedKeys, setRedactedKeys] = useState<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const safeScopes = scopes ?? [];
   const safeEntries = entries ?? [];
@@ -55,20 +63,107 @@ export function ScopedMemoryInspector({
 
   const currentScope = safeScopes.find((s) => s.id === scopeId);
 
+  const handleExport = useCallback(() => {
+    const snapshot = {
+      scopes: safeScopes,
+      entries: safeEntries.map((e) => ({
+        ...e,
+        value: redactedKeys.has(e.id) ? "••••••" : e.value,
+      })),
+      exportedAt: new Date().toISOString(),
+      runId,
+    };
+    const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `memory-snapshot-${runId ?? "export"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [safeScopes, safeEntries, redactedKeys, runId]);
+
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleImportFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !onImportSnapshot) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result as string);
+          const scopes = Array.isArray(data?.scopes) ? data.scopes : [];
+          const entries = Array.isArray(data?.entries) ? data.entries : [];
+          onImportSnapshot({ scopes, entries });
+        } catch {
+          // ignore invalid JSON
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    },
+    [onImportSnapshot]
+  );
+
+  const toggleRedact = useCallback((entryId: string) => {
+    setRedactedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(entryId)) next.delete(entryId);
+      else next.add(entryId);
+      return next;
+    });
+  }, []);
+
   return (
     <Card className={cn("rounded-lg border-white/[0.03] bg-card", className)}>
       <CardHeader className="p-4 pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">Scoped Memory</CardTitle>
-          <button
-            type="button"
-            onClick={() => setRevealSensitive(!revealSensitive)}
-            className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            title={revealSensitive ? "Mask sensitive values" : "Reveal sensitive values"}
-            aria-label={revealSensitive ? "Mask sensitive values" : "Reveal sensitive values"}
-          >
-            {revealSensitive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setRevealSensitive(!revealSensitive)}
+              className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              title={revealSensitive ? "Mask sensitive values" : "Reveal sensitive values"}
+              aria-label={revealSensitive ? "Mask sensitive values" : "Reveal sensitive values"}
+            >
+              {revealSensitive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleExport}
+              aria-label="Export memory snapshot"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            {onImportSnapshot && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleImportFile}
+                  aria-hidden
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleImportClick}
+                  aria-label="Import memory snapshot"
+                >
+                  <Upload className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 pt-2">
           {safeScopes.map((s) => (
@@ -121,30 +216,49 @@ export function ScopedMemoryInspector({
                 <th className="text-left py-2 px-3 font-medium">Key</th>
                 <th className="text-left py-2 px-3 font-medium">Value</th>
                 <th className="text-left py-2 px-3 font-medium w-24">Time</th>
+                <th className="text-left py-2 px-3 font-medium w-16">Redact</th>
               </tr>
             </thead>
             <tbody>
               {filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-8 text-center text-muted-foreground text-xs">
+                  <td colSpan={4} className="py-8 text-center text-muted-foreground text-xs">
                     No entries in this scope
                   </td>
                 </tr>
               ) : (
-                (filteredEntries ?? []).map((entry) => (
-                  <tr
-                    key={entry.id}
-                    className="border-t border-white/[0.03] hover:bg-white/[0.02]"
-                  >
-                    <td className="py-2 px-3 font-mono text-xs">{entry.key}</td>
-                    <td className="py-2 px-3 text-muted-foreground break-all max-w-[200px]">
-                      {entry.encrypted && !revealSensitive ? "••••••" : safeStringify(entry.value)}
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">
-                      {entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : "—"}
-                    </td>
-                  </tr>
-                ))
+                (filteredEntries ?? []).map((entry) => {
+                  const isRedacted = redactedKeys.has(entry.id);
+                  const displayValue =
+                    isRedacted || (entry.encrypted && !revealSensitive)
+                      ? "••••••"
+                      : safeStringify(entry.value);
+                  return (
+                    <tr
+                      key={entry.id}
+                      className="border-t border-white/[0.03] hover:bg-white/[0.02]"
+                    >
+                      <td className="py-2 px-3 font-mono text-xs">{entry.key}</td>
+                      <td className="py-2 px-3 text-muted-foreground break-all max-w-[200px]">
+                        {displayValue}
+                      </td>
+                      <td className="py-2 px-3 text-muted-foreground text-xs">
+                        {entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : "—"}
+                      </td>
+                      <td className="py-2 px-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleRedact(entry.id)}
+                          className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                          title={isRedacted ? "Reveal value" : "Redact value"}
+                          aria-label={isRedacted ? "Reveal value" : "Redact value"}
+                        >
+                          {isRedacted ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

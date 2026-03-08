@@ -16,12 +16,15 @@ import {
   useHaltRun,
   useInjectInput,
 } from "@/hooks/use-run-details";
+import { useMemoryDiffs } from "@/hooks/use-memory-diffs";
 import {
   RunDetailsHeader,
   InputsPanel,
   MessageTraceViewer,
+  MessageTraceGraph,
   LogsEventsPanel,
   RunDetailsDiffsViewer,
+  MemoryDiffPanel,
   ArtifactsPanel,
   TimingPane,
   ReversibilityPanel,
@@ -31,6 +34,7 @@ import {
   HumanInputInjectModal,
   ApprovalQueue,
 } from "@/components/run-details";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -44,6 +48,7 @@ import {
   RotateCcw,
   History,
   CheckSquare,
+  Database,
 } from "lucide-react";
 
 export default function RunDetailsPage() {
@@ -51,6 +56,7 @@ export default function RunDetailsPage() {
   const navigate = useNavigate();
   const { run, trace, logs, diffs, artifacts, timing, reversibleActions, auditTrail, isLoading, error } =
     useRunDetails(runId ?? null, cronjobId);
+  const { diffs: memoryDiffs } = useMemoryDiffs(runId ?? null);
   const revertMutation = useRevertRun(runId ?? null);
   const pauseMutation = usePauseRun(runId ?? null);
   const resumeMutation = useResumeRun(runId ?? null);
@@ -58,6 +64,7 @@ export default function RunDetailsPage() {
   const injectMutation = useInjectInput(runId ?? null);
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
   const [injectModalOpen, setInjectModalOpen] = useState(false);
+  const [traceViewMode, setTraceViewMode] = useState<"timeline" | "graph">("timeline");
 
   const mockApprovals: import("@/components/run-details/approval-queue").ApprovalItem[] =
     (run?.status === "paused" || run?.status === "running") && run
@@ -247,6 +254,10 @@ export default function RunDetailsPage() {
             <Diff className="h-4 w-4" />
             Diffs
           </TabsTrigger>
+          <TabsTrigger value="memory" className="gap-2">
+            <Database className="h-4 w-4" />
+            Memory
+          </TabsTrigger>
           <TabsTrigger value="artifacts" className="gap-2">
             <Paperclip className="h-4 w-4" />
             Artifacts
@@ -291,7 +302,37 @@ export default function RunDetailsPage() {
         </TabsContent>
 
         <TabsContent value="trace" className="space-y-4">
-          <MessageTraceViewer trace={trace} />
+          <div className="flex gap-2 mb-2">
+            <button
+              type="button"
+              onClick={() => setTraceViewMode("timeline")}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                traceViewMode === "timeline"
+                  ? "border-primary/50 bg-primary/10 text-foreground"
+                  : "border-white/[0.03] bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}
+            >
+              Timeline
+            </button>
+            <button
+              type="button"
+              onClick={() => setTraceViewMode("graph")}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                traceViewMode === "graph"
+                  ? "border-primary/50 bg-primary/10 text-foreground"
+                  : "border-white/[0.03] bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}
+            >
+              Graph
+            </button>
+          </div>
+          {traceViewMode === "timeline" ? (
+            <MessageTraceViewer trace={trace} />
+          ) : (
+            <MessageTraceGraph trace={trace} />
+          )}
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-4">
@@ -300,6 +341,10 @@ export default function RunDetailsPage() {
 
         <TabsContent value="diffs" className="space-y-4">
           <RunDetailsDiffsViewer diffs={diffs} />
+        </TabsContent>
+
+        <TabsContent value="memory" className="space-y-4">
+          <MemoryDiffPanel diffs={memoryDiffs} runId={runId ?? undefined} />
         </TabsContent>
 
         <TabsContent value="artifacts" className="space-y-4">

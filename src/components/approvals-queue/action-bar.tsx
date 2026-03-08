@@ -16,6 +16,10 @@ export interface ActionBarProps {
   onRevert?: () => void;
   isPending?: boolean;
   canRevert?: boolean;
+  /** When true, Reject button is disabled (e.g. comment required for rejection). */
+  rejectDisabled?: boolean;
+  /** Optional ID for element describing why Reject is disabled (accessibility). */
+  rejectDescriptionId?: string;
   runId?: string;
   runDetailsUrl?: string;
   className?: string;
@@ -31,12 +35,15 @@ export function ActionBar({
   onRevert,
   isPending = false,
   canRevert = false,
+  rejectDisabled = false,
+  rejectDescriptionId,
   runId,
   runDetailsUrl,
   className,
 }: ActionBarProps) {
   const isActionable =
     status === "queued" || status === "pending" || status === "conditional";
+  const isRejectDisabled = isPending || rejectDisabled;
 
   return (
     <div
@@ -53,7 +60,7 @@ export function ActionBar({
             size="sm"
             onClick={onApprove}
             disabled={isPending}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 transition-transform duration-200 hover:scale-[1.02]"
             aria-label="Approve"
           >
             <Check className="mr-1.5 h-4 w-4" />
@@ -72,10 +79,11 @@ export function ActionBar({
           <Button
             size="sm"
             variant="outline"
-            className="text-destructive border-destructive/50 hover:bg-destructive/10"
+            className="text-destructive border-destructive/50 hover:bg-destructive/10 transition-transform duration-200 hover:scale-[1.02]"
             onClick={onReject}
-            disabled={isPending}
+            disabled={isRejectDisabled}
             aria-label="Reject"
+            aria-describedby={rejectDescriptionId}
           >
             <X className="mr-1.5 h-4 w-4" />
             Reject

@@ -93,11 +93,14 @@ export async function mockDeleteMemory(memoryId: string): Promise<void> {
 }
 
 export async function mockListMemories(
-  _scopeType: string,
-  _scopeId: string
+  scopeType: string,
+  scopeId: string
 ): Promise<Memory[]> {
   await new Promise((r) => setTimeout(r, 100));
-  return Array.from(MEMORY_STORE.values());
+  const all = Array.from(MEMORY_STORE.values());
+  return all.filter(
+    (m) => m.scopeType === scopeType && (scopeId === "global" ? m.scopeId === "global" : m.scopeId === scopeId)
+  );
 }
 
 export async function mockGetMemoryDiffs(runId: string): Promise<MemoryDiff[]> {

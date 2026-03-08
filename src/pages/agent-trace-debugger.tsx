@@ -17,6 +17,7 @@ import {
   VariableStatesInspector,
   PerformanceHealthIndicators,
   ExplainabilityPanel,
+  AnnotationPanel,
 } from "@/components/agent-trace";
 import {
   useTrace,
@@ -33,6 +34,7 @@ import {
 import { mockAssertions, mockConflicts } from "@/api/debug-trace-mock";
 import { HumanInputInjectModal } from "@/components/run-details";
 import { cn } from "@/lib/utils";
+import type { Annotation } from "@/components/agent-trace/annotation-panel";
 
 const RUN_PARAM = "runId";
 const CRON_PARAM = "cronJobId";
@@ -66,6 +68,7 @@ export default function AgentTraceDebuggerPage() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedScopeId, setSelectedScopeId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
   const safeSteps = steps ?? [];
   const activeStepAgentId = useMemo(() => {
@@ -113,6 +116,20 @@ export default function AgentTraceDebuggerPage() {
   const handleRevert = useCallback(() => {
     revertMutation.mutate({ reason: "User-initiated from Agent Trace & Debugger" });
   }, [revertMutation]);
+
+  const handleAddAnnotation = useCallback(
+    (annotation: Omit<Annotation, "id" | "createdAt">) => {
+      setAnnotations((prev) => [
+        ...prev,
+        {
+          ...annotation,
+          id: `ann-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    },
+    []
+  );
 
   if (isError) {
     return (
@@ -212,6 +229,15 @@ export default function AgentTraceDebuggerPage() {
                       entries={entries}
                       selectedScopeId={scopeId}
                       onScopeChange={setSelectedScopeId}
+                      runId={runId}
+                    />
+                    <AnnotationPanel
+                      steps={safeSteps}
+                      messages={messages}
+                      currentStepIndex={currentStepIndex}
+                      selectedAgentId={selectedAgentId ?? activeStepAgentId}
+                      annotations={annotations}
+                      onAddAnnotation={handleAddAnnotation}
                     />
                     <VariableStatesInspector
                       steps={safeSteps}
@@ -223,6 +249,14 @@ export default function AgentTraceDebuggerPage() {
                       messages={messages}
                       currentStepIndex={currentStepIndex}
                       selectedAgentId={selectedAgentId ?? activeStepAgentId}
+                    />
+                    <AnnotationPanel
+                      steps={safeSteps}
+                      messages={messages}
+                      currentStepIndex={currentStepIndex}
+                      selectedAgentId={selectedAgentId ?? activeStepAgentId}
+                      annotations={annotations}
+                      onAddAnnotation={handleAddAnnotation}
                     />
                     <RunDetailsPanel
                       runId={runId}

@@ -18,6 +18,7 @@ import type {
   AddCommentPayload,
   EscalatePayload,
   Comment,
+  AuditEvent,
 } from "@/types/approvals";
 
 const BASE = "/approvals/queue";
@@ -116,4 +117,13 @@ export async function escalateItem(
   payload: EscalatePayload = {}
 ): Promise<ApprovalQueueItem> {
   return api.post<ApprovalQueueItem>(`${BASE}/${id}/escalate`, payload);
+}
+
+/** GET /api/audits?refId=:id - fetch audit trail for an approval item */
+export async function getAuditTrail(refId: string): Promise<AuditEvent[]> {
+  const raw = await api.get<AuditEvent[] | { data?: AuditEvent[] }>(
+    `/audits?refId=${encodeURIComponent(refId)}`
+  );
+  const list = Array.isArray(raw) ? raw : (raw as { data?: AuditEvent[] })?.data ?? [];
+  return Array.isArray(list) ? list : [];
 }

@@ -1,8 +1,10 @@
 export { RunDetailsHeader } from "./run-details-header";
 export { InputsPanel } from "./inputs-panel";
 export { MessageTraceViewer } from "./message-trace-viewer";
+export { MessageTraceGraph } from "./message-trace-graph";
 export { LogsEventsPanel } from "./logs-events-panel";
 export { RunDetailsDiffsViewer } from "./diffs-viewer";
+export { MemoryDiffPanel } from "./memory-diff-panel";
 export { ArtifactsPanel } from "./artifacts-panel";
 export { TimingPane } from "./timing-pane";
 export { ReversibilityPanel } from "./reversibility-panel";

@@ -160,12 +160,35 @@ export function FiltersBar({ filters, onFiltersChange, className }: FiltersBarPr
         className="w-[140px] bg-secondary/50 border-white/[0.03]"
         aria-label="Filter by assigned approver"
       />
+      <div className="flex items-center gap-2">
+        <Input
+          type="date"
+          value={filters.dateFrom ?? ""}
+          onChange={(e) =>
+            onFiltersChange({ dateFrom: e.target.value || undefined, page: 1 })
+          }
+          className="w-[140px] bg-secondary/50 border-white/[0.03]"
+          aria-label="Time window from"
+        />
+        <span className="text-xs text-muted-foreground">–</span>
+        <Input
+          type="date"
+          value={filters.dateTo ?? ""}
+          onChange={(e) =>
+            onFiltersChange({ dateTo: e.target.value || undefined, page: 1 })
+          }
+          className="w-[140px] bg-secondary/50 border-white/[0.03]"
+          aria-label="Time window to"
+        />
+      </div>
       {(filters.search ??
         filters.severity ??
         filters.status ??
         filters.priority ??
         filters.slaUrgency ??
-        filters.assignedApprover) && (
+        filters.assignedApprover ??
+        filters.dateFrom ??
+        filters.dateTo) && (
         <Button
           variant="ghost"
           size="sm"
@@ -177,6 +200,8 @@ export function FiltersBar({ filters, onFiltersChange, className }: FiltersBarPr
               priority: undefined,
               slaUrgency: undefined,
               assignedApprover: undefined,
+              dateFrom: undefined,
+              dateTo: undefined,
               page: 1,
             })
           }

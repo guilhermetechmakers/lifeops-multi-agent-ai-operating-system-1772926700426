@@ -8,3 +8,4 @@ export { EncryptionStatusBadge } from "./encryption-status-badge";
 export { VariableStatesInspector } from "./variable-states-inspector";
 export { PerformanceHealthIndicators } from "./performance-health-indicators";
 export { ExplainabilityPanel } from "./explainability-panel";
+export { AnnotationPanel } from "./annotation-panel";
