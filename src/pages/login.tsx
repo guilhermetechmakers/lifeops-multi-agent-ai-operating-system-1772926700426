@@ -84,7 +84,7 @@ export default function Login() {
             </div>
             <div className="flex items-center justify-between text-sm">
               <Link
-                to="/password-reset"
+                to="/auth/forgot"
                 className="text-primary hover:underline"
               >
                 Forgot password?

@@ -9,7 +9,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth";
 import AuthCallbackPage from "@/pages/auth-callback";
-import AuthForgotPage from "@/pages/auth-forgot";
+import { PasswordResetPage } from "@/components/auth/password-reset";
 import DashboardMaster from "@/pages/dashboard-master";
 import CronjobsDashboard from "@/pages/cronjobs-dashboard";
 import Approvals from "@/pages/approvals";
@@ -49,10 +49,11 @@ function App() {
           <Route path="/docs" element={<Docs />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          <Route path="/auth/forgot" element={<AuthForgotPage />} />
+          <Route path="/auth/forgot" element={<PasswordResetPage />} />
+          <Route path="/auth/reset" element={<PasswordResetPage />} />
+          <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
-          <Route path="/password-reset" element={<Navigate to="/auth/forgot" replace />} />
           <Route path="/dashboard" element={<SessionGuard><DashboardLayout /></SessionGuard>}>
             <Route index element={<DashboardMaster />} />
             <Route path="cronjobs" element={<CronjobsDashboard />} />

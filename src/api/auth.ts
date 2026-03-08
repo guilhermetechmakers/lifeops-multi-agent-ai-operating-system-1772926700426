@@ -74,20 +74,64 @@ export async function initiateSSO(domain?: string): Promise<{ url: string }> {
 }
 
 /** Request password reset email */
-export async function requestPasswordReset(email: string): Promise<void> {
+export async function requestPasswordReset(email: string): Promise<{ success: boolean; message?: string }> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500));
-    return;
+    return { success: true, message: "If this email is registered, you will receive a reset link." };
   }
-  await api.post(`${AUTH_BASE}/password-reset/request`, { email });
+  const data = await api.post<{ success?: boolean; message?: string }>(`${AUTH_BASE}/password-reset/request`, { email });
+  return { success: data?.success ?? true, message: data?.message };
 }
 
-/** Confirm password reset with token */
+/** Verify password reset token */
+export async function verifyPasswordResetToken(token: string): Promise<{
+  valid: boolean;
+  userId?: string;
+  requiresMfa?: boolean;
+}> {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 300));
+    return { valid: token.length >= 6, userId: "mock-user" };
+  }
+  const data = await api.post<{ valid?: boolean; userId?: string; requiresMfa?: boolean }>(
+    `${AUTH_BASE}/password-reset/verify`,
+    { token }
+  );
+  return {
+    valid: data?.valid ?? false,
+    userId: data?.userId,
+    requiresMfa: data?.requiresMfa,
+  };
+}
+
+/** Set new password after token verification */
+export async function setNewPassword(
+  token: string,
+  newPassword: string
+): Promise<{ success: boolean; session?: AuthResponse; user?: User }> {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 500));
+    const user = mockUser("reset@example.com");
+    return { success: true, session: { token: "mock-token", user }, user };
+  }
+  const data = await api.post<{ success?: boolean; session?: AuthResponse; user?: User }>(
+    `${AUTH_BASE}/password-reset/set`,
+    { token, newPassword }
+  );
+  return {
+    success: data?.success ?? false,
+    session: data?.session,
+    user: data?.user,
+  };
+}
+
+/** @deprecated Use setNewPassword instead. Kept for backward compatibility. */
 export async function confirmPasswordReset(
   token: string,
   password: string
 ): Promise<void> {
-  await api.post(`${AUTH_BASE}/password-reset/confirm`, { token, password });
+  const result = await setNewPassword(token, password);
+  if (!result.success) throw new Error("Password reset failed");
 }
 
 /** Get available OAuth providers */
