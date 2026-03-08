@@ -3,6 +3,8 @@ export { BacklogPanel } from "./backlog-panel";
 export { RoadmapPanel } from "./roadmap-panel";
 export { TicketsPanel } from "./tickets-panel";
 export { PRsPanel } from "./prs-panel";
+export { PRSummaryDrawer } from "./pr-summary-drawer";
+export { ReleaseNotesGenerator } from "./release-notes-generator";
 export { AgentHistoryPanel } from "./agent-history-panel";
 export { ActionsWidgetBar } from "./actions-widget-bar";
 export { CronjobsDashboardLink } from "./cronjobs-dashboard-link";

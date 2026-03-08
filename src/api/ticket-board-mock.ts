@@ -245,6 +245,7 @@ export function mockBulkUpdateTickets(
       if (updates.priority) item.priority = updates.priority as Ticket["priority"];
       if (updates.sprintId !== undefined) item.sprintId = updates.sprintId;
       if (updates.labels) item.labels = updates.labels;
+      if (updates.snoozedUntil !== undefined) item.snoozedUntil = updates.snoozedUntil;
       item.updatedAt = new Date().toISOString();
     }
   });

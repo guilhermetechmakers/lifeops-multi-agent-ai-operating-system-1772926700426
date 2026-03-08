@@ -16,6 +16,7 @@ export interface KanbanColumnProps {
   onBulkAction?: () => void;
   onOpenTicket?: (ticket: Ticket) => void;
   onBulkToggle?: (ticketId: string) => void;
+  onSnooze?: (ticket: Ticket, until: string) => void;
   selectedTicketIds?: string[];
   capacity?: number;
   usedCapacity?: number;
@@ -27,6 +28,7 @@ export function KanbanColumn({
   tickets,
   onOpenTicket,
   onBulkToggle,
+  onSnooze,
   selectedTicketIds = [],
   capacity,
   usedCapacity,
@@ -86,6 +88,7 @@ export function KanbanColumn({
             ticket={t}
             onOpen={onOpenTicket}
             onBulkToggle={onBulkToggle}
+            onSnooze={onSnooze}
             isSelected={selected.includes(t.id)}
           />
         ))}

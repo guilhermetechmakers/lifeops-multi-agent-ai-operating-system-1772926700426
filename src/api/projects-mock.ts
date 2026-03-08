@@ -110,8 +110,36 @@ const tickets: Ticket[] = [
 ];
 
 const prs: PR[] = [
-  { id: "pr1", projectId: "proj-1", title: "feat: OAuth integration", status: "open", authorName: "Alex", summary: "Adds OAuth 2.0 flow with Google and GitHub providers.", reviewers: ["Sam", "Jordan"], createdAt: "2025-03-05T00:00:00Z", updatedAt: "2025-03-06T00:00:00Z" },
-  { id: "pr2", projectId: "proj-1", title: "fix: Kanban column overflow", status: "open", authorName: "Sam", summary: "Fixes horizontal scroll for long ticket titles.", reviewers: ["Alex"], createdAt: "2025-03-04T00:00:00Z", updatedAt: "2025-03-04T00:00:00Z" },
+  {
+    id: "pr1",
+    projectId: "proj-1",
+    title: "feat: OAuth integration",
+    status: "open",
+    authorName: "Alex",
+    summary: "Adds OAuth 2.0 flow with Google and GitHub providers. Includes token refresh and session management.",
+    reviewers: ["Sam", "Jordan"],
+    createdAt: "2025-03-05T00:00:00Z",
+    updatedAt: "2025-03-06T00:00:00Z",
+    keyChanges: [
+      "Added OAuth2 client with Google and GitHub providers",
+      "Implemented token refresh and session persistence",
+      "Added callback handler and redirect flow",
+    ],
+    risks: ["Token storage in localStorage — consider httpOnly cookies for production"],
+    tests: ["OAuth flow E2E", "Token refresh unit tests", "Session expiry handling"],
+    impactedFiles: ["src/auth/oauth.ts", "src/auth/callback.tsx", "src/lib/session.ts"],
+  },
+  {
+    id: "pr2",
+    projectId: "proj-1",
+    title: "fix: Kanban column overflow",
+    status: "open",
+    authorName: "Sam",
+    summary: "Fixes horizontal scroll for long ticket titles.",
+    reviewers: ["Alex"],
+    createdAt: "2025-03-04T00:00:00Z",
+    updatedAt: "2025-03-04T00:00:00Z",
+  },
 ];
 
 const releases: Release[] = [

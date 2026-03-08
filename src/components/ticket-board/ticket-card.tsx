@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Tag, GitBranch } from "lucide-react";
+import { MoreHorizontal, Pencil, Tag, GitBranch, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Ticket } from "@/types/projects";
 
@@ -30,6 +30,7 @@ export interface TicketCardProps {
   onOpen?: (ticket: Ticket) => void;
   onInlineEdit?: (ticket: Ticket) => void;
   onBulkToggle?: (ticketId: string) => void;
+  onSnooze?: (ticket: Ticket, until: string) => void;
   isSelected?: boolean;
   isDragging?: boolean;
 }
@@ -39,6 +40,7 @@ export function TicketCard({
   onOpen,
   onInlineEdit,
   onBulkToggle,
+  onSnooze,
   isSelected = false,
   isDragging = false,
 }: TicketCardProps) {
@@ -136,6 +138,36 @@ export function TicketCard({
               <DropdownMenuItem>
                 <Tag className="h-4 w-4 mr-2" />
                 Add tag
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + 1);
+                  onSnooze?.(ticket, d.toISOString());
+                }}
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                SNOOZE 1 day
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + 3);
+                  onSnooze?.(ticket, d.toISOString());
+                }}
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                SNOOZE 3 days
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + 7);
+                  onSnooze?.(ticket, d.toISOString());
+                }}
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                SNOOZE 1 week
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <GitBranch className="h-4 w-4 mr-2" />

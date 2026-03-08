@@ -346,6 +346,84 @@ export function DashboardLayout() {
               </NavLink>
             </nav>
           )}
+          {location.pathname.startsWith("/dashboard/projects") && (
+            <nav
+              className="flex gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-white/[0.03]"
+              aria-label="Projects section"
+            >
+              <NavLink
+                to="/dashboard/projects"
+                end
+                className={({ isActive }) =>
+                  `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    isActive
+                      ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`
+                }
+              >
+                Overview
+              </NavLink>
+              {(() => {
+                const projectsMatch = location.pathname.match(/^\/dashboard\/projects\/([^/]+)/);
+                const projectId = projectsMatch?.[1];
+                if (!projectId) return null;
+                return (
+                  <>
+                    <NavLink
+                      to={`/dashboard/projects/${projectId}`}
+                      end
+                      className={({ isActive }) =>
+                        `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                          isActive
+                            ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        }`
+                      }
+                    >
+                      Dashboard
+                    </NavLink>
+                    <NavLink
+                      to={`/dashboard/projects/${projectId}/detail`}
+                      className={({ isActive }) =>
+                        `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                          isActive
+                            ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        }`
+                      }
+                    >
+                      Project Detail
+                    </NavLink>
+                    <NavLink
+                      to={`/dashboard/projects/${projectId}/ticket-board`}
+                      className={({ isActive }) =>
+                        `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                          isActive
+                            ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        }`
+                      }
+                    >
+                      Ticket Board
+                    </NavLink>
+                    <NavLink
+                      to={`/dashboard/projects/${projectId}/ci-integrations`}
+                      className={({ isActive }) =>
+                        `px-3 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                          isActive
+                            ? "bg-card text-foreground border border-white/[0.03] border-b-transparent -mb-px"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        }`
+                      }
+                    >
+                      CI & Integrations
+                    </NavLink>
+                  </>
+                );
+              })()}
+            </nav>
+          )}
           {location.pathname.startsWith("/dashboard/finance") && (
             <nav
               className="flex gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-white/[0.03]"

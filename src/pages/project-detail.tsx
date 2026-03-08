@@ -2,7 +2,7 @@
  * Project Detail — single project cockpit with backlog, roadmap, tickets, PRs, agent history.
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { AnimatedPage } from "@/components/animated-page";
@@ -17,6 +17,7 @@ import {
   ActionsWidgetBar,
   CronjobsDashboardLink,
   DataVizTinyCharts,
+  ReleaseNotesGenerator,
 } from "@/components/project-detail";
 import {
   CIReleasePanel,
@@ -25,7 +26,14 @@ import {
   CronjobOverview,
   AuditTrailPanel,
 } from "@/components/projects-dashboard";
-import { useProjectCronjobs, useProject, useUpdateProjectStatus, useRunAgent } from "@/hooks/use-projects";
+import {
+  useProjectCronjobs,
+  useProject,
+  useUpdateProjectStatus,
+  useRunAgent,
+  useProjectPRs,
+  useProjectReleases,
+} from "@/hooks/use-projects";
 import type { ProjectStatus } from "@/types/projects";
 
 export default function ProjectDetail() {
@@ -58,8 +66,11 @@ export default function ProjectDetail() {
   }
 
   const { items: cronjobs } = useProjectCronjobs(projectId);
+  const { items: prs } = useProjectPRs(projectId);
+  const { items: releases } = useProjectReleases(projectId);
   const cronjobList = Array.isArray(cronjobs) ? cronjobs : [];
   const firstCronjobId = cronjobList[0]?.id;
+  const [releaseNotesOpen, setReleaseNotesOpen] = useState(false);
 
   return (
     <AnimatedPage className="space-y-6">
@@ -80,12 +91,19 @@ export default function ProjectDetail() {
       <div className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Quick actions</h2>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Link to={`/dashboard/projects/${projectId}/ticket-board`}>
               <Button variant="outline" size="sm">
                 Open Ticket Board
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setReleaseNotesOpen(true)}
+            >
+              Release Notes
+            </Button>
             <ActionsWidgetBar projectId={projectId} cronjobId={firstCronjobId} />
           </div>
         </div>
@@ -111,6 +129,14 @@ export default function ProjectDetail() {
           <AuditTrailPanel projectId={projectId} />
         </div>
       </div>
+
+      <ReleaseNotesGenerator
+        open={releaseNotesOpen}
+        onOpenChange={setReleaseNotesOpen}
+        projectId={projectId}
+        releases={releases ?? []}
+        prs={prs ?? []}
+      />
     </AnimatedPage>
   );
 }

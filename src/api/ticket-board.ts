@@ -55,7 +55,10 @@ export const ticketBoardApi = {
   bulkUpdateTickets: (
     projectId: string,
     ids: string[],
-    updates: Partial<Pick<Ticket, "status" | "assigneeId" | "priority" | "sprintId"> & { labels?: string[] }>
+    updates: Partial<
+      Pick<Ticket, "status" | "assigneeId" | "priority" | "sprintId" | "snoozedUntil">
+      & { labels?: string[] }
+    >
   ) =>
     api.post<{ ok: boolean }>(`${BASE}/${projectId}/tickets/bulk`, { ids, updates }),
 

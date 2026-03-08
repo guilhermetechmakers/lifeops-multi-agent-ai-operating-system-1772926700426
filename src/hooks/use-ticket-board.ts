@@ -130,7 +130,7 @@ export function useBulkUpdateTicketBoard(projectId: string | undefined | null) {
     }: {
       ids: string[];
       updates: Partial<
-        Pick<Ticket, "status" | "assigneeId" | "priority" | "sprintId">
+        Pick<Ticket, "status" | "assigneeId" | "priority" | "sprintId" | "snoozedUntil">
         & { labels?: string[] }
       >;
     }) =>

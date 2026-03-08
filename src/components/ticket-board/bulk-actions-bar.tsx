@@ -36,6 +36,7 @@ export type BulkActionType =
   | "assign"
   | "tag"
   | "priority"
+  | "snooze"
   | "convert"
   | "pr_summary";
 
@@ -62,6 +63,8 @@ export function BulkActionsBar({
   const [assigneeId, setAssigneeId] = useState("");
   const [tagOpen, setTagOpen] = useState(false);
   const [tagInput, setTagInput] = useState("");
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const [snoozeDays, setSnoozeDays] = useState<number>(1);
 
   const count = (selectedTicketIds ?? []).length;
   if (count === 0) return null;
@@ -93,6 +96,13 @@ export function BulkActionsBar({
       setTagOpen(false);
     }
   }, [tagInput, onBulkApply]);
+
+  const handleSnoozeSubmit = useCallback(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + snoozeDays);
+    onBulkApply({ type: "snooze", payload: { snoozedUntil: d.toISOString() } });
+    setSnoozeOpen(false);
+  }, [snoozeDays, onBulkApply]);
 
   return (
     <>
@@ -148,6 +158,14 @@ export function BulkActionsBar({
           className="transition-transform duration-200 hover:scale-[1.02]"
         >
           Add tags
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setSnoozeOpen(true)}
+          className="transition-transform duration-200 hover:scale-[1.02]"
+        >
+          SNOOZE
         </Button>
         <Button size="sm" variant="outline" onClick={() => onBulkApply({ type: "convert" })}>
           Convert to tasks
@@ -223,6 +241,35 @@ export function BulkActionsBar({
               }
             >
               Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={snoozeOpen} onOpenChange={setSnoozeOpen}>
+        <DialogContent className="border-[rgb(255_255_255/0.03)] bg-card">
+          <DialogHeader>
+            <DialogTitle>SNOOZE tickets</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Label htmlFor="bulk-snooze">Snooze for (days)</Label>
+            <Input
+              id="bulk-snooze"
+              type="number"
+              min={1}
+              max={30}
+              value={snoozeDays}
+              onChange={(e) => setSnoozeDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              className="border-[rgb(255_255_255/0.03)] bg-secondary/30"
+              onKeyDown={(e) => e.key === "Enter" && handleSnoozeSubmit()}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSnoozeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSnoozeSubmit}>
+              Snooze {count} ticket{count !== 1 ? "s" : ""}
             </Button>
           </DialogFooter>
         </DialogContent>

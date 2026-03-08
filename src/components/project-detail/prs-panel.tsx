@@ -1,15 +1,18 @@
 /**
  * PRsPanel — list of PRs with summarize action, status, checks.
+ * Opens PR Summary Drawer on click.
  */
 
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { GitPullRequest, User, FileText } from "lucide-react";
+import { GitPullRequest, User, FileText, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProjectPRs } from "@/hooks/use-projects";
 import { cn } from "@/lib/utils";
+import { PRSummaryDrawer } from "./pr-summary-drawer";
 import type { PR } from "@/types/projects";
 
 export interface PRsPanelProps {
@@ -21,6 +24,18 @@ export interface PRsPanelProps {
 export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
   const { items: prs, isLoading } = useProjectPRs(projectId);
   const list = prs ?? [];
+  const [selectedPR, setSelectedPR] = useState<PR | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleOpenPR = useCallback((pr: PR) => {
+    setSelectedPR(pr);
+    setDrawerOpen(true);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setSelectedPR(null);
+  }, []);
 
   if (isLoading) {
     return (
@@ -40,6 +55,7 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
   }
 
   return (
+    <>
     <Card className={cn("card-project-detail", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -57,7 +73,11 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
             {list.map((pr: PR) => (
               <div
                 key={pr.id}
-                className="rounded-lg border border-white/[0.03] bg-secondary/30 p-3 transition-colors hover:bg-secondary/50"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenPR(pr)}
+                onKeyDown={(e) => e.key === "Enter" && handleOpenPR(pr)}
+                className="rounded-lg border border-white/[0.03] bg-secondary/30 p-3 transition-all duration-200 hover:bg-secondary/50 hover:shadow-card-hover cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-foreground line-clamp-1 flex-1">
@@ -91,7 +111,16 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
                     <User className="h-3 w-3" />
                     {pr.authorName ?? "—"}
                   </span>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => handleOpenPR(pr)}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Summary
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -114,5 +143,37 @@ export function PRsPanel({ projectId, onSummarize, className }: PRsPanelProps) {
         )}
       </CardContent>
     </Card>
+
+    <PRSummaryDrawer
+      pr={selectedPR}
+      open={drawerOpen}
+      onOpenChange={(open) => !open && handleCloseDrawer()}
+      onExport={(p) => {
+        const blob = new Blob(
+          [
+            JSON.stringify(
+              {
+                title: p.title,
+                summary: p.summary,
+                keyChanges: p.keyChanges,
+                risks: p.risks,
+                tests: p.tests,
+                impactedFiles: p.impactedFiles,
+              },
+              null,
+              2
+            ),
+          ],
+          { type: "application/json" }
+        );
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `pr-summary-${p.id}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }}
+    />
+    </>
   );
 }

@@ -4,8 +4,9 @@
  */
 
 import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
-import { FolderKanban, GitBranch, ChevronRight, Menu } from "lucide-react";
+import { useState, useMemo } from "react";
+import { FolderKanban, GitBranch, ChevronRight, Menu, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useProjectsList } from "@/hooks/use-projects";
+import { ProjectsOverview } from "./projects-overview";
 import { RoadmapTimelineCard } from "./roadmap-timeline-card";
 import { TicketKanbanBoard } from "./ticket-kanban-board";
 import { PRSummariesPanel } from "./pr-summaries-panel";
@@ -36,9 +38,18 @@ export function ProjectsDashboardShell() {
   const { projectId } = useParams<{ projectId: string }>();
   const activeId = projectId ?? null;
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState("");
 
   const { items: projects, isLoading } = useProjectsList();
   const projectList = Array.isArray(projects) ? projects : [];
+  const filteredProjects = useMemo(() => {
+    if (!projectSearch.trim()) return projectList;
+    const q = projectSearch.toLowerCase();
+    return projectList.filter(
+      (p: { name: string; id?: string }) =>
+        p.name?.toLowerCase().includes(q) || p.id?.toLowerCase().includes(q)
+    );
+  }, [projectList, projectSearch]);
   const activeProject = projectList.find((p: { id: string }) => p.id === activeId);
 
   return (
@@ -52,6 +63,18 @@ export function ProjectsDashboardShell() {
       >
         <div className="flex h-14 items-center px-4 border-b border-white/[0.03]">
           <h2 className="text-sm font-semibold text-foreground">Projects</h2>
+        </div>
+        <div className="px-2 pb-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={projectSearch}
+              onChange={(e) => setProjectSearch(e.target.value)}
+              className="pl-8 h-9 text-sm border-white/[0.03] bg-secondary/30"
+              aria-label="Search projects"
+            />
+          </div>
         </div>
         <ScrollArea className="flex-1 py-2">
           {isLoading ? (
@@ -68,7 +91,7 @@ export function ProjectsDashboardShell() {
             </div>
           ) : (
             <nav className="grid gap-1 px-2">
-              {projectList.map((p: { id: string; name: string }) => {
+              {filteredProjects.map((p: { id: string; name: string }) => {
                 const isActive = activeId === p.id;
                 return (
                   <Link key={p.id} to={`/dashboard/projects/${p.id}`}>
@@ -129,7 +152,7 @@ export function ProjectsDashboardShell() {
                     </DialogHeader>
                     <ScrollArea className="max-h-[60vh] px-2 pb-4">
                       <nav className="grid gap-1">
-                        {projectList.map((p: { id: string; name: string }) => (
+                        {filteredProjects.map((p: { id: string; name: string }) => (
                           <Link
                             key={p.id}
                             to={`/dashboard/projects/${p.id}`}
@@ -170,45 +193,8 @@ export function ProjectsDashboardShell() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
-            <FolderKanban className="h-12 w-12 text-muted-foreground mb-4" aria-hidden />
-            <h3 className="text-lg font-semibold text-foreground">Select a project</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-              Choose a project to view roadmaps, tickets, PRs, CI status, and agent suggestions.
-            </p>
-            {projectList.length > 0 && (
-              <div className="mt-4 md:hidden">
-                <Dialog open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                      <Menu className="h-4 w-4" />
-                      Pick project
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-xs p-0 gap-0" showClose={true}>
-                    <DialogHeader className="p-4 pb-2">
-                      <DialogTitle>Select project</DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[60vh] px-2 pb-4">
-                      <nav className="grid gap-1">
-                        {projectList.map((p: { id: string; name: string }) => (
-                          <Link
-                            key={p.id}
-                            to={`/dashboard/projects/${p.id}`}
-                            onClick={() => setMobileSheetOpen(false)}
-                            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          >
-                            <FolderKanban className="h-4 w-4 shrink-0" />
-                            <span className="truncate">{p.name}</span>
-                            <ChevronRight className="h-4 w-4 shrink-0 ml-auto" />
-                          </Link>
-                        ))}
-                      </nav>
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
+          <div className="p-4 md:p-6">
+            <ProjectsOverview />
           </div>
         )}
       </div>

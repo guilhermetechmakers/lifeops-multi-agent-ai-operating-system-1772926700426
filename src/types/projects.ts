@@ -94,6 +94,7 @@ export interface Ticket {
   createdAt: string;
   updatedAt: string;
   dueDate?: string;
+  snoozedUntil?: string;
   source?: string;
   estimate?: string;
   labels?: string[];
@@ -174,6 +175,11 @@ export interface PR {
   linkedTicketIds?: string[];
   createdAt: string;
   updatedAt: string;
+  /** Agent-generated summary fields */
+  keyChanges?: string[];
+  risks?: string[];
+  tests?: string[];
+  impactedFiles?: string[];
 }
 
 export type ReleaseStatus = "planned" | "in_progress" | "released";

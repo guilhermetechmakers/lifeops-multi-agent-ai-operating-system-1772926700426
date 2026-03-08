@@ -25,6 +25,7 @@ import {
   useMoveTicketBoardTicket,
   useBulkUpdateTicketBoard,
   useRunTicketBoardAutomation,
+  usePatchTicketBoardTicket,
 } from "@/hooks/use-ticket-board";
 import type { TicketFilters } from "@/api/ticket-board";
 import { KanbanColumn } from "./kanban-column";
@@ -76,6 +77,7 @@ export function TicketBoardLayout({
   const moveTicket = useMoveTicketBoardTicket(projectId);
   const bulkUpdate = useBulkUpdateTicketBoard(projectId);
   const runAutomation = useRunTicketBoardAutomation(projectId);
+  const patchTicket = usePatchTicketBoardTicket(projectId);
 
   const sprintList = sprints ?? [];
 
@@ -142,6 +144,12 @@ export function TicketBoardLayout({
       } else if (action.type === "tag" && payload.labels) {
         bulkUpdate.mutate({ ids, updates: { labels: payload.labels as string[] } });
         setSelectedTicketIds(new Set());
+      } else if (action.type === "snooze" && payload.snoozedUntil) {
+        bulkUpdate.mutate({
+          ids,
+          updates: { snoozedUntil: payload.snoozedUntil as string },
+        });
+        setSelectedTicketIds(new Set());
       } else if (action.type === "pr_summary") {
         runAutomation.mutate(undefined);
       } else {
@@ -154,6 +162,13 @@ export function TicketBoardLayout({
   const handleClearSelection = useCallback(() => {
     setSelectedTicketIds(new Set());
   }, []);
+
+  const handleSnooze = useCallback(
+    (ticket: Ticket, until: string) => {
+      patchTicket.mutate({ ticketId: ticket.id, data: { snoozedUntil: until } });
+    },
+    [patchTicket]
+  );
 
   const getColumnCapacity = useCallback(
     (status: TicketStatus) => {
@@ -240,6 +255,7 @@ export function TicketBoardLayout({
                     tickets={getTicketsByStatus(col.id)}
                     onOpenTicket={() => {}}
                     onBulkToggle={handleBulkToggle}
+                    onSnooze={handleSnooze}
                     selectedTicketIds={Array.from(selected)}
                     capacity={col.id === "in_progress" ? cap.capacity : undefined}
                     usedCapacity={

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { IntegrationCard } from "./integration-card";
+import { HealthMetricsSummary } from "./health-metrics-summary";
 import { LogsPanel } from "./logs-panel";
 import { RunHistoryPanel } from "./run-history-panel";
 import { AdapterConfigEditor } from "./adapter-config-editor";
@@ -175,6 +176,8 @@ export function IntegrationsDashboard({ projectId, className }: IntegrationsDash
           </div>
         </div>
       </header>
+
+      <HealthMetricsSummary integrations={filteredAndSorted} />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
