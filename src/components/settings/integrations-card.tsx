@@ -1,17 +1,40 @@
 /**
- * IntegrationsCard — Adapter list with status, credential management, test connection.
- * Uses settings API IntegrationAdapter[]; guards (adapters ?? []).
+ * IntegrationsCard — Adapter list from adapters API with status, test, run, rotate.
+ * Uses useAdapters, useAdaptersHealth; guards (adapters ?? []).
  */
 
-import { Plug, CheckCircle, XCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import {
+  Plug,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  Play,
+  Key,
+  MoreVertical,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useSettingsIntegrations, useConnectIntegration, useTestIntegration } from "@/hooks/use-settings";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  useAdapters,
+  useAdaptersHealth,
+  useTestAdapter,
+  useRunAdapter,
+  useRotateCredential,
+  useUpdateAdapter,
+  useDeleteAdapter,
+} from "@/hooks/use-adapters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
-import type { IntegrationAdapter } from "@/types/settings";
 import { cn } from "@/lib/utils";
+import type { AdapterInstance } from "@/types/adapters";
 
 const ADAPTER_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   llm: Plug,
@@ -22,12 +45,30 @@ const ADAPTER_ICONS: Record<string, React.ComponentType<{ className?: string }>>
   health: Plug,
 };
 
-export function IntegrationsCard() {
-  const { items: adapters, isLoading } = useSettingsIntegrations();
-  const connect = useConnectIntegration();
-  const test = useTestIntegration();
+function getStatusFromHealth(
+  adapterId: string,
+  healthList: { adapterId: string; status: string }[]
+): "healthy" | "degraded" | "unhealthy" {
+  const h = healthList.find((x) => x.adapterId === adapterId);
+  if (!h) return "unhealthy";
+  return h.status as "healthy" | "degraded" | "unhealthy";
+}
+
+export interface IntegrationsCardProps {
+  onLinkCredentials?: (adapter: AdapterInstance) => void;
+}
+
+export function IntegrationsCard({ onLinkCredentials }: IntegrationsCardProps) {
+  const { items: adapters, isLoading } = useAdapters();
+  const { items: healthList } = useAdaptersHealth();
+  const testAdapter = useTestAdapter();
+  const runAdapter = useRunAdapter();
+  const rotateCredential = useRotateCredential();
+  const updateAdapter = useUpdateAdapter();
+  const deleteAdapter = useDeleteAdapter();
 
   const list = adapters ?? [];
+  const health = healthList ?? [];
 
   if (isLoading) {
     return (
@@ -53,7 +94,7 @@ export function IntegrationsCard() {
           Integrations
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          LLM, GitHub, Plaid, Stripe, QuickBooks, Health APIs. Connect and test.
+          LLM, GitHub, Plaid, Stripe, QuickBooks, Health APIs. Test, run, rotate credentials.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -62,17 +103,18 @@ export function IntegrationsCard() {
             <Plug className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-sm font-medium text-foreground">No adapters configured</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Integrations will appear here when available
+              Add an adapter above to get started
             </p>
           </div>
         ) : (
-          (list ?? []).map((adapter: IntegrationAdapter) => {
+          (list ?? []).map((adapter: AdapterInstance) => {
             const Icon = ADAPTER_ICONS[adapter.type] ?? Plug;
-            const isConnected = adapter.status === "connected";
-            const isError = adapter.status === "error";
-            const StatusIcon = isConnected ? CheckCircle : isError ? AlertCircle : XCircle;
-            const statusVariant = isConnected ? "default" : isError ? "destructive" : "secondary";
-            const isTesting = test.isPending;
+            const healthStatus = getStatusFromHealth(adapter.id, health);
+            const isHealthy = healthStatus === "healthy";
+            const isDegraded = healthStatus === "degraded";
+            const hasCreds = (adapter.credentialsRef ?? "").length > 0;
+            const StatusIcon = isHealthy ? CheckCircle : isDegraded ? AlertCircle : XCircle;
+            const statusVariant = isHealthy ? "success" : isDegraded ? "warning" : "secondary";
 
             return (
               <div
@@ -86,70 +128,112 @@ export function IntegrationsCard() {
                   <div className="min-w-0">
                     <p className="font-medium text-foreground">{adapter.name ?? adapter.id}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {adapter.description ?? adapter.type}
+                      {adapter.type} {!adapter.enabled && "· disabled"}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <Badge variant={statusVariant} className="text-xs">
                         <StatusIcon className="h-3 w-3 mr-1" />
-                        {adapter.status}
+                        {healthStatus}
                       </Badge>
-                      {adapter.last_connected && (
+                      {adapter.updatedAt && (
                         <span className="text-xs text-muted-foreground">
-                          Last connected{" "}
-                          {formatDistanceToNow(new Date(adapter.last_connected), { addSuffix: true })}
+                          Updated {formatDistanceToNow(new Date(adapter.updatedAt), { addSuffix: true })}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {isConnected ? (
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  {hasCreds ? (
                     <>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => connect.mutate({ id: adapter.id, credentials: {} })}
-                        disabled={connect.isPending}
+                        onClick={() => testAdapter.mutate(adapter.id)}
+                        disabled={testAdapter.isPending}
                         className="border-white/[0.03]"
-                        title="Reconnect / Re-authorize"
+                        title="Test connection"
                       >
-                        {connect.isPending ? (
+                        {testAdapter.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Test"
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => runAdapter.mutate({ id: adapter.id, payload: {} })}
+                        disabled={runAdapter.isPending}
+                        className="border-white/[0.03]"
+                        title="Run sample"
+                      >
+                        {runAdapter.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            <RefreshCw className="h-4 w-4 mr-1" />
-                            Reconnect
+                            <Play className="h-4 w-4 mr-1" />
+                            Run
                           </>
                         )}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => test.mutate(adapter.id)}
-                        disabled={isTesting}
+                        onClick={() => rotateCredential.mutate(adapter.id)}
+                        disabled={rotateCredential.isPending}
                         className="border-white/[0.03]"
+                        title="Rotate credentials"
                       >
-                        {isTesting ? (
+                        {rotateCredential.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          "Test"
+                          <>
+                            <Key className="h-4 w-4 mr-1" />
+                            Rotate
+                          </>
                         )}
                       </Button>
                     </>
                   ) : (
                     <Button
                       size="sm"
-                      onClick={() => connect.mutate({ id: adapter.id, credentials: {} })}
-                      disabled={connect.isPending}
-                      className={cn("transition-transform hover:scale-[1.02]")}
+                      variant="outline"
+                      onClick={() => onLinkCredentials?.(adapter)}
+                      className={cn("border-white/[0.03] transition-transform hover:scale-[1.02]")}
                     >
-                      {connect.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Connect"
-                      )}
+                      <Key className="h-4 w-4 mr-1" />
+                      Link credentials
                     </Button>
                   )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" aria-label="More actions" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="border-white/[0.03] bg-card">
+                      <DropdownMenuItem onClick={() => onLinkCredentials?.(adapter)}>
+                        Link credentials
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          updateAdapter.mutate({
+                            id: adapter.id,
+                            input: { enabled: !adapter.enabled },
+                          })
+                        }
+                      >
+                        {adapter.enabled ? "Disable" : "Enable"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => deleteAdapter.mutate(adapter.id)}
+                      >
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             );
