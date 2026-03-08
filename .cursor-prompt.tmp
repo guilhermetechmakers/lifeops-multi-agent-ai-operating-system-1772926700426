@@ -847,297 +847,417 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Forecasting & Reports
+ for bestpractices and # Health Dashboard Prompt for AI Development Tool
+
+Below is a comprehensive, actionable prompt you can feed into an AI development assistant to build the Health Dashboard feature set described. The prompt enforces runtime safety rules (null/undefined guards, Supabase data handling, proper React state initialization) and aligns with the provided visual, architectural, and behavioral requirements.
+
+---
+
+## Health Dashboard
 
 ## Overview
-Develop the Forecasting & Reports page for LifeOps, enabling users to forecast future cash flow, run scenario projections, and export month-end reports. This page must integrate with the Finance Automation suite (transaction ingestion, categorization, subscriptions, anomaly detection, forecasting, and monthly close workflows) and provide an intuitive, enterprise-grade UI that supports fast forecasting cycles, scenario planning, and auditable report exports. The implementation must be robust against null/undefined values and guard all array operations per the project’s runtime safety standards.
+Build the LifeOps Health Dashboard module: a unified command center for personal health and workload balance. It surfaces a holistic view of habits, training and meal plans, recovery score, and workload recommendations derived from personal health data, calendar events, and project timelines. The page integrates Health Automation features (habit tracking, plan generation, recovery monitoring, and workload balancing) and connects to supporting pages (Habits Tracker and Training & Meal Planner) to enable end-to-end workflows, scheduling, and agent-enabled coaching interventions.
 
 ---
 
 ## Page Description (Full Detail)
+
 What this page is:
-- A comprehensive Forecasting & Reports hub that visualizes rolling cashflow forecasts, supports scenario-based projections, and exports month-end accounting reports (PDF/CSV). It also surfaces agent-driven insights and recommendations to optimize spend and manage deferred revenue.
+- The Health Dashboard is the central, do-it-all view for personal health optimization and workload balance. It aggregates data across habits, training plans, meal plans, recovery metrics, and project/calendar-driven workload signals.
 
 Goals:
-- Allow users to generate and compare forecast scenarios (baseline, upside, downside, custom inputs).
-- Enable scenario builder to adjust income, expenses, subscriptions, and anomalies inputs; immediately reflect changes in charts and summary KPIs.
-- Provide exportable month-end reports (PDF/CSV) with a clear audit trail, data provenance, and run artifacts.
-- Surface agent insights and suggestions to reduce spend or optimize cash flow timing.
-- Seamlessly integrate with Finance Automation workflows (ingestion, categorization, anomalies, forecasting, and monthly close).
-- Ensure data integrity, permissions, and full traceability with reversible actions and run artifacts.
+- Give users a concise yet actionable snapshot of health status, progress on habits, and preparedness for upcoming work loads.
+- Automatically propose workload adjustments to optimize recovery versus deadlines.
+- Coordinate with Habit Tracking (habits and streaks with agent interventions) and Training/Meal Planner (personalized routines and nutrition) and reflect changes in a unified UI.
+- Provide a traceable audit trail of agent actions, user approvals, and run artifacts, with reversible actions where applicable.
 
-Connected features and data flows:
-- Transaction ingestion, categorization, and subscription data feed forecasting inputs.
-- Anomaly detection results feeding into forecast confidence and scenario adjustments.
-- Monthly close workflow driving final reporting artifacts and approvals.
-- Centralized audit trail for all forecast runs, scenario builds, exports, and inter-agent messages.
+Features connected:
+- Health Automation: Habit tracking and coaching interventions, generation of training/meal plans, recovery monitoring, and workload balancing using personal data and calendar syncing.
+- Habits Tracker page: Create, track, and receive reminders; display streaks and coaching interventions.
+- Training & Meal Planner page: Configure schedules, generate nutrition plans, provide nutrition summaries, and generate grocery lists.
+- Workload Balancer: Recommended schedule changes derived from project timelines, calendar events, and recovery signals.
 
-UI guidance and layout:
-- Forecast graphs showing rolling forecast and scenario overlays with toggles (baseline, scenario A/B, confidence intervals).
-- Scenario Builder panel with tunable assumptions (revenue, costs, seasonality, churn, renewal rates, subscription growth, one-off items).
-- Report Exports panel for PDF/CSV generation with month-end metadata (period, account mappings, currency, permissions).
-- Agent Insights panel delivering actionable recommendations.
-- Left navigation and top breadcrumbs consistent with the LifeOps design system.
+UI elements and how they should look:
+- Health Snapshot: shows Sleep, Recovery Score, Weekly Training Load, and a compact daily/weekly view.
+- Habits Panel: displays tracked habits, current streaks, next reminders, and agent coaching interventions.
+- Training & Meal Plans: shows upcoming training sessions, planned meals, nutrition summary (calories/macros), and links to grocery list generation.
+- Workload Balancer: presents recommended schedule shifts to balance work deadlines with recovery windows; supports one-click adjustment proposal and approval flow.
+- Visual guidance: dark UI with high-contrast typography, clear card hierarchy, and data-driven charts using the accent palette (teal, amber, purple) for data viz.
 
-API integrations:
-- No external APIs specified; all data originates from the LifeOps internal data layer (Finance Automation, Cronjobs, and Run Artifacts).
-- Ensure API endpoints (internal) support data fetches for forecasts, scenarios, reports, and run histories with proper validation and security.
+Connected Pages:
+- Habits Tracker: independent page for creating, tracking, and coaching interventions.
+- Training & Meal Planner: page for configuring and managing personal training and meal plans.
 
-Accessibility and UX:
-- Keyboard navigable controls, screen-reader friendly labels, and contrast-appropriate UI.
-- Responsive layout that preserves data density for power users while maintaining clarity on smaller screens.
+Connected Features:
+- Health Automation: data-driven generation, monitoring, and balancing across habits, training, meals, and workload.
+
+API Integrations:
+- No external APIs required for this implementation according to the provided context. All data interactions will be simulated or mocked within the app context unless otherwise specified.
 
 ---
 
 ## Components to Build
-1) ForecastingDashboard
-- Purpose: Top-level page container with forecast chart, KPI cards, scenario toggles, and export actions.
-- Data sources: forecastBaseline, forecastScenario(s), confidence intervals, forecast horizon.
-- State: selectedScenario, isLoading, forecastData, exportStatus.
-- Interactions: switch scenario, adjust date range, trigger re-forecast, export.
 
-2) ScenarioBuilder
-- Purpose: Comprehensive panel to adjust inputs affecting income, expenses, churn, seasonality, and subscriptions.
-- Data sources: baseAssumptions, scenarioInputs.
-- State: inputs object with nested fields; validation state.
-- Interactions: live preview on chart; add/remove scenario lines; save/load scenarios; reset to baseline.
+1) HealthDashboardShell
+- Purpose: Master container for the Health Dashboard with header, left navigation, and content grid.
+- Data flow: Pulls from client-side stores or API stubs; uses safe guards for data.
+- Props: none required; relies on global state.
+- State: local UI state for tab/panel expansion.
 
-3) ReportsExportPanel
-- Purpose: Manage month-end report exports as PDF/CSV with metadata and permissions.
-- Data sources: reportTemplates, periodMeta, userPermissions.
-- State: selectedFormat, period, status, generatedArtifactInfo.
-- Interactions: initiate export, show progress, download links, export history.
+2) HealthSnapshotCard
+- Purpose: Quick snapshot row: Sleep, Recovery Score, Weekly Training Load, and next 7 days overview.
+- Data inputs: user health data (sleep, recovery, training load) and calendar signals.
+- UI: Card with gradient background, top icon, title, numeric value, trend indicator.
+- Interactions: Hover lift, show micro-details on hover or click.
 
-4) AgentInsightsPanel
-- Purpose: Display AI-generated recommendations for spend reduction, revenue acceleration, and timing optimizations.
-- Data sources: insightsModel outputs, anomaly signals, forecast confidence.
-- State: insightsList, loading, filters (severity, area).
-- Interactions: apply recommendation as an action (e.g., modify input), dismiss, pin.
+3) HabitsPanel
+- Purpose: Display active habits, streaks, upcoming reminders, and coaching interventions.
+- Data inputs: habits array with properties {id, name, streak, nextReminder, coachInterventions}
+- Interactions: Start/stop reminders, manual update, view coach note.
+- Safety: Guard maps for null data; use (habits ?? []) and safe map.
 
-5) ChartPanel (ForecastGraph)
-- Purpose: Render rolling forecast with scenario overlays, confidence bands, and interactive tooltips.
-- Data sources: forecastData (baseline + scenarios), axis scales.
-- State: hoveredPoint, selectedSeries.
-- Interactions: hover/tooltips, zoom, export chart as image.
+4) TrainingMealPanel
+- Purpose: Show upcoming training sessions, meal plans, nutrition summaries, and groceries list actions.
+- Data inputs: trainingPlans, mealPlans, nutritionSummary, groceriesList
+- Interactions: Sync calendar, generate grocery list, adjust plan.
+- Safety: Guard all arrays as (plans ?? []).
 
-6) DataGuard & Utilities
-- Purpose: Ensure all data access guards against null/undefined; provide safe helpers for array operations.
-- Functions: safeMap, safeFilter, safeReduce; ensure data ?? [] patterns; Array.isArray guards.
+5) RecoveryAndWorkloadPanel
+- Purpose: Display Recovery Score trend and workload balancing recommendations based on projects and calendar.
+- Data inputs: recoveryScore, workloadRecommendations (list), calendarIntents
+- Interactions: Accept/reject adjustments, preview schedule changes.
 
-7) Navigation & Layout
-- SideNav: left compact navigation with active state pills.
-- TopBar/Breadcrumb: consistent with LifeOps design system.
+6) WorkloadRecommendationList
+- Purpose: List of recommended schedule changes with impact and confidence.
+- Data inputs: recommendations array with {id, changeDescription, impact, confidence}
+- Interactions: One-click apply, or route through approvals.
 
-8) Modals/Toasts
-- Confirmations for destructive actions, export completion, rollback prompts.
+7) ScheduleAdjustmentModal
+- Purpose: Modal/dialog to apply suggested schedule changes with rationale.
+- Interactions: Confirm, cancel; track approval state.
+
+8) DataVizChart
+- Purpose: Reusable chart component for lines/bars using minimal, high-contrast styling.
+- Data inputs: series data, categories.
+- Visuals: Use teal/amber/purple accents; gridlines subtle; tooltips enabled.
+
+9) NotificationsTray
+- Purpose: Show agent coaching interventions and important health prompts.
+- Data inputs: interventions[], alerts[]
+- Interactions: Acknowledge, snooze.
+
+10) GroceryListPanel
+- Purpose: Display generated grocery list associated with meal plans.
+- Data inputs: groceries[]
+- Interactions: Export, check-off items.
+
+Note: Ensure every component guards against null/undefined values and uses the runtime safety patterns described in the "Mandatory Coding Standards".
 
 ---
 
 ## Implementation Requirements
 
 ### Frontend
-- Frameworks: React with TypeScript; state management via React hooks or a lightweight store (e.g., Zustand) as appropriate.
-- Components must:
-  - Guard against null/undefined values before array methods:
-    - Always use (data ?? []) before map/filter/reduce, or Array.isArray(data) ? data.map(...) : [].
-    - Example: (forecastData ?? []).map(...)
-  - Initialize state with proper defaults:
-    - useState<ForecastPoint[]>([]) for arrays, useState<Scenario[]>([]) for lists.
-  - Validate API-like responses using Array.isArray checks:
-    - const list = Array.isArray(response?.data) ? response.data : [].
-  - Use optional chaining for nested API responses: obj?.prop?.subprop.
-  - Provide default destructuring with defaults: const { items = [], count = 0 } = response ?? {}.
-- UI components:
-  - Reusable Card components with dark theme, 8–12px border radius, and depth.
-  - Charting components (SVG/Canvas) with accessible legends and tooltips.
-  - Data grids or dense cards for KPI summaries, with counts and timestamps per metadata.
-  - Form controls styled per design system: inputs, selects, toggles, date pickers.
-  - Buttons with Primary/Secondary styles as defined.
-  - Export actions that trigger a backend-like export flow with progress indicators.
-- Data formats:
-  - ForecastPoint: { date: string; value: number; scenario?: string; confidence?: number }
-  - Scenario: { id: string; name: string; inputs: ScenarioInputs; createdAt: string }
-  - ScenarioInputs: { revenueGrowth: number; expenseGrowth: number; churnRate: number; seasonality: number; subscriptionDelta: number; oneOffs: number }
-  - ReportArtifact: { id: string; period: string; url: string; type: 'pdf'|'csv'; status: 'ready'|'failed'|'in_progress' }
+
+- Architecture:
+  - Use React with hooks. Prefer functional components with clear separation of concerns.
+  - Use TypeScript for type-safety and explicit interfaces.
+  - Maintain a consistent component API surface with prop-types/interfaces where data is consumed.
+
+- UI Components and Interactions:
+  - Implement Event Handlers with robust guards. Any data access from API-like sources must use nullish coalescing and Array.isArray checks.
+  - Initialize all useState calls with correct defaults, e.g., useState<HabitsItem[]>([]) for habit items, useState<TrainingPlan[]>([]) for training plans, etc.
+  - All array operations must guard against non-arrays: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
+  - Ensure all API response shapes are validated: const list = Array.isArray(response?.data) ? response.data : [].
+
+- Layout and Styling:
+  - Implement the visual style and color palette exactly as described, with the specified typography, spacing (8px baseline grid), and layout guidelines.
+  - Cards: rounded 8–12px, inner gradient background, subtle borders, hover lift.
+  - Left navigation: vertical, with active state pill accent in #FF3B30.
+  - Data Viz: charts using the provided accent colors; tooltips with dark panels, rounded corners, and shadows.
+
 - Accessibility:
-  - ARIA attributes for charts and controls; keyboard focus rings; screen-reader friendly labels.
+  - All interactive elements must be keyboard accessible.
+  - Use aria-labels and roles for chart areas and controls.
+  - Ensure color contrast meets WCAG guidelines for text on dark backgrounds.
+
+- Performance:
+  - Memoize heavy chart components if needed.
+  - Debounce or throttle high-frequency interactions where appropriate (e.g., live search within panels, responsive resizing).
+
+- Data Handling (Runtime Safety):
+  - Supabase results: if you mock or simulate, still follow:
+    - const items = data ?? [] when reading lists from responses.
+  - Array operations guarded:
+    - (array ?? []).map(...)
+    - Array.isArray(array) ? array.map(...) : []
+  - useState defaults for arrays/objects:
+    - useState<Type[]>([]) for arrays
+  - Validation:
+    - const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: safe access to nested data like user?.profile?.name
+  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+
+- API Design (if needed for local interactions):
+  - Endpoints (mocked): 
+    - GET /health/habits
+    - GET /health/plans/training
+    - GET /health/plans/meals
+    - GET /health/recovery
+    - POST /health/workload/apply
+  - Return shapes should be validated and typed.
+
+- State Management:
+  - Centralize user health state in a HealthDashboardContext or a dedicated hook useHealthDashboard.
+  - Persist user adjustments in local storage or a mock backend for audit trail.
+
+- Security:
+  - If extending to real authentication, ensure endpoints require authentication tokens and proper authorization for health data.
 
 ### Backend
-- Endpoints (internal within LifeOps):
-  - GET /forecasting/baseline?period=YYYY-MM
-  - POST /forecasting/compute with body { period, scenarios, assumptions }
-  - GET /forecasts/{id}/data to fetch computed series
-  - POST /reports/export with payload { period, format: 'pdf'|'csv', templates, includeAudit: boolean }
-  - GET /reports/history?period=YYYY-MM
-  - GET /insights?period=YYYY-MM
-- Database tables (schemas, simplified):
-  - forecasts: id, period, baseline_values json, scenarios json, generatedAt timestamp, status
-  - scenarios: id, name, inputs json, createdAt
-  - reports: id, period, type, status, artifactUrl, createdAt
-  - transactions/subscriptions/invoices tables exist via Finance Automation and feed forecast inputs.
-- Functions to implement:
-  - computeForecast(baseline, scenarios, assumptions) -> forecasts with horizon
-  - validateInputs(input) with strict checks
-  - exportReport(period, format, options) -> returns artifact metadata
-- Validation & safety:
-  - All API responses validated with Array.isArray checks; default to [] when data missing.
-  - Inputs validated for numbers within sane ranges; error messages returned for invalid inputs.
-  - Authentication/Authorization middleware ensuring user has permission to view/Export/Modify forecasts and reports.
+
+- Data Handling:
+  - If a real backend is introduced, implement endpoints to fetch and mutate:
+    - habits, training plans, meal plans, recovery metrics, workload recommendations.
+  - Ensure all endpoints return data shapes that match the frontend types and that null/undefined values are handled gracefully.
+
+- Validation:
+  - Validate inputs for POST requests (e.g., new habit creation, schedule adjustments) using schema validation.
+  - Implement an audit trail: log actions with timestamps, user, and action type.
+
+- Database Tables (conceptual):
+  - habits(id, userId, name, streak, nextReminder, coachInterventions JSON)
+  - training_plans(id, userId, goal, sessions JSON, calendarSync boolean)
+  - meal_plans(id, userId, goal, meals JSON, nutritionSummary JSON)
+  - recovery_metrics(id, userId, score, timestamp)
+  - workload_recommendations(id, userId, recommendations JSON, createdAt)
+  - groceries(id, userId, items JSON)
 
 ### Integration
-- Data flow:
-  - Finance Automation data (transactions, categories, subscriptions, anomalies) feeds into baseline forecast.
-  - ScenarioBuilder adjusts inputs that recompute forecast via computeForecast.
-  - AgentInsightsPanel consumes insights from insightsModel; actions may update ScenarioInputs.
-  - ReportsExportPanel triggers export; generated Reports appear in Reports history and can be downloaded.
-  - Cronjobs/Approval systems are integrated to schedule forecast recalculation and export runs if configured.
-- State synchronization:
-  - Use a central store or React context to share forecastData, scenarios, and export status across components.
-  - Ensure optimistic UI states show loading and error states gracefully with proper rollbacks.
+
+- Data Flow:
+  - HealthDashboard reads data from multiple panels, and actions from Workspace (habits, plans, recovery) flow back to a unified audit log.
+  - User changes in WorkloadBalancer trigger ScheduleAdjustmentModal, which upon confirmation posts an adjustment, updates the plan, and logs an artifact.
+
+- Data Consistency:
+  - Implement a read-through guard layer to normalize API results: always coerce arrays to [], objects to defaults, and validate nested fields.
+
+- Synchronization:
+  - Calendar Sync: mock ability to read/write to calendar events from training plans; ensure idempotent operations and safe fallbacks.
 
 ---
 
 ## User Experience Flow
-1) User lands on Forecasting & Reports page.
-2) Baseline forecast renders as primary chart with rolling horizon (e.g., 12–18 months) and confidence band.
-3) User toggles between Baseline and Scenario overlays using ScenarioBuilder or quick toggle chips.
-4) In ScenarioBuilder:
-   - User adjusts inputs (revenue growth, expense growth, churn, seasonality, subscriptions, one-offs).
-   - Chart updates in real-time (debounced) to reflect changes.
-   - User saves a named scenario or loads an existing one; can duplicate or delete scenarios.
-   - User can compare 2–3 scenarios side-by-side in the chart legend.
-5) AgentInsightsPanel displays recommendations based on forecast deviations; user can apply selected recommendations to scenario inputs.
-6) ReportsExportPanel selects period and format; user initiates export; progress shows; on completion, download link appears and export history updates.
-7) KPI banner shows key metrics: forecast total cash inflow/outflow, net cash, ending cash balance, forecast error, and months to cover runway; quick filters for date range.
-8) All actions are auditable; each run adds an artifact with a traceable run ID and inter-agent trace logs accessible in Run Artifacts panel or within the Forecasting run details.
+
+1) User lands on Health Dashboard.
+   - Sees Health Snapshot (Sleep, Recovery, Weekly Load) and a quick trend view.
+   - Habits Panel shows current habits with streaks and next reminders; coaching interventions are surfaced.
+   - Training & Meal Plans panel shows upcoming sessions, meals, nutrition summary, and grocery list action.
+   - Recovery/Workload panel presents recovery score and personalized workload recommendations.
+   - Left navigation allows jumping to Habits Tracker or Training & Meal Planner pages.
+
+2) User interacts with Habits Panel.
+   - Create or edit a habit; set frequency/reminders.
+   - System updates streaks and may surface agent coaching interventions.
+   - Reminders trigger at scheduled times.
+
+3) User interacts with Training & Meal Plans.
+   - Configure training schedule aligned with goals.
+   - Generate or adjust meal plans; view nutrition summaries.
+   - Sync to calendar; generate or export grocery list.
+
+4) User reviews Workload Recommendations.
+   - See suggested schedule changes with impact.
+   - Accept or modify proposed changes; apply or route through approvals.
+   - Changes appear in the corresponding plans and are logged.
+
+5) All actions create artifacts for audit trail.
+   - Each action is associated with a run artifact, logs, and inter-agent trace when applicable.
+
+6) User navigates to Habits Tracker or Training & Meal Planner pages for deeper workflows or to adjust settings.
 
 ---
 
 ## Technical Specifications
 
-Data Models:
-- ForecastRun
-  - id: string
-  - period: string (YYYY-MM)
-  - baseline: number[]
-  - scenarios: Array<{ id: string; name: string; inputs: ScenarioInputs; values: number[] }>
-  - horizon: number
-  - createdAt: string
-  - status: 'completed'|'in_progress'|'failed'
-- Scenario
-  - id: string
-  - name: string
-  - inputs: ScenarioInputs
-  - createdAt: string
-- ScenarioInputs
-  - revenueGrowth: number
-  - expenseGrowth: number
-  - churnRate: number
-  - seasonality: number
-  - subscriptionDelta: number
-  - oneOffs: number
-- ReportArtifact
-  - id: string
-  - period: string
-  - type: 'pdf'|'csv'
-  - status: 'ready'|'in_progress'|'failed'
-  - url?: string
-  - createdAt: string
-- Insights
-  - id: string
-  - period: string
-  - items: Array<{ id: string; severity: 'low'|'medium'|'high'; text: string; suggestedAction?: string }>
+- Data Models: see below for schemas.
 
-API Endpoints:
-- GET /forecasting/baseline?period={YYYY-MM}
-  - Returns: { period, baseline: number[], horizon: number, status }
-- POST /forecasting/compute
-  - Body: { period, baselineInputs, scenarios: ScenarioInputs[], horizon }
-  - Returns: { runId, forecast: { dates[], values[] }, scenarios: [...] , status }
-- GET /forecasts/{runId}/data
-  - Returns: { dates: string[], baseline: number[], scenarios: [...] , confidence: number[] }
-- POST /reports/export
-  - Body: { period, format: 'pdf'|'csv', includeAudit: boolean, templates?: string[] }
-  - Returns: { artifactId, status, url? }
-- GET /reports/history?period=YYYY-MM
-  - Returns: { period, artifacts: ReportArtifact[] }
-- GET /insights?period=YYYY-MM
-  - Returns: { period, items: Insights[] }
+- API Endpoints (Routes and Methods):
+  - GET /health/habits
+  - POST /health/habits
+  - GET /health/plans/training
+  - POST /health/plans/training
+  - GET /health/plans/meals
+  - POST /health/plans/meals
+  - GET /health/recovery
+  - GET /health/workload/recommendations
+  - POST /health/workload/apply
+  - GET /health/groceries
+  - POST /health/calendar/sync
+  - GET /health/audit/logs
 
-Security:
-- Authentication: OAuth2 or session-based tokens; all endpoints require valid auth.
-- Authorization: Role-based access; only users with Finance/Forecasting permissions can view/export/modify.
+- Security:
+  - Token-based authentication (JWT or OAuth2 as applicable).
+  - Ensure endpoints validate user scope and permission for health data.
 
-Validation:
-- All inputs validated server-side and client-side.
-- Use default fallbacks for missing data: data ?? [] and Array.isArray(...) guards.
-
-Error handling:
-- Centralized error payloads with user-friendly messages.
-- Retry logic on transient failures for exports and data fetches.
-
-Performance:
-- Debounced UI updates for scenario input changes (e.g., 300ms).
-- Lazy loading for long periods; pagination not required for forecast data.
+- Validation:
+  - Input validation for all POST endpoints.
+  - Server should sanitize and default missing fields, returning empty arrays/objects as needed.
 
 ---
 
 ## Acceptance Criteria
-- [ ] All arrays are safely handled with nullish coalescing or Array.isArray guards; no runtime errors from mapping over potential nulls.
-- [ ] Forecasting graph renders baseline and at least one scenario with a correct horizon (12–18 months) and shows a confidence band.
-- [ ] Scenario Builder saves, loads, duplicates, and deletes scenarios; UI updates reflect changes immediately.
-- [ ] ReportsExportPanel can initiate export, show progress, and provide a downloadable artifact URL on success; history logs persist.
-- [ ] Agent Insights panel fetches and displays at least one actionable insight; applying an insight updates the scenario inputs.
-- [ ] All API responses validated: response?.data is an array when expected; defaults applied with destructuring defaults.
-- [ ] Navigation, layout, and styling comply with the provided visual system and color palette.
-- [ ] Accessibility checks pass: ARIA labels, keyboard navigation, contrast ratios meet standards.
+
+- Data Safety:
+  - All array operations guard against null/undefined: (data ?? []).map(...); Array.isArray(data) ? data.map(...) : [].
+  - All useState initializations for arrays use correct defaults: useState<Type[]>([]).
+
+- UI/UX:
+  - The Health Dashboard renders without errors with sample data.
+  - Cards render with proper spacing, typography, and color palette.
+  - Data visualizations use the provided accent colors and have accessible tooltips.
+
+- Functionality:
+  - Habits panel displays streaks and upcoming reminders; coaching interventions visible.
+  - Training & Meal Plans panel shows upcoming items and nutrition summaries.
+  - Recovery and Workload panel shows a plausible recovery score and a set of workload recommendations that can be applied.
+  - Schedule adjustments are applied correctly and logged in the audit trail.
+
+- Performance:
+  - Rendering performance is acceptable for a dense dashboard (no unnecessary re-renders; memoized charts if necessary).
+
+- Accessibility:
+  - All interactive controls focusable; aria-labels provided for charts and panels.
+  - Color contrast adheres to accessibility standards.
+
+- Security/Integrity:
+  - All endpoints validated; invalid inputs rejected; outcomes logged for audit trail.
 
 ---
 
-## UI/UX Guidelines
-Apply the project's design system:
-- Dark, dense, and focused UI with strong visual hierarchy.
-- Minimalistic but information-rich cards and charts.
-- Consistent typography, spacing, and alignment; 8px baseline grid; gutters ~220–260px for the sidebar.
-- Use accent red (#FF3B30) sparingly for alerts and active indicators.
-- Data viz uses teal #00C2A8, amber #FFB020, purple #8B5CF6 for series accents.
-- Subtle borders and shadows to create depth without clutter.
-- MD-like microcopy, tooltips, and contextual help for forecasting concepts.
+## UI/UX Guidelines (Applied to all components)
 
-Visual Style
-- Maintain the given color palette, typography, spacing, and depth rules.
-- Cards: elevated with subtle gradient, 8–12px radius, soft shadows.
-- Navigation: left sidebar with active pills; top breadcrumb/navigation bar for context.
-- Charts: muted gridlines, bold series with rounded line caps, accessible tooltips.
-
-Gradients, borders, and micro-interactions follow the specified tokens to ensure consistency.
+Apply the project's design system faithfully:
+- Colors, typography, spacing, elevations, and responsive behaviors align with the Visual Style and Color Palette provided.
+- Card surfaces: gradients from #0B0B0C to #151718, soft inner highlights, 1px borders with rgba(255,255,255,0.03), elevated shadows.
+- Navigation: left bar with active state pill in #FF3B30; breadcrumbs and top nav styling.
+- Data Viz: minimalism with a dark theme; use teal #00C2A8, amber #FFB020, purple #8B5CF6 for series accents.
+- UI Elements: consistent button styles, toggles, pills, badges; micro-interactions with 120–200ms transitions.
+- Typography: Inter-like sans font with the specified weights and sizes; sentence case with restrained capitalization.
+- Layout Rhythm: 8px baseline grid, 16–20px card padding, 24–32px card gaps, 220–260px sidebar.
 
 ---
 
-## Mandatory Coding Standards — Runtime Safety
+## Visual Style (Reaffirmed)
 
-CRITICAL: Follow these rules in ALL generated code to prevent runtime crashes.
+- Color Palette, Typography, Spacing, and Key Design Elements are exactly as described in the provided Visual Style section.
+- Ensure a cohesive feel across Health Dashboard, Habits Tracker, and Training & Meal Planner connections.
 
-1. Supabase / API query results:
+---
+
+## Mandatory Coding Standards — Runtime Safety (CRITICAL)
+
+1) Supabase query results:
    - Always use nullish coalescing: const items = data ?? [].
-2. Array methods:
-   - Never call on potentially null/undefined values. Guard:
-     - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
-3. React useState:
-   - Arrays/objects initialized with proper defaults, e.g.,
-     - const [forecasts, setForecasts] = useState<ForecastPoint[]>([]);
-     - const [scenarios, setScenarios] = useState<Scenario[]>([]);
-4. API response shapes:
-   - Always validate:
-     - const list = Array.isArray(response?.data) ? response.data : [];
-5. Optional chaining:
-   - Use obj?.property?.nested when accessing nested API responses.
-6. Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {};
+
+2) Array methods:
+   - Never call on a potentially null/undefined value.
+   - Guarded patterns: (items ?? []).map(...); Array.isArray(items) ? items.map(...) : [].
+
+3) React useState for arrays/objects:
+   - Initialize arrays correctly: useState<Type[]>([]).
+
+4) API response shapes:
+   - Validate: const list = Array.isArray(response?.data) ? response.data : [].
+
+5) Optional chaining:
+   - Use safe access: obj?.property?.nested.
+
+6) Destructuring with defaults:
+   - const { items = [], count = 0 } = response ?? {}.
 
 ---
 
-This completes a complete, actionable development prompt for building the Forecasting & Reports feature within LifeOps, aligned with the provided project context, UI style, and runtime safety requirements. for style.
+## Data Models (Schema Details)
+
+- Habit
+  - id: string
+  - userId: string
+  - name: string
+  - frequency: string (e.g., "daily", "weekly")
+  - streak: number
+  - nextReminder: string (ISO date)
+  - coachInterventions?: string[] // coaching notes or prompts
+
+- TrainingPlan
+  - id: string
+  - userId: string
+  - goal: string
+  - sessions: Array<{ date: string, type: string, durationMin: number }>
+  - calendarSync: boolean
+
+- MealPlan
+  - id: string
+  - userId: string
+  - goal: string
+  - meals: Array<{ date: string, items: string[] }>
+  - nutritionSummary: { calories: number, protein: number, carbs: number, fats: number }
+
+- RecoveryMetric
+  - id: string
+  - userId: string
+  - score: number (0-100)
+  - timestamp: string
+
+- WorkloadRecommendation
+  - id: string
+  - userId: string
+  - recommendations: Array<{ id: string, changeDescription: string, impact: string, confidence: number }>
+  - createdAt: string
+
+- GroceryItem
+  - id: string
+  - name: string
+  - quantity: string
+  - checked?: boolean
+
+- AuditLog
+  - id: string
+  - userId: string
+  - action: string
+  - timestamp: string
+  - artifactRef?: string
+
+---
+
+## API Endpoints (Optional for Real Backend)
+
+- GET /health/habits
+- POST /health/habits
+- GET /health/plans/training
+- POST /health/plans/training
+- GET /health/plans/meals
+- POST /health/plans/meals
+- GET /health/recovery
+- GET /health/workload/recommendations
+- POST /health/workload/apply
+- GET /health/groceries
+- POST /health/calendar/sync
+- GET /health/audit/logs
+
+All responses must be validated on the frontend as described, and nulls should default to empty arrays or objects where appropriate.
+
+---
+
+## Deliverables
+
+- A fully wired Health Dashboard with the described components, interconnections, and data flows.
+- All code guarded against null/undefined values as per the runtime safety rules.
+- TypeScript types/interfaces for all data models.
+- Mock data or APIs to demonstrate behavior if a real backend is not available.
+- Documentation in code comments detailing data flows, guard practices, and state management decisions.
+
+If you need me to provide starter code scaffolding (React + TypeScript) with example components, hooks, and mock data adhering to these constraints, I can generate that next. for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1159,297 +1279,417 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Forecasting & Reports
+# Health Dashboard Prompt for AI Development Tool
+
+Below is a comprehensive, actionable prompt you can feed into an AI development assistant to build the Health Dashboard feature set described. The prompt enforces runtime safety rules (null/undefined guards, Supabase data handling, proper React state initialization) and aligns with the provided visual, architectural, and behavioral requirements.
+
+---
+
+## Health Dashboard
 
 ## Overview
-Develop the Forecasting & Reports page for LifeOps, enabling users to forecast future cash flow, run scenario projections, and export month-end reports. This page must integrate with the Finance Automation suite (transaction ingestion, categorization, subscriptions, anomaly detection, forecasting, and monthly close workflows) and provide an intuitive, enterprise-grade UI that supports fast forecasting cycles, scenario planning, and auditable report exports. The implementation must be robust against null/undefined values and guard all array operations per the project’s runtime safety standards.
+Build the LifeOps Health Dashboard module: a unified command center for personal health and workload balance. It surfaces a holistic view of habits, training and meal plans, recovery score, and workload recommendations derived from personal health data, calendar events, and project timelines. The page integrates Health Automation features (habit tracking, plan generation, recovery monitoring, and workload balancing) and connects to supporting pages (Habits Tracker and Training & Meal Planner) to enable end-to-end workflows, scheduling, and agent-enabled coaching interventions.
 
 ---
 
 ## Page Description (Full Detail)
+
 What this page is:
-- A comprehensive Forecasting & Reports hub that visualizes rolling cashflow forecasts, supports scenario-based projections, and exports month-end accounting reports (PDF/CSV). It also surfaces agent-driven insights and recommendations to optimize spend and manage deferred revenue.
+- The Health Dashboard is the central, do-it-all view for personal health optimization and workload balance. It aggregates data across habits, training plans, meal plans, recovery metrics, and project/calendar-driven workload signals.
 
 Goals:
-- Allow users to generate and compare forecast scenarios (baseline, upside, downside, custom inputs).
-- Enable scenario builder to adjust income, expenses, subscriptions, and anomalies inputs; immediately reflect changes in charts and summary KPIs.
-- Provide exportable month-end reports (PDF/CSV) with a clear audit trail, data provenance, and run artifacts.
-- Surface agent insights and suggestions to reduce spend or optimize cash flow timing.
-- Seamlessly integrate with Finance Automation workflows (ingestion, categorization, anomalies, forecasting, and monthly close).
-- Ensure data integrity, permissions, and full traceability with reversible actions and run artifacts.
+- Give users a concise yet actionable snapshot of health status, progress on habits, and preparedness for upcoming work loads.
+- Automatically propose workload adjustments to optimize recovery versus deadlines.
+- Coordinate with Habit Tracking (habits and streaks with agent interventions) and Training/Meal Planner (personalized routines and nutrition) and reflect changes in a unified UI.
+- Provide a traceable audit trail of agent actions, user approvals, and run artifacts, with reversible actions where applicable.
 
-Connected features and data flows:
-- Transaction ingestion, categorization, and subscription data feed forecasting inputs.
-- Anomaly detection results feeding into forecast confidence and scenario adjustments.
-- Monthly close workflow driving final reporting artifacts and approvals.
-- Centralized audit trail for all forecast runs, scenario builds, exports, and inter-agent messages.
+Features connected:
+- Health Automation: Habit tracking and coaching interventions, generation of training/meal plans, recovery monitoring, and workload balancing using personal data and calendar syncing.
+- Habits Tracker page: Create, track, and receive reminders; display streaks and coaching interventions.
+- Training & Meal Planner page: Configure schedules, generate nutrition plans, provide nutrition summaries, and generate grocery lists.
+- Workload Balancer: Recommended schedule changes derived from project timelines, calendar events, and recovery signals.
 
-UI guidance and layout:
-- Forecast graphs showing rolling forecast and scenario overlays with toggles (baseline, scenario A/B, confidence intervals).
-- Scenario Builder panel with tunable assumptions (revenue, costs, seasonality, churn, renewal rates, subscription growth, one-off items).
-- Report Exports panel for PDF/CSV generation with month-end metadata (period, account mappings, currency, permissions).
-- Agent Insights panel delivering actionable recommendations.
-- Left navigation and top breadcrumbs consistent with the LifeOps design system.
+UI elements and how they should look:
+- Health Snapshot: shows Sleep, Recovery Score, Weekly Training Load, and a compact daily/weekly view.
+- Habits Panel: displays tracked habits, current streaks, next reminders, and agent coaching interventions.
+- Training & Meal Plans: shows upcoming training sessions, planned meals, nutrition summary (calories/macros), and links to grocery list generation.
+- Workload Balancer: presents recommended schedule shifts to balance work deadlines with recovery windows; supports one-click adjustment proposal and approval flow.
+- Visual guidance: dark UI with high-contrast typography, clear card hierarchy, and data-driven charts using the accent palette (teal, amber, purple) for data viz.
 
-API integrations:
-- No external APIs specified; all data originates from the LifeOps internal data layer (Finance Automation, Cronjobs, and Run Artifacts).
-- Ensure API endpoints (internal) support data fetches for forecasts, scenarios, reports, and run histories with proper validation and security.
+Connected Pages:
+- Habits Tracker: independent page for creating, tracking, and coaching interventions.
+- Training & Meal Planner: page for configuring and managing personal training and meal plans.
 
-Accessibility and UX:
-- Keyboard navigable controls, screen-reader friendly labels, and contrast-appropriate UI.
-- Responsive layout that preserves data density for power users while maintaining clarity on smaller screens.
+Connected Features:
+- Health Automation: data-driven generation, monitoring, and balancing across habits, training, meals, and workload.
+
+API Integrations:
+- No external APIs required for this implementation according to the provided context. All data interactions will be simulated or mocked within the app context unless otherwise specified.
 
 ---
 
 ## Components to Build
-1) ForecastingDashboard
-- Purpose: Top-level page container with forecast chart, KPI cards, scenario toggles, and export actions.
-- Data sources: forecastBaseline, forecastScenario(s), confidence intervals, forecast horizon.
-- State: selectedScenario, isLoading, forecastData, exportStatus.
-- Interactions: switch scenario, adjust date range, trigger re-forecast, export.
 
-2) ScenarioBuilder
-- Purpose: Comprehensive panel to adjust inputs affecting income, expenses, churn, seasonality, and subscriptions.
-- Data sources: baseAssumptions, scenarioInputs.
-- State: inputs object with nested fields; validation state.
-- Interactions: live preview on chart; add/remove scenario lines; save/load scenarios; reset to baseline.
+1) HealthDashboardShell
+- Purpose: Master container for the Health Dashboard with header, left navigation, and content grid.
+- Data flow: Pulls from client-side stores or API stubs; uses safe guards for data.
+- Props: none required; relies on global state.
+- State: local UI state for tab/panel expansion.
 
-3) ReportsExportPanel
-- Purpose: Manage month-end report exports as PDF/CSV with metadata and permissions.
-- Data sources: reportTemplates, periodMeta, userPermissions.
-- State: selectedFormat, period, status, generatedArtifactInfo.
-- Interactions: initiate export, show progress, download links, export history.
+2) HealthSnapshotCard
+- Purpose: Quick snapshot row: Sleep, Recovery Score, Weekly Training Load, and next 7 days overview.
+- Data inputs: user health data (sleep, recovery, training load) and calendar signals.
+- UI: Card with gradient background, top icon, title, numeric value, trend indicator.
+- Interactions: Hover lift, show micro-details on hover or click.
 
-4) AgentInsightsPanel
-- Purpose: Display AI-generated recommendations for spend reduction, revenue acceleration, and timing optimizations.
-- Data sources: insightsModel outputs, anomaly signals, forecast confidence.
-- State: insightsList, loading, filters (severity, area).
-- Interactions: apply recommendation as an action (e.g., modify input), dismiss, pin.
+3) HabitsPanel
+- Purpose: Display active habits, streaks, upcoming reminders, and coaching interventions.
+- Data inputs: habits array with properties {id, name, streak, nextReminder, coachInterventions}
+- Interactions: Start/stop reminders, manual update, view coach note.
+- Safety: Guard maps for null data; use (habits ?? []) and safe map.
 
-5) ChartPanel (ForecastGraph)
-- Purpose: Render rolling forecast with scenario overlays, confidence bands, and interactive tooltips.
-- Data sources: forecastData (baseline + scenarios), axis scales.
-- State: hoveredPoint, selectedSeries.
-- Interactions: hover/tooltips, zoom, export chart as image.
+4) TrainingMealPanel
+- Purpose: Show upcoming training sessions, meal plans, nutrition summaries, and groceries list actions.
+- Data inputs: trainingPlans, mealPlans, nutritionSummary, groceriesList
+- Interactions: Sync calendar, generate grocery list, adjust plan.
+- Safety: Guard all arrays as (plans ?? []).
 
-6) DataGuard & Utilities
-- Purpose: Ensure all data access guards against null/undefined; provide safe helpers for array operations.
-- Functions: safeMap, safeFilter, safeReduce; ensure data ?? [] patterns; Array.isArray guards.
+5) RecoveryAndWorkloadPanel
+- Purpose: Display Recovery Score trend and workload balancing recommendations based on projects and calendar.
+- Data inputs: recoveryScore, workloadRecommendations (list), calendarIntents
+- Interactions: Accept/reject adjustments, preview schedule changes.
 
-7) Navigation & Layout
-- SideNav: left compact navigation with active state pills.
-- TopBar/Breadcrumb: consistent with LifeOps design system.
+6) WorkloadRecommendationList
+- Purpose: List of recommended schedule changes with impact and confidence.
+- Data inputs: recommendations array with {id, changeDescription, impact, confidence}
+- Interactions: One-click apply, or route through approvals.
 
-8) Modals/Toasts
-- Confirmations for destructive actions, export completion, rollback prompts.
+7) ScheduleAdjustmentModal
+- Purpose: Modal/dialog to apply suggested schedule changes with rationale.
+- Interactions: Confirm, cancel; track approval state.
+
+8) DataVizChart
+- Purpose: Reusable chart component for lines/bars using minimal, high-contrast styling.
+- Data inputs: series data, categories.
+- Visuals: Use teal/amber/purple accents; gridlines subtle; tooltips enabled.
+
+9) NotificationsTray
+- Purpose: Show agent coaching interventions and important health prompts.
+- Data inputs: interventions[], alerts[]
+- Interactions: Acknowledge, snooze.
+
+10) GroceryListPanel
+- Purpose: Display generated grocery list associated with meal plans.
+- Data inputs: groceries[]
+- Interactions: Export, check-off items.
+
+Note: Ensure every component guards against null/undefined values and uses the runtime safety patterns described in the "Mandatory Coding Standards".
 
 ---
 
 ## Implementation Requirements
 
 ### Frontend
-- Frameworks: React with TypeScript; state management via React hooks or a lightweight store (e.g., Zustand) as appropriate.
-- Components must:
-  - Guard against null/undefined values before array methods:
-    - Always use (data ?? []) before map/filter/reduce, or Array.isArray(data) ? data.map(...) : [].
-    - Example: (forecastData ?? []).map(...)
-  - Initialize state with proper defaults:
-    - useState<ForecastPoint[]>([]) for arrays, useState<Scenario[]>([]) for lists.
-  - Validate API-like responses using Array.isArray checks:
-    - const list = Array.isArray(response?.data) ? response.data : [].
-  - Use optional chaining for nested API responses: obj?.prop?.subprop.
-  - Provide default destructuring with defaults: const { items = [], count = 0 } = response ?? {}.
-- UI components:
-  - Reusable Card components with dark theme, 8–12px border radius, and depth.
-  - Charting components (SVG/Canvas) with accessible legends and tooltips.
-  - Data grids or dense cards for KPI summaries, with counts and timestamps per metadata.
-  - Form controls styled per design system: inputs, selects, toggles, date pickers.
-  - Buttons with Primary/Secondary styles as defined.
-  - Export actions that trigger a backend-like export flow with progress indicators.
-- Data formats:
-  - ForecastPoint: { date: string; value: number; scenario?: string; confidence?: number }
-  - Scenario: { id: string; name: string; inputs: ScenarioInputs; createdAt: string }
-  - ScenarioInputs: { revenueGrowth: number; expenseGrowth: number; churnRate: number; seasonality: number; subscriptionDelta: number; oneOffs: number }
-  - ReportArtifact: { id: string; period: string; url: string; type: 'pdf'|'csv'; status: 'ready'|'failed'|'in_progress' }
+
+- Architecture:
+  - Use React with hooks. Prefer functional components with clear separation of concerns.
+  - Use TypeScript for type-safety and explicit interfaces.
+  - Maintain a consistent component API surface with prop-types/interfaces where data is consumed.
+
+- UI Components and Interactions:
+  - Implement Event Handlers with robust guards. Any data access from API-like sources must use nullish coalescing and Array.isArray checks.
+  - Initialize all useState calls with correct defaults, e.g., useState<HabitsItem[]>([]) for habit items, useState<TrainingPlan[]>([]) for training plans, etc.
+  - All array operations must guard against non-arrays: (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
+  - Ensure all API response shapes are validated: const list = Array.isArray(response?.data) ? response.data : [].
+
+- Layout and Styling:
+  - Implement the visual style and color palette exactly as described, with the specified typography, spacing (8px baseline grid), and layout guidelines.
+  - Cards: rounded 8–12px, inner gradient background, subtle borders, hover lift.
+  - Left navigation: vertical, with active state pill accent in #FF3B30.
+  - Data Viz: charts using the provided accent colors; tooltips with dark panels, rounded corners, and shadows.
+
 - Accessibility:
-  - ARIA attributes for charts and controls; keyboard focus rings; screen-reader friendly labels.
+  - All interactive elements must be keyboard accessible.
+  - Use aria-labels and roles for chart areas and controls.
+  - Ensure color contrast meets WCAG guidelines for text on dark backgrounds.
+
+- Performance:
+  - Memoize heavy chart components if needed.
+  - Debounce or throttle high-frequency interactions where appropriate (e.g., live search within panels, responsive resizing).
+
+- Data Handling (Runtime Safety):
+  - Supabase results: if you mock or simulate, still follow:
+    - const items = data ?? [] when reading lists from responses.
+  - Array operations guarded:
+    - (array ?? []).map(...)
+    - Array.isArray(array) ? array.map(...) : []
+  - useState defaults for arrays/objects:
+    - useState<Type[]>([]) for arrays
+  - Validation:
+    - const list = Array.isArray(response?.data) ? response.data : []
+  - Optional chaining: safe access to nested data like user?.profile?.name
+  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+
+- API Design (if needed for local interactions):
+  - Endpoints (mocked): 
+    - GET /health/habits
+    - GET /health/plans/training
+    - GET /health/plans/meals
+    - GET /health/recovery
+    - POST /health/workload/apply
+  - Return shapes should be validated and typed.
+
+- State Management:
+  - Centralize user health state in a HealthDashboardContext or a dedicated hook useHealthDashboard.
+  - Persist user adjustments in local storage or a mock backend for audit trail.
+
+- Security:
+  - If extending to real authentication, ensure endpoints require authentication tokens and proper authorization for health data.
 
 ### Backend
-- Endpoints (internal within LifeOps):
-  - GET /forecasting/baseline?period=YYYY-MM
-  - POST /forecasting/compute with body { period, scenarios, assumptions }
-  - GET /forecasts/{id}/data to fetch computed series
-  - POST /reports/export with payload { period, format: 'pdf'|'csv', templates, includeAudit: boolean }
-  - GET /reports/history?period=YYYY-MM
-  - GET /insights?period=YYYY-MM
-- Database tables (schemas, simplified):
-  - forecasts: id, period, baseline_values json, scenarios json, generatedAt timestamp, status
-  - scenarios: id, name, inputs json, createdAt
-  - reports: id, period, type, status, artifactUrl, createdAt
-  - transactions/subscriptions/invoices tables exist via Finance Automation and feed forecast inputs.
-- Functions to implement:
-  - computeForecast(baseline, scenarios, assumptions) -> forecasts with horizon
-  - validateInputs(input) with strict checks
-  - exportReport(period, format, options) -> returns artifact metadata
-- Validation & safety:
-  - All API responses validated with Array.isArray checks; default to [] when data missing.
-  - Inputs validated for numbers within sane ranges; error messages returned for invalid inputs.
-  - Authentication/Authorization middleware ensuring user has permission to view/Export/Modify forecasts and reports.
+
+- Data Handling:
+  - If a real backend is introduced, implement endpoints to fetch and mutate:
+    - habits, training plans, meal plans, recovery metrics, workload recommendations.
+  - Ensure all endpoints return data shapes that match the frontend types and that null/undefined values are handled gracefully.
+
+- Validation:
+  - Validate inputs for POST requests (e.g., new habit creation, schedule adjustments) using schema validation.
+  - Implement an audit trail: log actions with timestamps, user, and action type.
+
+- Database Tables (conceptual):
+  - habits(id, userId, name, streak, nextReminder, coachInterventions JSON)
+  - training_plans(id, userId, goal, sessions JSON, calendarSync boolean)
+  - meal_plans(id, userId, goal, meals JSON, nutritionSummary JSON)
+  - recovery_metrics(id, userId, score, timestamp)
+  - workload_recommendations(id, userId, recommendations JSON, createdAt)
+  - groceries(id, userId, items JSON)
 
 ### Integration
-- Data flow:
-  - Finance Automation data (transactions, categories, subscriptions, anomalies) feeds into baseline forecast.
-  - ScenarioBuilder adjusts inputs that recompute forecast via computeForecast.
-  - AgentInsightsPanel consumes insights from insightsModel; actions may update ScenarioInputs.
-  - ReportsExportPanel triggers export; generated Reports appear in Reports history and can be downloaded.
-  - Cronjobs/Approval systems are integrated to schedule forecast recalculation and export runs if configured.
-- State synchronization:
-  - Use a central store or React context to share forecastData, scenarios, and export status across components.
-  - Ensure optimistic UI states show loading and error states gracefully with proper rollbacks.
+
+- Data Flow:
+  - HealthDashboard reads data from multiple panels, and actions from Workspace (habits, plans, recovery) flow back to a unified audit log.
+  - User changes in WorkloadBalancer trigger ScheduleAdjustmentModal, which upon confirmation posts an adjustment, updates the plan, and logs an artifact.
+
+- Data Consistency:
+  - Implement a read-through guard layer to normalize API results: always coerce arrays to [], objects to defaults, and validate nested fields.
+
+- Synchronization:
+  - Calendar Sync: mock ability to read/write to calendar events from training plans; ensure idempotent operations and safe fallbacks.
 
 ---
 
 ## User Experience Flow
-1) User lands on Forecasting & Reports page.
-2) Baseline forecast renders as primary chart with rolling horizon (e.g., 12–18 months) and confidence band.
-3) User toggles between Baseline and Scenario overlays using ScenarioBuilder or quick toggle chips.
-4) In ScenarioBuilder:
-   - User adjusts inputs (revenue growth, expense growth, churn, seasonality, subscriptions, one-offs).
-   - Chart updates in real-time (debounced) to reflect changes.
-   - User saves a named scenario or loads an existing one; can duplicate or delete scenarios.
-   - User can compare 2–3 scenarios side-by-side in the chart legend.
-5) AgentInsightsPanel displays recommendations based on forecast deviations; user can apply selected recommendations to scenario inputs.
-6) ReportsExportPanel selects period and format; user initiates export; progress shows; on completion, download link appears and export history updates.
-7) KPI banner shows key metrics: forecast total cash inflow/outflow, net cash, ending cash balance, forecast error, and months to cover runway; quick filters for date range.
-8) All actions are auditable; each run adds an artifact with a traceable run ID and inter-agent trace logs accessible in Run Artifacts panel or within the Forecasting run details.
+
+1) User lands on Health Dashboard.
+   - Sees Health Snapshot (Sleep, Recovery, Weekly Load) and a quick trend view.
+   - Habits Panel shows current habits with streaks and next reminders; coaching interventions are surfaced.
+   - Training & Meal Plans panel shows upcoming sessions, meals, nutrition summary, and grocery list action.
+   - Recovery/Workload panel presents recovery score and personalized workload recommendations.
+   - Left navigation allows jumping to Habits Tracker or Training & Meal Planner pages.
+
+2) User interacts with Habits Panel.
+   - Create or edit a habit; set frequency/reminders.
+   - System updates streaks and may surface agent coaching interventions.
+   - Reminders trigger at scheduled times.
+
+3) User interacts with Training & Meal Plans.
+   - Configure training schedule aligned with goals.
+   - Generate or adjust meal plans; view nutrition summaries.
+   - Sync to calendar; generate or export grocery list.
+
+4) User reviews Workload Recommendations.
+   - See suggested schedule changes with impact.
+   - Accept or modify proposed changes; apply or route through approvals.
+   - Changes appear in the corresponding plans and are logged.
+
+5) All actions create artifacts for audit trail.
+   - Each action is associated with a run artifact, logs, and inter-agent trace when applicable.
+
+6) User navigates to Habits Tracker or Training & Meal Planner pages for deeper workflows or to adjust settings.
 
 ---
 
 ## Technical Specifications
 
-Data Models:
-- ForecastRun
-  - id: string
-  - period: string (YYYY-MM)
-  - baseline: number[]
-  - scenarios: Array<{ id: string; name: string; inputs: ScenarioInputs; values: number[] }>
-  - horizon: number
-  - createdAt: string
-  - status: 'completed'|'in_progress'|'failed'
-- Scenario
-  - id: string
-  - name: string
-  - inputs: ScenarioInputs
-  - createdAt: string
-- ScenarioInputs
-  - revenueGrowth: number
-  - expenseGrowth: number
-  - churnRate: number
-  - seasonality: number
-  - subscriptionDelta: number
-  - oneOffs: number
-- ReportArtifact
-  - id: string
-  - period: string
-  - type: 'pdf'|'csv'
-  - status: 'ready'|'in_progress'|'failed'
-  - url?: string
-  - createdAt: string
-- Insights
-  - id: string
-  - period: string
-  - items: Array<{ id: string; severity: 'low'|'medium'|'high'; text: string; suggestedAction?: string }>
+- Data Models: see below for schemas.
 
-API Endpoints:
-- GET /forecasting/baseline?period={YYYY-MM}
-  - Returns: { period, baseline: number[], horizon: number, status }
-- POST /forecasting/compute
-  - Body: { period, baselineInputs, scenarios: ScenarioInputs[], horizon }
-  - Returns: { runId, forecast: { dates[], values[] }, scenarios: [...] , status }
-- GET /forecasts/{runId}/data
-  - Returns: { dates: string[], baseline: number[], scenarios: [...] , confidence: number[] }
-- POST /reports/export
-  - Body: { period, format: 'pdf'|'csv', includeAudit: boolean, templates?: string[] }
-  - Returns: { artifactId, status, url? }
-- GET /reports/history?period=YYYY-MM
-  - Returns: { period, artifacts: ReportArtifact[] }
-- GET /insights?period=YYYY-MM
-  - Returns: { period, items: Insights[] }
+- API Endpoints (Routes and Methods):
+  - GET /health/habits
+  - POST /health/habits
+  - GET /health/plans/training
+  - POST /health/plans/training
+  - GET /health/plans/meals
+  - POST /health/plans/meals
+  - GET /health/recovery
+  - GET /health/workload/recommendations
+  - POST /health/workload/apply
+  - GET /health/groceries
+  - POST /health/calendar/sync
+  - GET /health/audit/logs
 
-Security:
-- Authentication: OAuth2 or session-based tokens; all endpoints require valid auth.
-- Authorization: Role-based access; only users with Finance/Forecasting permissions can view/export/modify.
+- Security:
+  - Token-based authentication (JWT or OAuth2 as applicable).
+  - Ensure endpoints validate user scope and permission for health data.
 
-Validation:
-- All inputs validated server-side and client-side.
-- Use default fallbacks for missing data: data ?? [] and Array.isArray(...) guards.
-
-Error handling:
-- Centralized error payloads with user-friendly messages.
-- Retry logic on transient failures for exports and data fetches.
-
-Performance:
-- Debounced UI updates for scenario input changes (e.g., 300ms).
-- Lazy loading for long periods; pagination not required for forecast data.
+- Validation:
+  - Input validation for all POST endpoints.
+  - Server should sanitize and default missing fields, returning empty arrays/objects as needed.
 
 ---
 
 ## Acceptance Criteria
-- [ ] All arrays are safely handled with nullish coalescing or Array.isArray guards; no runtime errors from mapping over potential nulls.
-- [ ] Forecasting graph renders baseline and at least one scenario with a correct horizon (12–18 months) and shows a confidence band.
-- [ ] Scenario Builder saves, loads, duplicates, and deletes scenarios; UI updates reflect changes immediately.
-- [ ] ReportsExportPanel can initiate export, show progress, and provide a downloadable artifact URL on success; history logs persist.
-- [ ] Agent Insights panel fetches and displays at least one actionable insight; applying an insight updates the scenario inputs.
-- [ ] All API responses validated: response?.data is an array when expected; defaults applied with destructuring defaults.
-- [ ] Navigation, layout, and styling comply with the provided visual system and color palette.
-- [ ] Accessibility checks pass: ARIA labels, keyboard navigation, contrast ratios meet standards.
+
+- Data Safety:
+  - All array operations guard against null/undefined: (data ?? []).map(...); Array.isArray(data) ? data.map(...) : [].
+  - All useState initializations for arrays use correct defaults: useState<Type[]>([]).
+
+- UI/UX:
+  - The Health Dashboard renders without errors with sample data.
+  - Cards render with proper spacing, typography, and color palette.
+  - Data visualizations use the provided accent colors and have accessible tooltips.
+
+- Functionality:
+  - Habits panel displays streaks and upcoming reminders; coaching interventions visible.
+  - Training & Meal Plans panel shows upcoming items and nutrition summaries.
+  - Recovery and Workload panel shows a plausible recovery score and a set of workload recommendations that can be applied.
+  - Schedule adjustments are applied correctly and logged in the audit trail.
+
+- Performance:
+  - Rendering performance is acceptable for a dense dashboard (no unnecessary re-renders; memoized charts if necessary).
+
+- Accessibility:
+  - All interactive controls focusable; aria-labels provided for charts and panels.
+  - Color contrast adheres to accessibility standards.
+
+- Security/Integrity:
+  - All endpoints validated; invalid inputs rejected; outcomes logged for audit trail.
 
 ---
 
-## UI/UX Guidelines
-Apply the project's design system:
-- Dark, dense, and focused UI with strong visual hierarchy.
-- Minimalistic but information-rich cards and charts.
-- Consistent typography, spacing, and alignment; 8px baseline grid; gutters ~220–260px for the sidebar.
-- Use accent red (#FF3B30) sparingly for alerts and active indicators.
-- Data viz uses teal #00C2A8, amber #FFB020, purple #8B5CF6 for series accents.
-- Subtle borders and shadows to create depth without clutter.
-- MD-like microcopy, tooltips, and contextual help for forecasting concepts.
+## UI/UX Guidelines (Applied to all components)
 
-Visual Style
-- Maintain the given color palette, typography, spacing, and depth rules.
-- Cards: elevated with subtle gradient, 8–12px radius, soft shadows.
-- Navigation: left sidebar with active pills; top breadcrumb/navigation bar for context.
-- Charts: muted gridlines, bold series with rounded line caps, accessible tooltips.
-
-Gradients, borders, and micro-interactions follow the specified tokens to ensure consistency.
+Apply the project's design system faithfully:
+- Colors, typography, spacing, elevations, and responsive behaviors align with the Visual Style and Color Palette provided.
+- Card surfaces: gradients from #0B0B0C to #151718, soft inner highlights, 1px borders with rgba(255,255,255,0.03), elevated shadows.
+- Navigation: left bar with active state pill in #FF3B30; breadcrumbs and top nav styling.
+- Data Viz: minimalism with a dark theme; use teal #00C2A8, amber #FFB020, purple #8B5CF6 for series accents.
+- UI Elements: consistent button styles, toggles, pills, badges; micro-interactions with 120–200ms transitions.
+- Typography: Inter-like sans font with the specified weights and sizes; sentence case with restrained capitalization.
+- Layout Rhythm: 8px baseline grid, 16–20px card padding, 24–32px card gaps, 220–260px sidebar.
 
 ---
 
-## Mandatory Coding Standards — Runtime Safety
+## Visual Style (Reaffirmed)
 
-CRITICAL: Follow these rules in ALL generated code to prevent runtime crashes.
+- Color Palette, Typography, Spacing, and Key Design Elements are exactly as described in the provided Visual Style section.
+- Ensure a cohesive feel across Health Dashboard, Habits Tracker, and Training & Meal Planner connections.
 
-1. Supabase / API query results:
+---
+
+## Mandatory Coding Standards — Runtime Safety (CRITICAL)
+
+1) Supabase query results:
    - Always use nullish coalescing: const items = data ?? [].
-2. Array methods:
-   - Never call on potentially null/undefined values. Guard:
-     - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
-3. React useState:
-   - Arrays/objects initialized with proper defaults, e.g.,
-     - const [forecasts, setForecasts] = useState<ForecastPoint[]>([]);
-     - const [scenarios, setScenarios] = useState<Scenario[]>([]);
-4. API response shapes:
-   - Always validate:
-     - const list = Array.isArray(response?.data) ? response.data : [];
-5. Optional chaining:
-   - Use obj?.property?.nested when accessing nested API responses.
-6. Destructuring with defaults:
-   - const { items = [], count = 0 } = response ?? {};
+
+2) Array methods:
+   - Never call on a potentially null/undefined value.
+   - Guarded patterns: (items ?? []).map(...); Array.isArray(items) ? items.map(...) : [].
+
+3) React useState for arrays/objects:
+   - Initialize arrays correctly: useState<Type[]>([]).
+
+4) API response shapes:
+   - Validate: const list = Array.isArray(response?.data) ? response.data : [].
+
+5) Optional chaining:
+   - Use safe access: obj?.property?.nested.
+
+6) Destructuring with defaults:
+   - const { items = [], count = 0 } = response ?? {}.
 
 ---
 
-This completes a complete, actionable development prompt for building the Forecasting & Reports feature within LifeOps, aligned with the provided project context, UI style, and runtime safety requirements.
+## Data Models (Schema Details)
+
+- Habit
+  - id: string
+  - userId: string
+  - name: string
+  - frequency: string (e.g., "daily", "weekly")
+  - streak: number
+  - nextReminder: string (ISO date)
+  - coachInterventions?: string[] // coaching notes or prompts
+
+- TrainingPlan
+  - id: string
+  - userId: string
+  - goal: string
+  - sessions: Array<{ date: string, type: string, durationMin: number }>
+  - calendarSync: boolean
+
+- MealPlan
+  - id: string
+  - userId: string
+  - goal: string
+  - meals: Array<{ date: string, items: string[] }>
+  - nutritionSummary: { calories: number, protein: number, carbs: number, fats: number }
+
+- RecoveryMetric
+  - id: string
+  - userId: string
+  - score: number (0-100)
+  - timestamp: string
+
+- WorkloadRecommendation
+  - id: string
+  - userId: string
+  - recommendations: Array<{ id: string, changeDescription: string, impact: string, confidence: number }>
+  - createdAt: string
+
+- GroceryItem
+  - id: string
+  - name: string
+  - quantity: string
+  - checked?: boolean
+
+- AuditLog
+  - id: string
+  - userId: string
+  - action: string
+  - timestamp: string
+  - artifactRef?: string
+
+---
+
+## API Endpoints (Optional for Real Backend)
+
+- GET /health/habits
+- POST /health/habits
+- GET /health/plans/training
+- POST /health/plans/training
+- GET /health/plans/meals
+- POST /health/plans/meals
+- GET /health/recovery
+- GET /health/workload/recommendations
+- POST /health/workload/apply
+- GET /health/groceries
+- POST /health/calendar/sync
+- GET /health/audit/logs
+
+All responses must be validated on the frontend as described, and nulls should default to empty arrays or objects where appropriate.
+
+---
+
+## Deliverables
+
+- A fully wired Health Dashboard with the described components, interconnections, and data flows.
+- All code guarded against null/undefined values as per the runtime safety rules.
+- TypeScript types/interfaces for all data models.
+- Mock data or APIs to demonstrate behavior if a real backend is not available.
+- Documentation in code comments detailing data flows, guard practices, and state management decisions.
+
+If you need me to provide starter code scaffolding (React + TypeScript) with example components, hooks, and mock data adhering to these constraints, I can generate that next.
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist
