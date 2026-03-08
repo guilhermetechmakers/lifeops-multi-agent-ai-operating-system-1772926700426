@@ -10,6 +10,7 @@ import {
   Wallet,
   Heart,
   Settings,
+  User,
   ChevronLeft,
   Menu,
   Search,
@@ -97,7 +98,18 @@ export function DashboardLayout() {
             })}
           </nav>
           <Separator className="my-2 bg-white/[0.03]" />
-          <nav className="px-2 pb-2">
+          <nav className="px-2 pb-2 space-y-1">
+            <Link to="/dashboard/profile">
+              <span
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  location.pathname.startsWith("/dashboard/profile") && "bg-primary text-primary-foreground"
+                )}
+              >
+                <User className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>Profile</span>}
+              </span>
+            </Link>
             <Link to="/dashboard/settings">
               <span
                 className={cn(
@@ -152,6 +164,17 @@ export function DashboardLayout() {
                 </span>
               </Link>
             ))}
+            <Link to="/dashboard/profile" onClick={() => setMobileOpen(false)}>
+              <span className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                location.pathname.startsWith("/dashboard/profile")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}>
+                <User className="h-5 w-5 shrink-0" />
+                Profile
+              </span>
+            </Link>
             <Link to="/dashboard/settings" onClick={() => setMobileOpen(false)}>
               <span className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
                 <Settings className="h-5 w-5 shrink-0" />

@@ -11,6 +11,7 @@ import {
   Heart,
   FolderKanban,
   Settings,
+  User,
   Search,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,6 +119,10 @@ export default function DashboardMaster() {
             <CommandItem value="health" onSelect={() => runCommand("/dashboard/health")}>
               <Heart className="mr-2 h-4 w-4" />
               Health
+            </CommandItem>
+            <CommandItem value="profile" onSelect={() => runCommand("/dashboard/profile")}>
+              <User className="mr-2 h-4 w-4" />
+              Profile
             </CommandItem>
             <CommandItem value="settings" onSelect={() => runCommand("/dashboard/settings")}>
               <Settings className="mr-2 h-4 w-4" />

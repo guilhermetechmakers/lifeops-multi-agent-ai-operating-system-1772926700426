@@ -20,6 +20,15 @@ import ArtifactsPage from "@/pages/artifacts";
 import DashboardFinance from "@/pages/dashboard-finance";
 import DashboardHealth from "@/pages/dashboard-health";
 import DashboardSettings from "@/pages/dashboard-settings";
+import { UserProfileLayout } from "@/components/profile";
+import {
+  PersonalInfoPanel,
+  IntegrationsPanel,
+  SecurityPanel,
+  ApiKeysPanel,
+  BillingPanel,
+  PreferencesPanel,
+} from "@/components/profile";
 import CronjobDetail from "@/pages/cronjob-detail";
 import RunDetailsPage from "@/pages/run-details";
 import CronjobEditor from "@/pages/cronjob-editor";
@@ -71,6 +80,15 @@ function App() {
             <Route path="finance" element={<DashboardFinance />} />
             <Route path="health" element={<DashboardHealth />} />
             <Route path="settings" element={<DashboardSettings />} />
+            <Route path="profile" element={<UserProfileLayout />}>
+              <Route index element={<Navigate to="personal" replace />} />
+              <Route path="personal" element={<PersonalInfoPanel />} />
+              <Route path="integrations" element={<IntegrationsPanel />} />
+              <Route path="security" element={<SecurityPanel />} />
+              <Route path="api-keys" element={<ApiKeysPanel />} />
+              <Route path="billing" element={<BillingPanel />} />
+              <Route path="preferences" element={<PreferencesPanel />} />
+            </Route>
           </Route>
           <Route path="/404" element={<NotFound />} />
           <Route path="/500" element={<ServerErrorPage />} />

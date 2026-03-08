@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Bell,
   Mail,
@@ -8,6 +9,7 @@ import {
   FileText,
   Eye,
   Save,
+  User,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -319,8 +321,18 @@ export default function DashboardSettings() {
         <TabsContent value="profile" className="space-y-4">
           <Card className="border-white/[0.03] bg-card">
             <CardHeader>
-              <CardTitle>Profile</CardTitle>
-              <p className="text-sm text-muted-foreground">Account details</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Profile</CardTitle>
+                  <p className="text-sm text-muted-foreground">Account details</p>
+                </div>
+                <Link to="/dashboard/profile">
+                  <Button variant="outline" size="sm">
+                    <User className="h-4 w-4" />
+                    Full profile
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
