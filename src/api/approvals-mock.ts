@@ -16,6 +16,7 @@ import type {
   RequestChangesPayload,
   RevertPayload,
   AddCommentPayload,
+  EscalatePayload,
 } from "@/types/approvals";
 
 const now = new Date();
@@ -69,6 +70,8 @@ let queueItems: ApprovalQueueItem[] = [
     severity: "high",
     priority: 1,
     eta: soon.toISOString(),
+    slaMinutes: 120,
+    scheduledTime: soon.toISOString(),
     status: "pending",
     createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
     updatedAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
@@ -107,6 +110,8 @@ let queueItems: ApprovalQueueItem[] = [
     severity: "medium",
     priority: 2,
     eta: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+    slaMinutes: 120,
+    scheduledTime: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
     status: "pending",
     createdAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
@@ -142,7 +147,20 @@ function filterItems(
     );
   if (filters.module) out = out.filter((i) => i.module === filters.module);
   if (filters.severity) out = out.filter((i) => i.severity === filters.severity);
+  if (filters.priority) out = out.filter((i) => i.severity === filters.priority);
   if (filters.status) out = out.filter((i) => i.status === filters.status);
+  if (filters.assignedApprover)
+    out = out.filter((i) => i.assignedApprover === filters.assignedApprover);
+  if (filters.slaUrgency && filters.slaUrgency !== "all") {
+    const now = Date.now();
+    out = out.filter((i) => {
+      if (!i.slaMinutes || !i.createdAt) return filters.slaUrgency === "expired";
+      const expiry = new Date(i.createdAt).getTime() + i.slaMinutes * 60 * 1000;
+      if (filters.slaUrgency === "expired") return expiry < now;
+      if (filters.slaUrgency === "expiring") return expiry > now && expiry < now + 60 * 60 * 1000;
+      return true;
+    });
+  }
   if (filters.search) {
     const s = filters.search.toLowerCase();
     out = out.filter(
@@ -330,5 +348,34 @@ export const approvalsMockApi = {
     const comments = [...(item.comments ?? []), comment];
     queueItems[idx] = { ...item, comments, updatedAt: new Date().toISOString() };
     return comment;
+  },
+
+  escalate: async (
+    id: string,
+    payload: EscalatePayload = {}
+  ): Promise<ApprovalQueueItem> => {
+    await delay(250, null);
+    const idx = queueItems.findIndex((i) => i.id === id);
+    if (idx < 0) throw new Error("Approval not found");
+    const item = queueItems[idx];
+    const updated: ApprovalQueueItem = {
+      ...item,
+      status: "escalated",
+      assignedApprover: payload.targetGroup ?? payload.targetApproverGroup ?? "escalation-group",
+      updatedAt: new Date().toISOString(),
+      audit: [
+        ...(item.audit ?? []),
+        {
+          id: `e-${Date.now()}`,
+          type: "request_change",
+          authorId: "current-user",
+          authorName: "Current User",
+          timestamp: new Date().toISOString(),
+          details: payload.comment ?? "Escalated to next approver",
+        },
+      ],
+    };
+    queueItems[idx] = updated;
+    return updated;
   },
 };

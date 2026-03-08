@@ -8,9 +8,13 @@ export type ApprovalQueueStatus =
   | "pending"
   | "approved"
   | "rejected"
-  | "conditional";
+  | "conditional"
+  | "escalated";
 
 export type ApprovalSeverity = "low" | "medium" | "high" | "critical";
+
+/** Semantic priority for filtering; maps to severity. */
+export type ApprovalPriority = "low" | "medium" | "high" | "critical";
 
 export type AuditEventType =
   | "approval"
@@ -53,12 +57,28 @@ export interface ApprovalQueueItem {
   ownerName: string;
   module: string;
   severity: ApprovalSeverity;
+  /** Numeric priority for sorting (higher = more urgent). */
   priority: number;
+  /** Display priority: low | medium | high | critical */
+  priorityLevel?: ApprovalPriority;
+  /** ETA or next run time (ISO string). */
   eta: string;
+  /** Next run time (ISO); alias for eta when present. */
+  nextRun?: string;
+  /** SLA in minutes; used for countdown/expiry indicator. */
+  slaMinutes?: number;
+  /** Scheduled time for next run (ISO string). */
+  scheduledTime?: string;
+  /** Assigned approver or escalation group. */
+  assignedApprover?: string;
   status: ApprovalQueueStatus;
   createdAt: string;
   updatedAt: string;
+  /** Proposed/input payload for the action. */
   payload?: Record<string, unknown>;
+  /** Current payload (before proposed changes); for diff rendering. */
+  inputPayload?: Record<string, unknown>;
+  currentPayload?: Record<string, unknown>;
   rationale: string;
   diffs?: Record<string, unknown> | unknown[];
   artifacts?: RunArtifact[];
@@ -68,23 +88,34 @@ export interface ApprovalQueueItem {
   conditions?: Record<string, unknown>;
   runId?: string;
   cronjobId?: string;
+  targetAgentId?: string;
+  triggerType?: "time" | "event" | "conditional";
+  escalationRuleId?: string | null;
   /** Backward compatibility: cronjob_name alias */
   cronjob_name?: string;
   /** Backward compatibility: agent/requester */
   agent?: string;
 }
 
+export type SlaUrgency = "all" | "expiring" | "overdue" | "ok";
+
 export interface ApprovalQueueFilters {
   owner?: string;
   cronName?: string;
   module?: string;
   severity?: ApprovalSeverity;
+  /** Priority filter (low|medium|high|critical); maps to severity. */
+  priority?: ApprovalPriority;
   status?: ApprovalQueueStatus;
   page?: number;
   pageSize?: number;
   search?: string;
   dateFrom?: string;
   dateTo?: string;
+  /** Filter by SLA urgency: expiring soon, overdue, or all. */
+  slaUrgency?: SlaUrgency;
+  /** Assigned approver or escalation group. */
+  assignedApprover?: string;
 }
 
 export interface ApprovalQueueResponse {
@@ -117,4 +148,10 @@ export interface RevertPayload {
 
 export interface AddCommentPayload {
   text: string;
+}
+
+export interface EscalatePayload {
+  comment?: string;
+  targetGroup?: string;
+  targetApproverGroup?: string;
 }

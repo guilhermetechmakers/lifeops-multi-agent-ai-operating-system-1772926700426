@@ -16,6 +16,7 @@ import type {
   RequestChangesPayload,
   RevertPayload,
   AddCommentPayload,
+  EscalatePayload,
   Comment,
 } from "@/types/approvals";
 
@@ -33,6 +34,9 @@ function buildQueryString(filters: ApprovalQueueFilters): string {
   if (filters.search) params.set("search", filters.search);
   if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
   if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.priority) params.set("priority", filters.priority);
+  if (filters.slaUrgency) params.set("slaUrgency", filters.slaUrgency);
+  if (filters.assignedApprover) params.set("assignedApprover", filters.assignedApprover);
   const q = params.toString();
   return q ? `?${q}` : "";
 }
@@ -104,4 +108,12 @@ export async function addCommentItem(
   payload: AddCommentPayload
 ): Promise<Comment> {
   return api.post<Comment>(`${BASE}/${id}/comments`, payload);
+}
+
+/** POST /api/approvals/queue/:id/escalate */
+export async function escalateItem(
+  id: string,
+  payload: EscalatePayload = {}
+): Promise<ApprovalQueueItem> {
+  return api.post<ApprovalQueueItem>(`${BASE}/${id}/escalate`, payload);
 }

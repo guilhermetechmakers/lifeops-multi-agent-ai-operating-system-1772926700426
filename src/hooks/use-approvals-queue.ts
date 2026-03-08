@@ -15,6 +15,7 @@ import {
   requestChangesItem,
   revertItem,
   addCommentItem,
+  escalateItem,
 } from "@/api/approvals";
 import { approvalsMockApi } from "@/api/approvals-mock";
 import { safeArray } from "@/lib/api";
@@ -27,6 +28,7 @@ import type {
   RequestChangesPayload,
   RevertPayload,
   AddCommentPayload,
+  EscalatePayload,
 } from "@/types/approvals";
 
 const USE_MOCK =
@@ -51,6 +53,9 @@ function parseFiltersFromSearchParams(
     module: searchParams.get("module") ?? undefined,
     severity: (searchParams.get("severity") as ApprovalQueueFilters["severity"]) ?? undefined,
     status: (searchParams.get("status") as ApprovalQueueFilters["status"]) ?? undefined,
+    priority: (searchParams.get("priority") as ApprovalQueueFilters["priority"]) ?? undefined,
+    slaUrgency: (searchParams.get("slaUrgency") as ApprovalQueueFilters["slaUrgency"]) ?? undefined,
+    assignedApprover: searchParams.get("assignedApprover") ?? undefined,
     search: searchParams.get("search") ?? undefined,
     dateFrom: searchParams.get("dateFrom") ?? undefined,
     dateTo: searchParams.get("dateTo") ?? undefined,

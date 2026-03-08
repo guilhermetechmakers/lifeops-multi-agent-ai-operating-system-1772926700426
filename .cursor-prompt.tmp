@@ -1119,305 +1119,334 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Approvals Workflow
+ for bestpractices and # Master Dashboard & Global Search
 
 ## Overview
-Build a robust Approvals Workflow within LifeOps that collects, presents, and manages approvals for scheduled or suggested agent actions. The system must support an audit trail, conditional approvals, diffs of payloads, agent rationale, and role-based routing with escalation rules. A dedicated Approvals Queue page surfaces queued cron/jobs requiring human review, displaying review details, diffs, rationale, and the ability to approve, reject, or grant conditional approvals with comments. All code must guard against null/undefined data, use safe defaults, and follow the runtime safety rules described below.
+Create a centralized Master Dashboard in LifeOps that serves as a command center for power users. It combines a global search/command palette with cross-module overview widgets, a Cronjobs system, real-time insights, and an approvals queue. The UI must be highly performant, scalable, and permission-aware, with a strong emphasis on a dark, dense, developer-focused aesthetic. The feature should support full-text, fuzzy search across modules, real-time widget updates via WebSockets or polling, and a robust command palette capable of executing actions across modules while preserving an auditable run trail and reversible actions.
+
+Project scope covers:
+- A Master Dashboard page (page_master_dashboard_006) that presents global search, quick command bar, an active cronjobs snapshot, cross-module alerts, and quick-access workflows.
+- A global search index with permissions-aware results and fuzzy matching.
+- A cronjobs management surface with per-run details, next-run previews, retry policies, inputs/outputs, and an approvals queue for actions requiring human review.
+- Real-time or near-real-time widgets to reflect system state, agent activity, alerts, and artifacts.
 
 ## Components to Build
-
-1) Approvals Queue Page (page_approvals_queue_009)
-- Purpose: Show a queue of scheduled actions/crons that require approval.
-- Data model: approval items with id, priority, sla, status, scheduledTime, payload, diffs, rationale, artifacts, requester, approvers, escalationRule, comments, approvalActions.
-- UI blocks:
-  - Queue list with dense rows (8–12px vertical spacing), each row showing: id, name, priority, sla, status badge, nextRun, requester, and actions summary.
-  - Detail panel/drawer for selected item showing:
-    - Diff rendering between proposed vs current payload (with side-by-side or unified diff)
-    - Agent rationale and artifacts
-    - Conditional fields: required confirmations, safety rails, escalation hints
-    - Approve / Reject / Conditional Approve actions
-    - Comment input for reviewer notes
-    - Conditional approval controls (e.g., if payload satisfies constraints, auto-approve under certain conditions)
-  - Filters and quick actions:
-    - Status filter (pending, approved, rejected, escalated)
-    - Priority, SLA expiry indicator
-    - Assigned approver or escalation group
-  - Audit timeline: compact, scrollable trail of decisions, timestamps, and comments
-- Interactions:
-  - Accept/Reject with optional comments
-  - Conditional approval toggles with required fields
-  - Real-time or near-real-time updates via WebSocket or polling
-  - Keyboard shortcuts for power users (A for Approve, R for Reject)
-- Data expectations:
-  - Results from backend should be guarded: const items = data ?? [].
-  - Any array rendering must use (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
-- Accessibility:
-  - Roles, aria-labels, and keyboard navigability for all buttons and controls.
-- Audit & logging:
-  - Each action must produce an audit record: who approved, when, comments, and the decision reason.
-- Validation:
-  - Ensure required fields exist before enabling action buttons.
-  - Validate payload diffs rendering with safety checks.
-
-2) Backend APIs and Data Layer
-- REST/GraphQL endpoints for approvals workflow:
-  - GET /approvals queue: fetch queued approvals with pagination, filters
-  - GET /approvals/{id}: fetch detailed item including payload, diffs, rationale, artifacts
-  - POST /approvals/{id}/approve: submit approval with optional comments and any conditional payload; enforce role-based routing
-  - POST /approvals/{id}/reject: submit rejection with comments
-  - POST /approvals/{id}/conditional-approve: submit conditional approval with conditions and required confirmations
-  - POST /approvals/{id}/escalate: escalate to next approver or escalation rule
-  - GET /audits?refId=:id: fetch audit trail for an approval item
-- Database schema (normalized and queryable):
-  - approvals: id, name, priority, slaMinutes, status ('pending'|'approved'|'rejected'|'escalated'), scheduledTime, targetAgentId, triggerType, inputPayload (JSON), currentPayload (JSON), rationale (JSON), artifacts (JSON), diffs (JSON), requestedByUserId, escalationRuleId, permissionsLevel, createdAt, updatedAt
-  - approval_comments: id, approvalId, userId, action ('approve'|'reject'|'conditional'), comment, conditions, createdAt
-  - audit_trail: id, approvalId, action, actorId, timestamp, details (JSON)
-  - approvers: approvalId, userId, role, order, status
-  - escalation_rules: id, name, condition, nextApproverGroup, notifyOnDecision
-  - run_history: id, approvalId, runAt, outcome ('success'|'failure'), logs
-- Data integrity practices:
-  - All API responses must validate shapes; use Array.isArray(response?.data) ? response.data : [] as applicable.
-  - Guard all array operations in code with (data ?? []).
-  - Normalize and sanitize input payloads; enforce schema validation on create/update.
-
-3) Frontend Components and Pages
-- Shared UI primitives:
-  - Dark elevated cards with 8–12px radius, gradient background, subtle borders
-  - Diff viewer component supporting side-by-side and inline diffs with toggle
-  - Tag/chip components for priority and status
-  - Form controls for comments and conditional approvals
-  - Audit timeline widget
-- Approvals Queue List (within page_approvals_queue_009)
-  - Leaderboard-like dense list with:
-    - Priority badge, SLA countdown, next run, status
-    - Quick actions: View, Jump to item, Escalate
-  - Selection detail drawer:
-    - Payload diffs, rationale, artifacts
-    - Approve/Reject/Conditional Approve with comments
-    - Conditional approval rules panel showing required confirmations
-  - Filters toolbar:
-    - Status, Priority, SLA urgency, Assigned approver, Time window
-  - Bulk actions (where applicable): bulk escalate or bulk approve/reject for admin roles
-- Detail view modal/drawer for an approval item
-  - Diff rendering with navigable hunks
-  - Rationale and artifacts: show in collapsible panels
-  - Action area with:
-    - Approve button
-    - Reject button with mandatory comment
-    - Conditional Approve: supports entering conditions and required confirmations
-  - Audit trail panel showing recent decisions
-- Diff rendering:
-  - Support a secure, read-only diff area with syntax highlighting for JSON payloads
-  - Visual cues for additions/removals/edit diffs
-  - Defensive rendering: if payloads are absent, show a safe empty state
-- Data handling:
-  - Initialize arrays with useState<Type[]>([]) and useEffect to fetch; enforce data ?? [] in processing
-  - Use Array.isArray checks before map/filter/reduce
-  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
-- State management:
-  - Local UI state for selected item, filters, and diff view mode
-  - Global or module-level state for approvals data with immutability
-  - Use useMemo and useCallback to optimize rendering and event handlers
-- Performance and safety:
-  - Debounced search/filter inputs
-  - Pagination or infinite loading on queues; guard against undefined pages
-  - SSR considerations if used; hydrate safely
+- Global Search Command Bar
+  - Full-text search leveraging a central index (Elasticsearch/Algolia).
+  - Fuzzy search with typo tolerance, synonyms, and permission-filtered results.
+  - Keyboard shortcuts (e.g., Cmd/Ctrl+K) to open, arrows to navigate, Enter to execute.
+  - Result facets and per-result actions (open detail, run quick command, navigate to module).
+  - Safeguards: return empty array when no results; guard against null data.
+- Master Dashboard Shell
+  - Left navigation (collapsible) and top header with mini-controls.
+  - Central content area with a responsive card grid and a dense layout.
+  - Real-time widgets: Cronjobs snapshot, cross-module alerts, active workflows, and quick-access workflows.
+- Cronjobs Dashboard Widget
+  - List of cronjobs with: name, status (enabled/paused), schedule, next run, last run outcome, target, inputs/outputs, permissions/automation level, safety rails, retry policy, and logs/diffs.
+  - Per-run detail panel: runId, start time, end time, outcome, artifacts, trace, and diffs.
+  - Create/Edit cronjob surfaces (UI builder for schedule, timezone, input payload, constraints, safety rails).
+  - Approvals queue: a separate panel/list for actions requiring human review, with filter/sort capabilities.
+- Cross-Module Alerts Widget
+  - Aggregated alert stream from modules (e.g., Dev, Content, Finance, Health) with severity, timestamp, source module, and contextual actions.
+  - Ability to acknowledge, mute, or create follow-up tasks.
+- Quick-Access Workflows Widget
+  - Predefined templates for common tasks (e.g., deploy workflow, run audit, generate report) with one-click execution.
+  - Context-aware suggestions based on user role and module permissions.
+- Workspace Cards & Layout
+  - Re-usable Card components with consistent typography, spacing, and elevation.
+  - Card contents: icon, title, subtitle, major metric, small metadata badge, and action controls.
+- Data Visualization
+  - Lightweight charts for cronjob success rate, run duration distributions, and alert trends.
+  - Minimalist axes, muted gridlines, and accent colors from the design system.
+- Permission/Access Layer
+  - Frontend components that consume a permissioned API surface, ensuring search results and actions are filtered by user permissions.
+  - Visual affordances for restricted items (e.g., disabled actions, locked indicators).
 
 ## Implementation Requirements
 
 ### Frontend
-- UI components and pages:
-  - ApprovalsQueuePage component rendering page_approvals_queue_009
-  - ApprovalsQueueList component with per-item rendering and status badges
-  - ApprovalDetailDrawer component showing full item context, diffs, rationale, artifacts, and actions
-  - DiffViewer component with side-by-side and inline modes, with safe rendering for null payloads
-  - AuditTrail component listing actions with timestamps and comments
-  - ConditionalApprovalPanel component to configure conditional rules and required confirmations
-  - FiltersBar component for status, priority, SLA urgency, assignee, and time window
-  - API client utilities with guarded responses:
-    - const data = (await api.get('/approvals')).data ?? []
-    - Use (data ?? []) for subsequent map/filter
-  - State initialization:
-    - const [approvals, setApprovals] = useState<ApprovalType[]>([])
-    - const [selected, setSelected] = useState<ApprovalType | null>(null)
-  - Data validation:
-    - Ensure payloads parsed as objects; fallback to {} or [] where appropriate
-    - Validate nested fields with optional chaining: item?.payload?.field
-- Accessibility and UX:
-  - Keyboard accessible controls with focus management
-  - Clear affordances for approve/reject/conditional actions
-  - Snackbar/toast confirmations on actions
+- Architecture
+  - React-based SPA with a modular component approach.
+  - State management with a centralized store (e.g., Zustand/Redux) for dashboard widgets, search state, and user session.
+  - Use React Query or SWR for data fetching with caching; ensure null-safe data handling.
+- Components & Pages
+  - GlobalSearchBar component
+    - Props: onSelectResult, onExecuteCommand
+    - Behavior: asynchronous search calls; results list with keyboard navigation
+    - Safety: guard all array operations with (results ?? []).map(...) or Array.isArray(results) ? results.map(...) : []
+  - MasterDashboardLayout component
+    - LeftNav: collapsible sections, active item indicator
+    - TopBar: session controls, global search trigger, quick actions
+    - ContentGrid: responsive cards grid; supports drag-reorder or fixed layout as per design
+  - CronjobsWidget component
+    - Table/list view with columns: Name, Schedule, Next Run, Last Run, Status, Target, Actions
+    - Per-run detail drawer/panel with structured sections: Inputs, Outputs, Logs, Trace
+    - CreateCronjobModal / EditCronjobModal
+    - ApprovalsQueue component
+  - AlertsWidget component
+    - List of alerts with severity color coding; actions to acknowledge, mute, assign
+  - QuickWorkflowsWidget component
+    - List of templates with a Run button; supports parameter prompts
+  - ChartPanel component
+    - Reusable for cronjob metrics and alert trends
+  - APIErrorBoundary / Toasts
+- Data Handling & Safety
+  - All API responses must sanitize with defaults:
+    - const items = Array.isArray(response?.data) ? response.data : []
+  - Guard all array methods:
+    - (items ?? []).map(...)
+  - useState defaults for arrays/objects:
+    - const [widgets, setWidgets] = useState<WidgetType[]>([])
+  - Access nested properties via optional chaining: obj?.prop?.subprop
+  - Destructuring with defaults:
+    - const { items = [], count = 0 } = response ?? {}
+- API Integration
+  - Endpoints for search, cronjobs, alerts, approvals, and quick workflows
+  - Real-time updates via WebSockets or long polling for the dashboard widgets
+  - Pagination, filtering, and sorting on search results and cronjob lists
+- Accessibility
+  - Ensure keyboard navigability for the search results and command palette
+  - ARIA roles and proper focus management
+- Performance & Security
+  - Debounce search input; limit payloads; guard against over-fetching
+  - Token/permission checks on client; rely on API for final authorization
+  - Avoid leaking restricted data in any UI path
+- Styling
+  - Tailwind-like utility approach or CSS-in-JS that aligns with the project’s design system
+  - Apply the provided color palette and typography guidelines
+  - Responsive breakpoints to accommodate large monitors and tablets
+- Testing
+  - Unit tests for utility functions guarding against null/undefined arrays
+  - Integration tests for search results respect permissions
+  - E2E tests for key flows: global search execution, cronjob creation, approvals workflow
 
 ### Backend
-- Implement APIs as described under Backend APIs
-- Data validation:
-  - Validate required fields on create/update
-  - Guard against null payloads; default to {} or [] where necessary
-- Role-based routing:
-  - Implement RBAC to ensure only authorized roles can approve/reject/conditional approve
-  - Escalation logic to route to next approver or escalation group based on rules
-- Audit & logging:
-  - Persist audit trail records for every decision
-  - Attach decision context, comments, and conditions to each approval
-- Security:
-  - Authentication via OAuth/JWT; authorization checks on each endpoint
-  - Input sanitization to prevent injection or leakage of sensitive data
-- Validation:
-  - Normalize all API responses: const list = Array.isArray(response?.data) ? response.data : []
-  - Use nullish coalescing for optional results: const items = data ?? []
+- Data Models
+  - CronJob
+    - id, name, enabled, schedule, timezone, triggerType, target, inputPayload, permissions, automationLevel, constraints, safetyRails, retryPolicy, outputs, logs, lastRun, nextRun, status
+  - RunArtifact
+    - id, cronJobId, runId, startedAt, endedAt, status, trace, logs, artifacts
+  - Approval
+    - id, cronJobId, actionType, requestedBy, requestedAt, status, rationale
+  - Alert
+    - id, sourceModule, severity, message, timestamp, acknowledgedBy, status
+  - WorkflowTemplate
+    - id, name, description, parameters, requiredPermissions
+  - User
+  - Permissions
+- APIs
+  - Search API
+    - GET /api/search?q=&filters=&page=&perPage=
+    - Supports: full-text search, fuzzy matching, permission filtering
+  - Cronjobs API
+    - GET /api/cronjobs (list with pagination)
+    - POST /api/cronjobs (create)
+    - GET /api/cronjobs/{id}
+    - PATCH /api/cronjobs/{id} (update)
+    - POST /api/cronjobs/{id}/run (manual run)
+  - Run Details API
+    - GET /api/cronjobs/{id}/runs/{runId}
+  - Approvals API
+    - GET /api/approvals
+    - POST /api/approvals/{id}/approve
+    - POST /api/approvals/{id}/reject
+  - Alerts API
+    - GET /api/alerts
+    - POST /api/alerts/{id}/acknowledge
+  - Workflows API
+    - GET /api/workflows/templates
+    - POST /api/workflows/execute
+- Security
+  - Implement OAuth2/OIDC or session-based authentication
+  - Enforce role-based access control (RBAC) on all endpoints
+  - Sanitize inputs server-side; validate payload schema with a contract system (e.g., JSON Schema)
+  - Audit logs for every create/update/run/approval action
+- Validation
+  - Validate cron schedule formats; support cron expressions and UI-based schedules
+  - Validate inputPayload shapes and required fields
+  - Validate permissions and automationLevel constraints
+- Real-time
+  - WebSocket channel for dashboard widgets; fallback to long-polling
+  - Push updates for cronjob runs, alerts, and approvals
 
 ### Integration
-- Data flow:
-  - Cronjobs or scheduled actions feed into approvals queue when user approval is required
-  - Upon approval, trigger the next step in the cron/job or agent workflow
-  - Post-action, publish audit trail and update run_history
-- State synchronization:
-  - Real-time updates via WebSockets or push to keep queue in sync across clients
-  - Consistent optimistic UI with fallback to server-confirmed state
-- Diff and payload rendering:
-  - When a cron requires adjustment, render diffs between proposedPayload and currentPayload
-  - Display agent rationale and artifacts used to justify the action
-- Error handling:
-  - Centralized error boundaries; show user-friendly messages
-  - Retry policies for transient API failures with exponential backoff
+- Data Flow
+  - GlobalSearchBar queries the Search API; results feed into a contextual navigation system that routes to module dashboards or executes quick commands.
+  - CronjobsWidget continuously polls or subscribes to cronjob state; per-run details fetch on demand.
+  - AlertsWidget subscribes to real-time alert streams; actions route to the Alerts API and update the dashboard state.
+  - ApprovalsQueue interacts with Cronjobs and Approvals APIs; status transitions update relevant widgets.
+- State Synchronization
+  - Use a client-side store to hold:
+    - search results, current selection, and active command
+    - cronjobs list, nextRun, lastRun status
+    - alerts, approvals, workflow templates
+  - Ensure all data structures initialize with safe defaults:
+    - useState<YourType[]>([]) and guards for nulls
+- Error Handling
+  - Centralized error boundary with user-friendly messages
+  - Retry strategies for transient failures with exponential backoff
+- Design System Alignment
+  - Reuse Card, Button, Input, Avatar, Icon components from the existing design system
+  - Apply the specified color palette and typography
+  - Ensure consistency in spacing, borders, and elevation across widgets
 
 ## User Experience Flow
-
-1) User lands on Approvals Queue (page_approvals_queue_009)
-- Sees a dense, scannable list of queued approvals with priority, SLA status, and next run time
-- Uses filters to narrow to a subset (e.g., pending, high priority)
-
-2) User selects an item
-- The detail drawer opens showing:
-  - Overview: name, target agent, trigger type, scheduled time
-  - Payload diffs: side-by-side or unified diff with safe rendering
-  - Rationale: agent reasoning and supporting artifacts
-  - Comments and audit trail stub
-  - Conditional approvals panel (if applicable)
-
-3) Review actions
-- Approve: click Approve, optional comments; system records audit trail and executes next step
-- Reject: click Reject, require comments; system logs and notifies requester
-- Conditional Approve: define conditions and required confirmations; attach comments; if conditions satisfied later, action executes automatically
-- Escalate: escalate to next approver if needed
-
-4) After action
-- UI updates to reflect new status; audit trail shows the decision
-- If auto-execution path is enabled, system proceeds with the next workflow step
-- Notifications and dashboards refresh to reflect current state
-
-5) Ongoing governance
-- Admins can adjust escalation rules, SLA configurations, and approver roles
-- Audit dashboards present run histories, outcomes, and diffs for traceability
+1. User lands on Master Dashboard (page_master_dashboard_006)
+   - Top navigation shows a global search trigger; user can press Cmd/Ctrl+K to open the search modal.
+2. Global Search
+   - User types a query; search results render with permission-filtered items from multiple modules.
+   - User navigates results with arrow keys; Enter opens the selected item or executes a quick command.
+3. Cronjobs Overview
+   - CronjobsWidget presents a snapshot: next run, last run outcome, status, and quick actions (edit, run now, pause).
+   - User selects a cronjob to view per-run details; can drill into inputs, outputs, and traces.
+4. Approvals Queue
+   - Approvals panel lists pending actions requiring review; user can approve or reject with rationale.
+   - On approval, the cronjob auto-executes per policy and updates the run history.
+5. Alerts & Workflows
+   - Real-time alerts appear in AlertsWidget; user can acknowledge or mute.
+   - QuickWorkflowsWidget offers one-click execution for common tasks; prompts for required parameters when needed.
+6. Real-Time Feedback
+   - Widgets refresh in real time or near real time; user interactions trigger optimistic UI updates with server reconciliation.
+7. Drill-Down & Audit
+   - Actions produce artifacts and run traces for audit trails; user can export diffs and logs.
 
 ## Technical Specifications
 
-- Data Models
-  - approvals
-    - id: string
-    - name: string
-    - priority: 'low'|'medium'|'high'|'critical'
-    - slaMinutes: number
-    - status: 'pending'|'approved'|'rejected'|'escalated'
-    - scheduledTime: string (ISO)
-    - targetAgentId: string
-    - triggerType: 'time'|'event'|'conditional'
-    - inputPayload: any
-    - currentPayload: any
-    - rationale: any
-    - artifacts: any
-    - diffs: any
-    - requestedByUserId: string
-    - escalationRuleId: string | null
-    - permissionsLevel: 'suggest-only'|'approval-required'|'conditional-auto'
-    - constraints: any
-    - safetyRails: any
-    - retryPolicy: any
-    - outputs: any
-    - createdAt: string
-    - updatedAt: string
-  - approval_comments
-    - id: string
-    - approvalId: string
-    - userId: string
-    - action: 'approve'|'reject'|'conditional'
-    - comment: string
-    - conditions: any
-    - createdAt: string
-  - audit_trail
-    - id: string
-    - approvalId: string
-    - action: string
-    - actorId: string
-    - timestamp: string
-    - details: any
-  - approvers
-    - approvalId: string
-    - userId: string
-    - role: string
-    - order: number
-    - status: 'pending'|'approved'|'rejected'
-  - escalation_rules
-    - id: string
-    - name: string
-    - condition: string
-    - nextApproverGroup: string
-    - notifyOnDecision: boolean
-  - run_history
-    - id: string
-    - approvalId: string
-    - runAt: string
-    - outcome: 'success'|'failure'
-    - logs: string
+Data Models: [Schema details]
+- CronJob
+  - id: string
+  - name: string
+  - enabled: boolean
+  - schedule: string (cron expression or UI-based)
+  - timezone: string
+  - triggerType: string
+  - target: string
+  - inputPayload: any
+  - permissions: string[]
+  - automationLevel: string
+  - constraints: { maxActions?: number; spendLimit?: number; allowedTools?: string[] }
+  - safetyRails: string[]
+  - retryPolicy: { maxRetries: number; backoffMs: number; deadLetter?: string }
+  - outputs: RunArtifact[]
+  - logs: string[]
+  - lastRun?: { runId: string; startedAt: string; endedAt?: string; status: string }
+  - nextRun?: string
+  - status: string
+- RunArtifact
+  - id: string
+  - cronJobId: string
+  - runId: string
+  - startedAt: string
+  - endedAt: string
+  - status: string
+  - trace: string
+  - logs: string[]
+  - artifacts: string[]
+- Approval
+  - id: string
+  - cronJobId: string
+  - actionType: string
+  - requestedBy: string
+  - requestedAt: string
+  - status: string
+  - rationale: string
+- Alert
+  - id: string
+  - sourceModule: string
+  - severity: string
+  - message: string
+  - timestamp: string
+  - acknowledgedBy?: string
+  - status: string
+- WorkflowTemplate
+  - id: string
+  - name: string
+  - description: string
+  - parameters: any
+  - requiredPermissions: string[]
 
-- API Endpoints
-  - GET /approvals queue
-  - GET /approvals/{id}
-  - POST /approvals/{id}/approve
-  - POST /approvals/{id}/reject
-  - POST /approvals/{id}/conditional-approve
-  - POST /approvals/{id}/escalate
-  - GET /audits?refId={id}
+API Endpoints: [Routes and methods]
+- GET /api/search?q={query}&filters={filters}&page={n}&perPage={m}
+- GET /api/cronjobs
+- POST /api/cronjobs
+- GET /api/cronjobs/{id}
+- PATCH /api/cronjobs/{id}
+- POST /api/cronjobs/{id}/run
+- GET /api/cronjobs/{id}/runs/{runId}
+- GET /api/approvals
+- POST /api/approvals/{id}/approve
+- POST /api/approvals/{id}/reject
+- GET /api/alerts
+- POST /api/alerts/{id}/acknowledge
+- GET /api/workflows/templates
+- POST /api/workflows/execute
 
-- Security
-  - Authenticate with JWT/OAuth
-  - Enforce RBAC: roles such as Approver, Admin, EscalationManager
-  - Validate and sanitize all inputs; guard against undefined/null
-  - Ensure sensitive data exposure is minimized in UI
+Security: [Authentication, authorization requirements]
+- Implement OAuth2/OIDC or session-based auth; all endpoints enforce RBAC.
+- Resource access restricted by user roles and per-item permissions.
+- Audit trail for all mutating actions.
+- Input validation on server with strict schemas; return 403/401 for unauthorized access.
 
-- Validation
-  - Input validation on all endpoints
-  - Use safe defaults: const list = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining: obj?.property?.nested
-  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+Validation: [Input validation rules]
+- Cron schedules: validate cron expressions; reject invalid schedules with actionable errors.
+- Input payloads: schema-validate payloads against defined templates; required fields enforced.
+- Approvals: ensure rationale present on reject/approval actions when required.
+- Search: sanitize and normalize queries; handle empty queries gracefully.
 
-## Acceptance Criteria
+Acceptance Criteria
+- [ ] Global search returns permission-filtered results from all modules with fuzzy matching; results are safely rendered (guarded against nulls) and executable via keyboard commands.
+- [ ] Cronjobs surface shows next run times, last run outcomes, and per-run details; approvals queue functions with correct status transitions and audit logs.
+- [ ] Real-time/near real-time updates for cronjobs, alerts, and approvals via WebSockets or polling; UI remains responsive with safe default states.
+- [ ] All array operations in frontend are guarded: (data ?? []).map(...) or Array.isArray(data) ? data.map(...) : [].
+- [ ] All useState initializations for arrays/objects use proper defaults: useState<Type[]>([]) or useState<Type>({} as Type) where appropriate.
+- [ ] API responses are validated to shapes before use: const list = Array.isArray(response?.data) ? response.data : [].
+- [ ] The UI adheres to the provided visual style tokens and typography guidelines; color usage follows the palette strictly.
+- [ ] Accessibility: keyboard navigation, proper focus management, and ARIA labels implemented.
 
-- [ ] Approvals Queue page renders a dense, accessible list with working filters for status, priority, and SLA urgency
-- [ ] Selecting an item opens a detail view showing payloads, diffs, rationale, artifacts, and audit trail
-- [ ] Approve/Reject/Conditional Approve actions persist to backend and update UI, with audit trail
-- [ ] Conditional approvals enforce required confirmations and cannot be submitted without them
-- [ ] Escalation rules route to the correct next approver and reflect in UI
-- [ ] All API responses are validated and guarded against null/undefined before array methods
-- [ ] useState and data handling defaults are correct for arrays/objects
-- [ ] Diff viewer handles null payloads gracefully and renders readable diffs
-- [ ] Security: endpoints protected by RBAC, with proper error handling and no data leakage
-- [ ] UI adheres to the Visual Style and Design Guidelines, including color palette, typography, and spacing
+UI/UX Guidelines
+Apply the project's design system:
+- Dark, dense, high-contrast UI with controlled color accents.
+- Elevation, borders, and subtle gradients as described.
+- Card-based layout with intuitive density for power users.
+- Consistent typography, spacing, and alignment; 8px baseline grid; 220–260px sidebar.
 
-## UI/UX Guidelines
-Apply the project’s design system and ensure consistency with LifeOps visual language:
-- Dark, high-contrast UI with minimalistic chrome
-- Clear visual hierarchy for approvals, diffs, and audit artifacts
-- Consistent card, navigation, and data visualization styling
-- Subtle but informative micro-interactions on hover/focus
-- Accessible controls with keyboard navigation and screen-reader friendly labels
+Visual Style
 
----
+Color Palette (as provided)
+- Primary background: #0B0B0C
+- Secondary surface: #151718
+- Tertiary surface / panel outline: #1F1F20
+- Primary text / headings: #FFFFFF
+- Secondary text / meta: #9DA3A6
+- Subtle text / disabled: #56595B
+- Accent (action / alert): #FF3B30
+- Neutral highlight / icon fill: #CFCFCF
+- Soft highlight / gloss: #E6E7E8
+- Chart/status accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
+- Borders / dividers: rgba(255,255,255,0.03)
+- Gradients: #111213 → #1A1A1B
 
-Connected Pages:
-- Approvals Queue: Queue of scheduled actions/crons requiring user approval. Review details, diffs, agent rationale, and accept/reject with comments and conditional approvals.
+Typography & Layout
+- Font: Inter / SF Pro Display / Roboto fallback
+- Headings: 20–28px, weight 600–700
+- Card titles: 14–16px, weight 500–600
+- Body: 12–14px, weight 400
+- Microcopy: 11–12px, weight 300–400
+- Spacing: 8px baseline grid; gutters 220–260px; header 56–64px; card padding 16–20px
+- Alignment: left-aligned lists; mixed layout for main content; dense vertical spacing in trees/lists
 
-This prompt provides a complete, actionable blueprint for AI development tooling to build a scalable, safe, and user-friendly Approvals Workflow with a dedicated Approvals Queue page and robust backend/frontend integration, all while enforcing the runtime safety rules specified. for style.
+Key Design Elements
+- Card: dark, elevated, rounded 8–12px; gradient background; inner top highlight
+- Navigation: left vertical with active accent pill; collapsible sections
+- Data Visualization: minimal charts with subdued grids and colored series
+- Interactive Elements: primary/secondary buttons, inputs, toggles, chips, micro-interactions
+- Badges: counts and alerts with appropriate color usage
+
+Connected Pages
+- Master Dashboard: Global search, quick command bar, cronjobs snapshot, cross-module alerts, quick-access workflows.
+
+Generate the complete, detailed prompt now:
+ for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1439,305 +1468,334 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Approvals Workflow
+# Master Dashboard & Global Search
 
 ## Overview
-Build a robust Approvals Workflow within LifeOps that collects, presents, and manages approvals for scheduled or suggested agent actions. The system must support an audit trail, conditional approvals, diffs of payloads, agent rationale, and role-based routing with escalation rules. A dedicated Approvals Queue page surfaces queued cron/jobs requiring human review, displaying review details, diffs, rationale, and the ability to approve, reject, or grant conditional approvals with comments. All code must guard against null/undefined data, use safe defaults, and follow the runtime safety rules described below.
+Create a centralized Master Dashboard in LifeOps that serves as a command center for power users. It combines a global search/command palette with cross-module overview widgets, a Cronjobs system, real-time insights, and an approvals queue. The UI must be highly performant, scalable, and permission-aware, with a strong emphasis on a dark, dense, developer-focused aesthetic. The feature should support full-text, fuzzy search across modules, real-time widget updates via WebSockets or polling, and a robust command palette capable of executing actions across modules while preserving an auditable run trail and reversible actions.
+
+Project scope covers:
+- A Master Dashboard page (page_master_dashboard_006) that presents global search, quick command bar, an active cronjobs snapshot, cross-module alerts, and quick-access workflows.
+- A global search index with permissions-aware results and fuzzy matching.
+- A cronjobs management surface with per-run details, next-run previews, retry policies, inputs/outputs, and an approvals queue for actions requiring human review.
+- Real-time or near-real-time widgets to reflect system state, agent activity, alerts, and artifacts.
 
 ## Components to Build
-
-1) Approvals Queue Page (page_approvals_queue_009)
-- Purpose: Show a queue of scheduled actions/crons that require approval.
-- Data model: approval items with id, priority, sla, status, scheduledTime, payload, diffs, rationale, artifacts, requester, approvers, escalationRule, comments, approvalActions.
-- UI blocks:
-  - Queue list with dense rows (8–12px vertical spacing), each row showing: id, name, priority, sla, status badge, nextRun, requester, and actions summary.
-  - Detail panel/drawer for selected item showing:
-    - Diff rendering between proposed vs current payload (with side-by-side or unified diff)
-    - Agent rationale and artifacts
-    - Conditional fields: required confirmations, safety rails, escalation hints
-    - Approve / Reject / Conditional Approve actions
-    - Comment input for reviewer notes
-    - Conditional approval controls (e.g., if payload satisfies constraints, auto-approve under certain conditions)
-  - Filters and quick actions:
-    - Status filter (pending, approved, rejected, escalated)
-    - Priority, SLA expiry indicator
-    - Assigned approver or escalation group
-  - Audit timeline: compact, scrollable trail of decisions, timestamps, and comments
-- Interactions:
-  - Accept/Reject with optional comments
-  - Conditional approval toggles with required fields
-  - Real-time or near-real-time updates via WebSocket or polling
-  - Keyboard shortcuts for power users (A for Approve, R for Reject)
-- Data expectations:
-  - Results from backend should be guarded: const items = data ?? [].
-  - Any array rendering must use (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
-- Accessibility:
-  - Roles, aria-labels, and keyboard navigability for all buttons and controls.
-- Audit & logging:
-  - Each action must produce an audit record: who approved, when, comments, and the decision reason.
-- Validation:
-  - Ensure required fields exist before enabling action buttons.
-  - Validate payload diffs rendering with safety checks.
-
-2) Backend APIs and Data Layer
-- REST/GraphQL endpoints for approvals workflow:
-  - GET /approvals queue: fetch queued approvals with pagination, filters
-  - GET /approvals/{id}: fetch detailed item including payload, diffs, rationale, artifacts
-  - POST /approvals/{id}/approve: submit approval with optional comments and any conditional payload; enforce role-based routing
-  - POST /approvals/{id}/reject: submit rejection with comments
-  - POST /approvals/{id}/conditional-approve: submit conditional approval with conditions and required confirmations
-  - POST /approvals/{id}/escalate: escalate to next approver or escalation rule
-  - GET /audits?refId=:id: fetch audit trail for an approval item
-- Database schema (normalized and queryable):
-  - approvals: id, name, priority, slaMinutes, status ('pending'|'approved'|'rejected'|'escalated'), scheduledTime, targetAgentId, triggerType, inputPayload (JSON), currentPayload (JSON), rationale (JSON), artifacts (JSON), diffs (JSON), requestedByUserId, escalationRuleId, permissionsLevel, createdAt, updatedAt
-  - approval_comments: id, approvalId, userId, action ('approve'|'reject'|'conditional'), comment, conditions, createdAt
-  - audit_trail: id, approvalId, action, actorId, timestamp, details (JSON)
-  - approvers: approvalId, userId, role, order, status
-  - escalation_rules: id, name, condition, nextApproverGroup, notifyOnDecision
-  - run_history: id, approvalId, runAt, outcome ('success'|'failure'), logs
-- Data integrity practices:
-  - All API responses must validate shapes; use Array.isArray(response?.data) ? response.data : [] as applicable.
-  - Guard all array operations in code with (data ?? []).
-  - Normalize and sanitize input payloads; enforce schema validation on create/update.
-
-3) Frontend Components and Pages
-- Shared UI primitives:
-  - Dark elevated cards with 8–12px radius, gradient background, subtle borders
-  - Diff viewer component supporting side-by-side and inline diffs with toggle
-  - Tag/chip components for priority and status
-  - Form controls for comments and conditional approvals
-  - Audit timeline widget
-- Approvals Queue List (within page_approvals_queue_009)
-  - Leaderboard-like dense list with:
-    - Priority badge, SLA countdown, next run, status
-    - Quick actions: View, Jump to item, Escalate
-  - Selection detail drawer:
-    - Payload diffs, rationale, artifacts
-    - Approve/Reject/Conditional Approve with comments
-    - Conditional approval rules panel showing required confirmations
-  - Filters toolbar:
-    - Status, Priority, SLA urgency, Assigned approver, Time window
-  - Bulk actions (where applicable): bulk escalate or bulk approve/reject for admin roles
-- Detail view modal/drawer for an approval item
-  - Diff rendering with navigable hunks
-  - Rationale and artifacts: show in collapsible panels
-  - Action area with:
-    - Approve button
-    - Reject button with mandatory comment
-    - Conditional Approve: supports entering conditions and required confirmations
-  - Audit trail panel showing recent decisions
-- Diff rendering:
-  - Support a secure, read-only diff area with syntax highlighting for JSON payloads
-  - Visual cues for additions/removals/edit diffs
-  - Defensive rendering: if payloads are absent, show a safe empty state
-- Data handling:
-  - Initialize arrays with useState<Type[]>([]) and useEffect to fetch; enforce data ?? [] in processing
-  - Use Array.isArray checks before map/filter/reduce
-  - Normalize API responses: const list = Array.isArray(response?.data) ? response.data : []
-- State management:
-  - Local UI state for selected item, filters, and diff view mode
-  - Global or module-level state for approvals data with immutability
-  - Use useMemo and useCallback to optimize rendering and event handlers
-- Performance and safety:
-  - Debounced search/filter inputs
-  - Pagination or infinite loading on queues; guard against undefined pages
-  - SSR considerations if used; hydrate safely
+- Global Search Command Bar
+  - Full-text search leveraging a central index (Elasticsearch/Algolia).
+  - Fuzzy search with typo tolerance, synonyms, and permission-filtered results.
+  - Keyboard shortcuts (e.g., Cmd/Ctrl+K) to open, arrows to navigate, Enter to execute.
+  - Result facets and per-result actions (open detail, run quick command, navigate to module).
+  - Safeguards: return empty array when no results; guard against null data.
+- Master Dashboard Shell
+  - Left navigation (collapsible) and top header with mini-controls.
+  - Central content area with a responsive card grid and a dense layout.
+  - Real-time widgets: Cronjobs snapshot, cross-module alerts, active workflows, and quick-access workflows.
+- Cronjobs Dashboard Widget
+  - List of cronjobs with: name, status (enabled/paused), schedule, next run, last run outcome, target, inputs/outputs, permissions/automation level, safety rails, retry policy, and logs/diffs.
+  - Per-run detail panel: runId, start time, end time, outcome, artifacts, trace, and diffs.
+  - Create/Edit cronjob surfaces (UI builder for schedule, timezone, input payload, constraints, safety rails).
+  - Approvals queue: a separate panel/list for actions requiring human review, with filter/sort capabilities.
+- Cross-Module Alerts Widget
+  - Aggregated alert stream from modules (e.g., Dev, Content, Finance, Health) with severity, timestamp, source module, and contextual actions.
+  - Ability to acknowledge, mute, or create follow-up tasks.
+- Quick-Access Workflows Widget
+  - Predefined templates for common tasks (e.g., deploy workflow, run audit, generate report) with one-click execution.
+  - Context-aware suggestions based on user role and module permissions.
+- Workspace Cards & Layout
+  - Re-usable Card components with consistent typography, spacing, and elevation.
+  - Card contents: icon, title, subtitle, major metric, small metadata badge, and action controls.
+- Data Visualization
+  - Lightweight charts for cronjob success rate, run duration distributions, and alert trends.
+  - Minimalist axes, muted gridlines, and accent colors from the design system.
+- Permission/Access Layer
+  - Frontend components that consume a permissioned API surface, ensuring search results and actions are filtered by user permissions.
+  - Visual affordances for restricted items (e.g., disabled actions, locked indicators).
 
 ## Implementation Requirements
 
 ### Frontend
-- UI components and pages:
-  - ApprovalsQueuePage component rendering page_approvals_queue_009
-  - ApprovalsQueueList component with per-item rendering and status badges
-  - ApprovalDetailDrawer component showing full item context, diffs, rationale, artifacts, and actions
-  - DiffViewer component with side-by-side and inline modes, with safe rendering for null payloads
-  - AuditTrail component listing actions with timestamps and comments
-  - ConditionalApprovalPanel component to configure conditional rules and required confirmations
-  - FiltersBar component for status, priority, SLA urgency, assignee, and time window
-  - API client utilities with guarded responses:
-    - const data = (await api.get('/approvals')).data ?? []
-    - Use (data ?? []) for subsequent map/filter
-  - State initialization:
-    - const [approvals, setApprovals] = useState<ApprovalType[]>([])
-    - const [selected, setSelected] = useState<ApprovalType | null>(null)
-  - Data validation:
-    - Ensure payloads parsed as objects; fallback to {} or [] where appropriate
-    - Validate nested fields with optional chaining: item?.payload?.field
-- Accessibility and UX:
-  - Keyboard accessible controls with focus management
-  - Clear affordances for approve/reject/conditional actions
-  - Snackbar/toast confirmations on actions
+- Architecture
+  - React-based SPA with a modular component approach.
+  - State management with a centralized store (e.g., Zustand/Redux) for dashboard widgets, search state, and user session.
+  - Use React Query or SWR for data fetching with caching; ensure null-safe data handling.
+- Components & Pages
+  - GlobalSearchBar component
+    - Props: onSelectResult, onExecuteCommand
+    - Behavior: asynchronous search calls; results list with keyboard navigation
+    - Safety: guard all array operations with (results ?? []).map(...) or Array.isArray(results) ? results.map(...) : []
+  - MasterDashboardLayout component
+    - LeftNav: collapsible sections, active item indicator
+    - TopBar: session controls, global search trigger, quick actions
+    - ContentGrid: responsive cards grid; supports drag-reorder or fixed layout as per design
+  - CronjobsWidget component
+    - Table/list view with columns: Name, Schedule, Next Run, Last Run, Status, Target, Actions
+    - Per-run detail drawer/panel with structured sections: Inputs, Outputs, Logs, Trace
+    - CreateCronjobModal / EditCronjobModal
+    - ApprovalsQueue component
+  - AlertsWidget component
+    - List of alerts with severity color coding; actions to acknowledge, mute, assign
+  - QuickWorkflowsWidget component
+    - List of templates with a Run button; supports parameter prompts
+  - ChartPanel component
+    - Reusable for cronjob metrics and alert trends
+  - APIErrorBoundary / Toasts
+- Data Handling & Safety
+  - All API responses must sanitize with defaults:
+    - const items = Array.isArray(response?.data) ? response.data : []
+  - Guard all array methods:
+    - (items ?? []).map(...)
+  - useState defaults for arrays/objects:
+    - const [widgets, setWidgets] = useState<WidgetType[]>([])
+  - Access nested properties via optional chaining: obj?.prop?.subprop
+  - Destructuring with defaults:
+    - const { items = [], count = 0 } = response ?? {}
+- API Integration
+  - Endpoints for search, cronjobs, alerts, approvals, and quick workflows
+  - Real-time updates via WebSockets or long polling for the dashboard widgets
+  - Pagination, filtering, and sorting on search results and cronjob lists
+- Accessibility
+  - Ensure keyboard navigability for the search results and command palette
+  - ARIA roles and proper focus management
+- Performance & Security
+  - Debounce search input; limit payloads; guard against over-fetching
+  - Token/permission checks on client; rely on API for final authorization
+  - Avoid leaking restricted data in any UI path
+- Styling
+  - Tailwind-like utility approach or CSS-in-JS that aligns with the project’s design system
+  - Apply the provided color palette and typography guidelines
+  - Responsive breakpoints to accommodate large monitors and tablets
+- Testing
+  - Unit tests for utility functions guarding against null/undefined arrays
+  - Integration tests for search results respect permissions
+  - E2E tests for key flows: global search execution, cronjob creation, approvals workflow
 
 ### Backend
-- Implement APIs as described under Backend APIs
-- Data validation:
-  - Validate required fields on create/update
-  - Guard against null payloads; default to {} or [] where necessary
-- Role-based routing:
-  - Implement RBAC to ensure only authorized roles can approve/reject/conditional approve
-  - Escalation logic to route to next approver or escalation group based on rules
-- Audit & logging:
-  - Persist audit trail records for every decision
-  - Attach decision context, comments, and conditions to each approval
-- Security:
-  - Authentication via OAuth/JWT; authorization checks on each endpoint
-  - Input sanitization to prevent injection or leakage of sensitive data
-- Validation:
-  - Normalize all API responses: const list = Array.isArray(response?.data) ? response.data : []
-  - Use nullish coalescing for optional results: const items = data ?? []
+- Data Models
+  - CronJob
+    - id, name, enabled, schedule, timezone, triggerType, target, inputPayload, permissions, automationLevel, constraints, safetyRails, retryPolicy, outputs, logs, lastRun, nextRun, status
+  - RunArtifact
+    - id, cronJobId, runId, startedAt, endedAt, status, trace, logs, artifacts
+  - Approval
+    - id, cronJobId, actionType, requestedBy, requestedAt, status, rationale
+  - Alert
+    - id, sourceModule, severity, message, timestamp, acknowledgedBy, status
+  - WorkflowTemplate
+    - id, name, description, parameters, requiredPermissions
+  - User
+  - Permissions
+- APIs
+  - Search API
+    - GET /api/search?q=&filters=&page=&perPage=
+    - Supports: full-text search, fuzzy matching, permission filtering
+  - Cronjobs API
+    - GET /api/cronjobs (list with pagination)
+    - POST /api/cronjobs (create)
+    - GET /api/cronjobs/{id}
+    - PATCH /api/cronjobs/{id} (update)
+    - POST /api/cronjobs/{id}/run (manual run)
+  - Run Details API
+    - GET /api/cronjobs/{id}/runs/{runId}
+  - Approvals API
+    - GET /api/approvals
+    - POST /api/approvals/{id}/approve
+    - POST /api/approvals/{id}/reject
+  - Alerts API
+    - GET /api/alerts
+    - POST /api/alerts/{id}/acknowledge
+  - Workflows API
+    - GET /api/workflows/templates
+    - POST /api/workflows/execute
+- Security
+  - Implement OAuth2/OIDC or session-based authentication
+  - Enforce role-based access control (RBAC) on all endpoints
+  - Sanitize inputs server-side; validate payload schema with a contract system (e.g., JSON Schema)
+  - Audit logs for every create/update/run/approval action
+- Validation
+  - Validate cron schedule formats; support cron expressions and UI-based schedules
+  - Validate inputPayload shapes and required fields
+  - Validate permissions and automationLevel constraints
+- Real-time
+  - WebSocket channel for dashboard widgets; fallback to long-polling
+  - Push updates for cronjob runs, alerts, and approvals
 
 ### Integration
-- Data flow:
-  - Cronjobs or scheduled actions feed into approvals queue when user approval is required
-  - Upon approval, trigger the next step in the cron/job or agent workflow
-  - Post-action, publish audit trail and update run_history
-- State synchronization:
-  - Real-time updates via WebSockets or push to keep queue in sync across clients
-  - Consistent optimistic UI with fallback to server-confirmed state
-- Diff and payload rendering:
-  - When a cron requires adjustment, render diffs between proposedPayload and currentPayload
-  - Display agent rationale and artifacts used to justify the action
-- Error handling:
-  - Centralized error boundaries; show user-friendly messages
-  - Retry policies for transient API failures with exponential backoff
+- Data Flow
+  - GlobalSearchBar queries the Search API; results feed into a contextual navigation system that routes to module dashboards or executes quick commands.
+  - CronjobsWidget continuously polls or subscribes to cronjob state; per-run details fetch on demand.
+  - AlertsWidget subscribes to real-time alert streams; actions route to the Alerts API and update the dashboard state.
+  - ApprovalsQueue interacts with Cronjobs and Approvals APIs; status transitions update relevant widgets.
+- State Synchronization
+  - Use a client-side store to hold:
+    - search results, current selection, and active command
+    - cronjobs list, nextRun, lastRun status
+    - alerts, approvals, workflow templates
+  - Ensure all data structures initialize with safe defaults:
+    - useState<YourType[]>([]) and guards for nulls
+- Error Handling
+  - Centralized error boundary with user-friendly messages
+  - Retry strategies for transient failures with exponential backoff
+- Design System Alignment
+  - Reuse Card, Button, Input, Avatar, Icon components from the existing design system
+  - Apply the specified color palette and typography
+  - Ensure consistency in spacing, borders, and elevation across widgets
 
 ## User Experience Flow
-
-1) User lands on Approvals Queue (page_approvals_queue_009)
-- Sees a dense, scannable list of queued approvals with priority, SLA status, and next run time
-- Uses filters to narrow to a subset (e.g., pending, high priority)
-
-2) User selects an item
-- The detail drawer opens showing:
-  - Overview: name, target agent, trigger type, scheduled time
-  - Payload diffs: side-by-side or unified diff with safe rendering
-  - Rationale: agent reasoning and supporting artifacts
-  - Comments and audit trail stub
-  - Conditional approvals panel (if applicable)
-
-3) Review actions
-- Approve: click Approve, optional comments; system records audit trail and executes next step
-- Reject: click Reject, require comments; system logs and notifies requester
-- Conditional Approve: define conditions and required confirmations; attach comments; if conditions satisfied later, action executes automatically
-- Escalate: escalate to next approver if needed
-
-4) After action
-- UI updates to reflect new status; audit trail shows the decision
-- If auto-execution path is enabled, system proceeds with the next workflow step
-- Notifications and dashboards refresh to reflect current state
-
-5) Ongoing governance
-- Admins can adjust escalation rules, SLA configurations, and approver roles
-- Audit dashboards present run histories, outcomes, and diffs for traceability
+1. User lands on Master Dashboard (page_master_dashboard_006)
+   - Top navigation shows a global search trigger; user can press Cmd/Ctrl+K to open the search modal.
+2. Global Search
+   - User types a query; search results render with permission-filtered items from multiple modules.
+   - User navigates results with arrow keys; Enter opens the selected item or executes a quick command.
+3. Cronjobs Overview
+   - CronjobsWidget presents a snapshot: next run, last run outcome, status, and quick actions (edit, run now, pause).
+   - User selects a cronjob to view per-run details; can drill into inputs, outputs, and traces.
+4. Approvals Queue
+   - Approvals panel lists pending actions requiring review; user can approve or reject with rationale.
+   - On approval, the cronjob auto-executes per policy and updates the run history.
+5. Alerts & Workflows
+   - Real-time alerts appear in AlertsWidget; user can acknowledge or mute.
+   - QuickWorkflowsWidget offers one-click execution for common tasks; prompts for required parameters when needed.
+6. Real-Time Feedback
+   - Widgets refresh in real time or near real time; user interactions trigger optimistic UI updates with server reconciliation.
+7. Drill-Down & Audit
+   - Actions produce artifacts and run traces for audit trails; user can export diffs and logs.
 
 ## Technical Specifications
 
-- Data Models
-  - approvals
-    - id: string
-    - name: string
-    - priority: 'low'|'medium'|'high'|'critical'
-    - slaMinutes: number
-    - status: 'pending'|'approved'|'rejected'|'escalated'
-    - scheduledTime: string (ISO)
-    - targetAgentId: string
-    - triggerType: 'time'|'event'|'conditional'
-    - inputPayload: any
-    - currentPayload: any
-    - rationale: any
-    - artifacts: any
-    - diffs: any
-    - requestedByUserId: string
-    - escalationRuleId: string | null
-    - permissionsLevel: 'suggest-only'|'approval-required'|'conditional-auto'
-    - constraints: any
-    - safetyRails: any
-    - retryPolicy: any
-    - outputs: any
-    - createdAt: string
-    - updatedAt: string
-  - approval_comments
-    - id: string
-    - approvalId: string
-    - userId: string
-    - action: 'approve'|'reject'|'conditional'
-    - comment: string
-    - conditions: any
-    - createdAt: string
-  - audit_trail
-    - id: string
-    - approvalId: string
-    - action: string
-    - actorId: string
-    - timestamp: string
-    - details: any
-  - approvers
-    - approvalId: string
-    - userId: string
-    - role: string
-    - order: number
-    - status: 'pending'|'approved'|'rejected'
-  - escalation_rules
-    - id: string
-    - name: string
-    - condition: string
-    - nextApproverGroup: string
-    - notifyOnDecision: boolean
-  - run_history
-    - id: string
-    - approvalId: string
-    - runAt: string
-    - outcome: 'success'|'failure'
-    - logs: string
+Data Models: [Schema details]
+- CronJob
+  - id: string
+  - name: string
+  - enabled: boolean
+  - schedule: string (cron expression or UI-based)
+  - timezone: string
+  - triggerType: string
+  - target: string
+  - inputPayload: any
+  - permissions: string[]
+  - automationLevel: string
+  - constraints: { maxActions?: number; spendLimit?: number; allowedTools?: string[] }
+  - safetyRails: string[]
+  - retryPolicy: { maxRetries: number; backoffMs: number; deadLetter?: string }
+  - outputs: RunArtifact[]
+  - logs: string[]
+  - lastRun?: { runId: string; startedAt: string; endedAt?: string; status: string }
+  - nextRun?: string
+  - status: string
+- RunArtifact
+  - id: string
+  - cronJobId: string
+  - runId: string
+  - startedAt: string
+  - endedAt: string
+  - status: string
+  - trace: string
+  - logs: string[]
+  - artifacts: string[]
+- Approval
+  - id: string
+  - cronJobId: string
+  - actionType: string
+  - requestedBy: string
+  - requestedAt: string
+  - status: string
+  - rationale: string
+- Alert
+  - id: string
+  - sourceModule: string
+  - severity: string
+  - message: string
+  - timestamp: string
+  - acknowledgedBy?: string
+  - status: string
+- WorkflowTemplate
+  - id: string
+  - name: string
+  - description: string
+  - parameters: any
+  - requiredPermissions: string[]
 
-- API Endpoints
-  - GET /approvals queue
-  - GET /approvals/{id}
-  - POST /approvals/{id}/approve
-  - POST /approvals/{id}/reject
-  - POST /approvals/{id}/conditional-approve
-  - POST /approvals/{id}/escalate
-  - GET /audits?refId={id}
+API Endpoints: [Routes and methods]
+- GET /api/search?q={query}&filters={filters}&page={n}&perPage={m}
+- GET /api/cronjobs
+- POST /api/cronjobs
+- GET /api/cronjobs/{id}
+- PATCH /api/cronjobs/{id}
+- POST /api/cronjobs/{id}/run
+- GET /api/cronjobs/{id}/runs/{runId}
+- GET /api/approvals
+- POST /api/approvals/{id}/approve
+- POST /api/approvals/{id}/reject
+- GET /api/alerts
+- POST /api/alerts/{id}/acknowledge
+- GET /api/workflows/templates
+- POST /api/workflows/execute
 
-- Security
-  - Authenticate with JWT/OAuth
-  - Enforce RBAC: roles such as Approver, Admin, EscalationManager
-  - Validate and sanitize all inputs; guard against undefined/null
-  - Ensure sensitive data exposure is minimized in UI
+Security: [Authentication, authorization requirements]
+- Implement OAuth2/OIDC or session-based auth; all endpoints enforce RBAC.
+- Resource access restricted by user roles and per-item permissions.
+- Audit trail for all mutating actions.
+- Input validation on server with strict schemas; return 403/401 for unauthorized access.
 
-- Validation
-  - Input validation on all endpoints
-  - Use safe defaults: const list = Array.isArray(response?.data) ? response.data : []
-  - Optional chaining: obj?.property?.nested
-  - Destructuring with defaults: const { items = [], count = 0 } = response ?? {}
+Validation: [Input validation rules]
+- Cron schedules: validate cron expressions; reject invalid schedules with actionable errors.
+- Input payloads: schema-validate payloads against defined templates; required fields enforced.
+- Approvals: ensure rationale present on reject/approval actions when required.
+- Search: sanitize and normalize queries; handle empty queries gracefully.
 
-## Acceptance Criteria
+Acceptance Criteria
+- [ ] Global search returns permission-filtered results from all modules with fuzzy matching; results are safely rendered (guarded against nulls) and executable via keyboard commands.
+- [ ] Cronjobs surface shows next run times, last run outcomes, and per-run details; approvals queue functions with correct status transitions and audit logs.
+- [ ] Real-time/near real-time updates for cronjobs, alerts, and approvals via WebSockets or polling; UI remains responsive with safe default states.
+- [ ] All array operations in frontend are guarded: (data ?? []).map(...) or Array.isArray(data) ? data.map(...) : [].
+- [ ] All useState initializations for arrays/objects use proper defaults: useState<Type[]>([]) or useState<Type>({} as Type) where appropriate.
+- [ ] API responses are validated to shapes before use: const list = Array.isArray(response?.data) ? response.data : [].
+- [ ] The UI adheres to the provided visual style tokens and typography guidelines; color usage follows the palette strictly.
+- [ ] Accessibility: keyboard navigation, proper focus management, and ARIA labels implemented.
 
-- [ ] Approvals Queue page renders a dense, accessible list with working filters for status, priority, and SLA urgency
-- [ ] Selecting an item opens a detail view showing payloads, diffs, rationale, artifacts, and audit trail
-- [ ] Approve/Reject/Conditional Approve actions persist to backend and update UI, with audit trail
-- [ ] Conditional approvals enforce required confirmations and cannot be submitted without them
-- [ ] Escalation rules route to the correct next approver and reflect in UI
-- [ ] All API responses are validated and guarded against null/undefined before array methods
-- [ ] useState and data handling defaults are correct for arrays/objects
-- [ ] Diff viewer handles null payloads gracefully and renders readable diffs
-- [ ] Security: endpoints protected by RBAC, with proper error handling and no data leakage
-- [ ] UI adheres to the Visual Style and Design Guidelines, including color palette, typography, and spacing
+UI/UX Guidelines
+Apply the project's design system:
+- Dark, dense, high-contrast UI with controlled color accents.
+- Elevation, borders, and subtle gradients as described.
+- Card-based layout with intuitive density for power users.
+- Consistent typography, spacing, and alignment; 8px baseline grid; 220–260px sidebar.
 
-## UI/UX Guidelines
-Apply the project’s design system and ensure consistency with LifeOps visual language:
-- Dark, high-contrast UI with minimalistic chrome
-- Clear visual hierarchy for approvals, diffs, and audit artifacts
-- Consistent card, navigation, and data visualization styling
-- Subtle but informative micro-interactions on hover/focus
-- Accessible controls with keyboard navigation and screen-reader friendly labels
+Visual Style
 
----
+Color Palette (as provided)
+- Primary background: #0B0B0C
+- Secondary surface: #151718
+- Tertiary surface / panel outline: #1F1F20
+- Primary text / headings: #FFFFFF
+- Secondary text / meta: #9DA3A6
+- Subtle text / disabled: #56595B
+- Accent (action / alert): #FF3B30
+- Neutral highlight / icon fill: #CFCFCF
+- Soft highlight / gloss: #E6E7E8
+- Chart/status accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
+- Borders / dividers: rgba(255,255,255,0.03)
+- Gradients: #111213 → #1A1A1B
 
-Connected Pages:
-- Approvals Queue: Queue of scheduled actions/crons requiring user approval. Review details, diffs, agent rationale, and accept/reject with comments and conditional approvals.
+Typography & Layout
+- Font: Inter / SF Pro Display / Roboto fallback
+- Headings: 20–28px, weight 600–700
+- Card titles: 14–16px, weight 500–600
+- Body: 12–14px, weight 400
+- Microcopy: 11–12px, weight 300–400
+- Spacing: 8px baseline grid; gutters 220–260px; header 56–64px; card padding 16–20px
+- Alignment: left-aligned lists; mixed layout for main content; dense vertical spacing in trees/lists
 
-This prompt provides a complete, actionable blueprint for AI development tooling to build a scalable, safe, and user-friendly Approvals Workflow with a dedicated Approvals Queue page and robust backend/frontend integration, all while enforcing the runtime safety rules specified.
+Key Design Elements
+- Card: dark, elevated, rounded 8–12px; gradient background; inner top highlight
+- Navigation: left vertical with active accent pill; collapsible sections
+- Data Visualization: minimal charts with subdued grids and colored series
+- Interactive Elements: primary/secondary buttons, inputs, toggles, chips, micro-interactions
+- Badges: counts and alerts with appropriate color usage
+
+Connected Pages
+- Master Dashboard: Global search, quick command bar, cronjobs snapshot, cross-module alerts, quick-access workflows.
+
+Generate the complete, detailed prompt now:
+
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist
