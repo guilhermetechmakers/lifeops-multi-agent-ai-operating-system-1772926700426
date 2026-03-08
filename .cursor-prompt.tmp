@@ -847,290 +847,366 @@ When implementing this project:
 ---
 
 **Remember: Always reference this file for design decisions. Do not use generic or placeholder designs.**
- for bestpractices and # Projects Dashboard
+ for bestpractices and # Project Detail Prompt
+
+You are an AI development tool prompt author. Use this prompt to guide a development team (or AI code generator) to build the LifeOps Project Detail feature set described below. Meet all structural and runtime safety requirements exactly as specified in the “Mandatory Coding Standards — Runtime Safety.” Include concrete data models, API contracts, UI components, interactions, and acceptance criteria. Ensure every piece of code or pseudo-code guards against null/undefined values before calling array methods, uses data ?? [] when handling Supabase results, and initializes React state for arrays/objects with proper defaults.
+
+---
+
+## Project Detail
+
+- TARGET PAGE: Project Detail
+- Description: A single-project view that consolidates backlog, roadmap items, tickets, PRs, agent-run history, and action widgets. It integrates with the Project Management Automation layer (roadmaps, ticketing automation, PR summarization, release notes generation, CI/CD integrations via agents) and connects to supporting pages: Ticket Board (Kanban board with agent automation rules, bulk edits, sprint planning), CI & Integrations Page (repository links, CI/CD connectors, deployment targets, integration health with logs/test triggers), and Projects Dashboard (developer-centric hub with roadmaps, active tickets, PRs, releases, CI status, and agent-suggested actions).
+
+- Core Goals:
+  - Provide a coherent, responsive, and highly interactive single-project cockpit.
+  - Reflect Roadmaps, Backlog, Tickets, PRs, and Agent History in a unified layout.
+  - Enable agent-driven actions (triage, release notes, summarization) with explicit auditing and reversibility.
+  - Offer action widgets and an Approvals/Cronjobs integration surface for scheduled workflows and governance.
+
+- Connected Features:
+  - Project Management Automation: Roadmaps, ticket automation, PR summarization, release notes generation, CI/CD integrations via agents.
+  - Agent Run History: Audit trails, run artifacts, and traceable inter-agent messages.
+
+---
 
 ## Overview
-Create a developer-centric, end-to-end Projects Dashboard for LifeOps that surfaces roadmaps, active tickets, pull requests, releases, CI status, and agent-suggested actions. This dashboard sits at the core of the Project Management Automation workflow, integrating with agent-driven automation (roadmaps, ticketing automation, PR summarization, release notes generation, and CI/CD integrations). It must present a dense, fast-scanning UI optimized for power users, with strong runtime safety for all code paths (null/undefined guards, proper defaults, and validated API responses). A separate Project Detail view exists for a single project, offering backlog, roadmap items, tickets, PRs, agent-run history, and action widgets, while maintaining consistent visual language and architecture.
 
-Project scope includes:
-- Frontend: rich, card-based UI with Kanban ticket board, roadmap timeline, PR summaries, CI status, agent-suggested actions, and historical run artifacts.
-- Backend: well-structured API surface to fetch and mutate roadmaps, tickets, PRs, releases, CI data, and agent-run actions; run history and audit artifacts are stored with full traceability.
-- Automation: integration points for agents to propose actions, summarize PRs, generate release notes, and trigger CI/CD workflows via an orchestration layer with traceability and safety rails.
-- User Experience: clear navigation, dense data presentation with scannability, actionable micro-interactions, and robust error handling with user-friendly messages.
+- The Project Detail page serves as the Command Center for a single LifeOps project. It aggregates:
+  - Project header (name, owners, status, integrations)
+  - Backlog section with quick-add and status indicators
+  - Roadmap items (timeline, status, owners)
+  - Tickets and PRs (summary, status, assignees)
+  - Agent-run history (recent runs, outcomes, links to run artifacts)
+  - Action widgets (start agent runs, generate release notes, run CI checks)
+- The UI follows a dark, dense, developer-centric design system with a focus on clarity, auditability, and fast scanning.
+
+---
 
 ## Page Description (Full Detail)
-What this page is:
-- The Projects Dashboard is the developer-centric hub for LifeOps projects. It consolidates project roadmaps, active tickets, PRs, releases, CI status, and agent-suggested actions into a single command center. It serves as the primary locus for project monitoring, prioritization, and orchestration of automated actions.
 
-Goals:
-- Provide a high-density overview that enables rapid discovery, prioritization, and action-taking by developers and operators.
-- Surface agent-driven automation prompts and suggested workflows to accelerate delivery while preserving human-in-the-loop control.
-- Integrate with the LifeOps Master Dashboard Cronjobs and approvals system to present upcoming scheduled actions, last-run outcomes, and per-run details.
+- What this page is:
+  - A cohesive, multi-pane project cockpit for LifeOps, presenting backlog, roadmap, tickets, PRs, and agent-run history, with direct controls to trigger automation actions and browse historical run data.
+- Goals:
+  - Provide a single source of truth for a project’s current state and recent automation activity.
+  - Enable fast triage, planning, and release preparation via integrated agent actions and templated workflows.
+  - Maintain an auditable trail of agent decisions, prompts, inputs, outputs, and artifacts.
+- Connected features:
+  - Roadmaps (driven by Roadmap items tied to the project)
+  - Ticketing automation (auto-generated tickets from backlog or roadmap needs)
+  - PR summarization (summaries of PRs for release notes or stakeholder briefs)
+  - Release notes generation (agent-generated notes from changes across tickets/PRs)
+  - CI/CD integrations via agents (build/test/deploy status surfaced, with agent-triggered actions)
+- UI Elements & Visual Guidance:
+  - Project Header: 
+    - Name, owner avatars/handles, status badge, integrations status (health indicators, last sync)
+    - Action: Quick-Connect integrations, set project status
+  - Backlog Panel:
+    - List with search, filter, and quick-add input
+    - Inline status chips (New, In Progress, Blocked, Done)
+  - Roadmaps Panel:
+    - Timeline-style or grouped cards with progress bars, owners, due dates
+  - Tickets Panel:
+    - Summary cards per ticket with status dot, priority badge, assignee avatars
+  - PRs Panel:
+    - List of PRs with summarize/expand actions, status, and checks summary
+  - Agent History Panel:
+    - Activity feed with recent agent runs, user actions, run IDs, and links to logs
+  - Action Widgets:
+    - Run Agent Triage, Generate Release Notes, Create Release, Trigger CI/CD, Schedule Cronjobs
+  - Interactions:
+    - Drag-and-drop for priorities, bulk actions (bulk edit), and sprint planning quick-access
+- API Integrations:
+  - No external APIs are required beyond internal LifeOps services; all data comes from the internal data layer (Postgres/Supabase-like) or internal agent orchestration services.
 
-Connected features and integrations:
-- Project Management Automation: Roadmaps, ticketing automation, PR summarization, release notes generation, CI/CD integrations via agents.
-- Cronjobs system (via Master Dashboard): next run, last run, run history, logs, inter-agent traceability, and approvals queue.
-- Audit and run artifacts: every action is explainable, schema-validated, logged, reversible, with an audit trail.
-
-UI elements and visual guidance:
-- Roadmap View: interactive timeline with milestones, linked epics, and dependency indicators.
-- Ticket Board: Kanban-style lanes (Backlog, In Progress, In Review, Done) with agent-suggested prioritization and quick actions.
-- PRs & Code Review: list of open PRs with agent-generated summaries, suggested reviewers, and quick review actions.
-- Releases & CI Status: pipeline run cards with outcome highlights, time-to-deploy estimates, and actionable remediation steps.
-- Agent Suggestions: a dedicated panel/cards showing next steps, automation recipes, and potential optimizations.
-- Top navigation and breadcrumbs tailored for quick context switching across Projects and Project Detail.
-- Visual guidance uses the provided dark UI theme with high-contrast typography and sparse but meaningful accent usage.
-
-Connected Page: Project Detail
-- Single project view with backlog, roadmap items, tickets, PRs, agent-run history, and action widgets. Shares the same visual language and data interaction patterns for consistency.
+---
 
 ## Components to Build
-- Projects Dashboard Shell
-  - Layout: persistent left navigation rail, top header, content grid with responsive breakpoints
-  - State: currently selected project, tab/section state, global filters (team, status, priority), and user permissions
-- RoadmapTimelineCard
-  - Interactive timeline with milestones, epics, and dependencies
-  - Drag-to-resize or click-to-view details (read-only in some modes)
-- TicketKanbanBoard
-  - Columns: Backlog, In Progress, In Review, Done
-  - Drag-and-drop support (with optimistic updates) and agent-prioritization hints
-  - Card components with title, assignee, priority, status, estimate, and agent-suggested actions
-- PRSummariesPanel
-  - List of open PRs with agent-generated summaries, suggested reviewers, and quick actions (approve/review/request changes)
-- CIReleasePanel
-  - Pipeline run cards with status, duration, and failure highlights
-  - Quick toggles to re-run or view logs
-- AgentSuggestionsPanel
-  - Cards for next steps, automation recipes, and tactical actions
-  - Ability to accept/apply suggestions or convert to automation rules
-- ApprovalsQueue
-  - List/table of scheduled actions requiring human approval
-  - Filters by project, agent, due date, risk, and spend constraints
-- CronjobOverview
-  - Next run, last run outcome, per-run details, and quick drill-down into run artifacts
-- ProjectDetailLinkCard
-  - Summary stats and quick actions to navigate from dashboard to detail
-- DataVizPanel
-  - Lightweight charts or sparklines for CI trends, velocity, burn-downs, and release cadence
-- AuditTrailPanel
-  - Run artifacts, inter-agent messages, diffs, logs, and reversibility controls
-- API Integration Layer (Frontend)
-  - Fetchers and hooks with robust null-safety, array guards, and type validation
-  - Centralized error handling and retry strategies
+
+- ProjectDetailPage
+  - Layout: header, left navigation (collapsed/expanded), main content grid with resizable panels
+  - Data adapters: fetch project by id, fetch related backlog, roadmaps, tickets, PRs, agent history
+  - State management: useState with array defaults; useEffect data fetch; proper null checks
+- ProjectHeader
+  - Displays project name, owners, status, integrations status
+  - Actions: connect integrations, quick status toggle
+- BacklogPanel
+  - List with search, filters, add-new task input, bulk select
+  - Actions: add backlog item, bulk update status
+- RoadmapPanel
+  - Roadmap items with progress, owner, due date; edit-in-place
+  - Drag-and-drop reordering within lanes or priority
+- TicketsPanel
+  - Card list of tickets with status, priority, assignee; supports bulk actions
+- PRsPanel
+  - Card list of PRs with summarize action, status, checks
+- AgentHistoryPanel
+  - Activity feed including run IDs, agents, results, and log links
+- ActionsWidgetBar
+  - Quick action buttons: Run Agent Triage, Generate Release Notes, Trigger CI/CD, Schedule Cronjob
+- CronjobsDashboardLink
+  - Link to Cronjobs dashboard with next run time and last run outcome
+- QuickAddModal
+  - For backlog and ticket quick-add with validation
+- BulkEditModal
+  - Apply bulk updates to selected items
+- DataVizTinyCharts
+  - Lightweight sparkline views for project metrics (CI status, ticket counts)
+- DataAdapters/Services
+  - ProjectService, BacklogService, RoadmapService, TicketService, PRService, AgentService, HistoryService
+- UI Primitives
+  - Button, Input, Select, Badge, Card, Avatar, Toggle, Chips, Tabs, Drawer/Panel
+
+Note: All components must guard against null/undefined values before using array methods. Follow the runtime safety rules throughout.
+
+---
 
 ## Implementation Requirements
 
 ### Frontend
-- Framework: React (TypeScript) with a modular component architecture
-- State Management: useState/useEffect for local UI state; optional useReducer or context for cross-component state; consider React Query or SWR for data fetching with caching and stale-while-revalidate patterns
-- Typing: strict TypeScript types for all data models (Project, Roadmap, Ticket, PR, Release, CI, Run, AgentSuggestion, Cronjob, Approval)
-- Accessibility: ensure keyboard navigation, screen reader labels, and proper ARIA attributes
-- Performance: virtualization for long lists (e.g., tickets, PRs), lazy loading of charts, and memoization where applicable
-- Runtime safety: enforce the non-negotiable safety rules
-  - Use data ?? [] for Supabase results
-  - Guard array operations with Array.isArray checks
-  - Initialize useState with array types, e.g., useState<T[]>([])
-  - Validate API responses: const list = Array.isArray(response?.data) ? response.data : []
-  - Destructure with defaults: const { items = [], count = 0 } = response ?? {}
-- UI Interactions:
-  - Drag-and-drop support for Kanban (with safe fallbacks if drag isn’t available)
-  - Click-to-expand/detail views in timeline and cards
-  - Real-time-ish feel via optimistic updates with clear rollback on error
-- Theming and styling:
-  - Implement the provided color palette and typography guidelines
-  - Create reusable UI primitives: Card, Button, Input, Toggle, Badge, Chip, Avatar, Icon
-  - Use gradients and shadows as specified for depth
-- Data validation and error states:
-  - Show user-friendly empty states when no data exists
-  - Graceful error messages with retry options
-- API surface integration (client):
-  - Endpoints to fetch: projects, roadmaps, tickets, PRs, releases, CI status, agent suggestions, run history, approvals
-  - Endpoints to mutate: update ticket status, add comments, trigger actions, approve/deny actions, create cronjobs
-  - Ensure consistent data shapes in frontend by validating shape with runtime checks
+
+- Architecture:
+  - React (with TypeScript) components, hooks-based state, context for project scope
+  - Component composition: header > left nav > content grid with resizable panels
+- UI Components & Interactions:
+  - Panels render data from services; handle loading, empty states, and error states gracefully
+  - All arrays initialized with safe defaults: e.g., const [backlog, setBacklog] = useState<BacklogItem[]>([])
+  - Use data ?? [] when mapping API results
+  - Use Array.isArray checks where needed
+  - Bulk actions: multi-select with bulk edit modal
+  - Drag-and-drop for backlog/tickets roadmaps (optional MVP with keyboard-accessible reordering)
+  - Quick-add forms with inline validation and optimistic UI updates
+  - Agent actions: trigger agent via API, display run status, show logs link
+  - Tabs: Card sections with consistent spacing and titles
+- Accessibility:
+  - Keyboard navigable controls, ARIA attributes for dynamic panels
+- State & Data Loading:
+  - Use suspense/fetch policy patterns or loading skeletons
+  - Debounce search inputs; pagination or infinite scroll for long lists
+- API Contracts:
+  - Consistent shapes with strict type definitions; validate shapes defensively
 
 ### Backend
-- Data Models (persistent storage, e.g., Postgres or Supabase-like layer):
-  - Project (id, name, description, owner, team, createdAt, updatedAt)
-  - Roadmap (id, projectId, title, description, startDate, endDate, status, epics: Epic[]; list of milestones)
-  - Epic (id, roadmapId, title, description, startDate, endDate, status, dependencies)
-  - Ticket (id, projectId, title, description, status, priority, assigneeId, createdAt, updatedAt, dueDate, source)
-  - PR (id, projectId, title, description, status, authorId, reviewers, summary, createdAt, updatedAt)
-  - Release (id, projectId, version, notes, plannedDate, releasedDate, status)
-  - CIJob (id, projectId, name, status, startedAt, finishedAt, logs, artifacts)
-  - AgentSuggestion (id, projectId, type, content, createdAt, relatedItemId, status)
-  - RunArtifact (id, runId, type, payload, timestamp)
-  - Cronjob (id, name, enabled, schedule, timezone, triggerType, target, inputPayload, permissions, constraints, safetyRails, retryPolicy, outputs)
-  - Approval (id, cronjobId, status, reviewerId, comments, createdAt, reviewedAt)
-- APIs (REST or GraphQL) to support:
-  - Read/write for all data models listed above
-  - Pagination, filtering, and sorting where appropriate
-  - Validation: server-side schema validation; return well-structured error objects
-  - Audit/logging: traceability for actions, agent handoffs, and run artifacts
-- Cronjobs subsystem:
-  - Schedule parsing and execution engine
-  - Timezone-aware scheduling
-  - Input payload templating and variable substitution
-  - Safety rails: prompts requiring confirmation, bounded auto-pilot rules
-  - Output collection: run history, logs, inter-agent traces, diffs, artifacts, errors
+
+- APIs to support frontend data needs (if not existing):
+  - GET /api/projects/:projectId
+  - GET /api/projects/:projectId/backlog
+  - GET /api/projects/:projectId/roadmaps
+  - GET /api/projects/:projectId/tickets
+  - GET /api/projects/:projectId/prs
+  - GET /api/projects/:projectId/history
+  - POST /api/projects/:projectId/backlog (create)
+  - POST /api/projects/:projectId/tickets (create)
+  - POST /api/agents/run (start agent run)
+  - POST /api/cronjobs/trigger (manually run cronjob)
+- Data Models (schemas):
+  - Project: id, name, owners[], status, integrations[]
+  - BacklogItem: id, title, description, status, priority, assigneeId, createdAt
+  - RoadmapItem: id, title, status, ownerId, dueDate, progress
+  - Ticket: id, title, status, priority, assigneeId, backlogItemId, createdAt
+  - PR: id, title, state, checksSummary, authorId, linkedTicketIds[]
+  - AgentRun: id, agentName, type, status, startedAt, endedAt, logsUrl, artifactsUrl
+  - CronJob: id, name, enabled, schedule, timezone, target, inputPayload, permissions, safetyRails, retryPolicy, outputs
+- Validation:
+  - Ensure all inputs are validated server-side; reject invalid payloads with descriptive errors
 - Security:
-  - Authentication and authorization (RBAC) to guard access to projects and actions
-  - Permissions per action: view, edit, automate, approve
-  - Input validation and rate limiting
-- Validation & reliability:
-  - Defensive checks for nulls and missing fields
-  - Use of IDs and UUIDs; referential integrity
-  - Idempotent endpoints for actions that can be retried
+  - Authenticate requests; enforce authorization per project; audit trails for agent actions
+- Data Safety:
+  - Use transactions for multi-record updates; ensure consistency between related panels
 
 ### Integration
-- Data flow:
-  - Frontend fetches from backend endpoints; data is normalized on the server and validated on both ends
-  - Cronjobs generate agent actions and push outputs to RunArtifact and AgentSuggestion records
-  - Approvals queue feeds into automation pipelines or manual triggers
-  - Agent suggestions can be accepted to auto-create automation rules or manual tasks
-- Inter-agent communication:
-  - All agent-to-agent messages must be traceable, with an identifier, timestamp, and context
-  - Logs and artifacts are stored and retrievable for audit
-- Error handling:
-  - Centralized error formatter; user-friendly messages in UI
-  - Re-try logic and dead-letter handling for failed cron jobs
+
+- How components connect:
+  - ProjectDetailPage consumes ProjectService data
+  - Each Panel subscribes to relevant services (BacklogService, RoadmapService, TicketService, PRService, HistoryService)
+  - Agent actions trigger AgentService endpoints; run artifacts linked to AgentRun records
+  - Cronjobs integration surfaces (CronjobsDashboardLink) point to a central Cronjobs module
+- Dataflow:
+  - On page load, fetch project and related collections in parallel; coerce results with data ?? [] and Array.isArray checks
+  - On user actions (add/edit), optimistically update UI, persist via API, then reconcile on response
+  - All actions produce run artifacts and logs; expose links in AgentHistoryPanel
+
+---
 
 ## User Experience Flow
-- Access and Overview:
-  - User lands on Projects Dashboard; selects a project from the left rail
-  - Dashboard loads roadmaps, tickets, PRs, CI status, releases, and agent suggestions
-- Roadmap Exploration:
-  - User reviews milestones; clicks a milestone to view epic details and linked tickets
-  - Agent suggestions for roadmap actions appear as optional next steps
-- Ticket Management:
-  - User sees Kanban lanes; drags tickets between lanes, assigns, or prioritizes with agent guidance
-  - Ticket cards show title, priority, assignee, and quick actions (comment, assign, tag)
-- PR & Code Review:
-  - PR panel shows open PRs; click for summary, suggested reviewers, and actions (approve, request changes)
-- CI & Release:
-  - CI status cards show latest runs; click to view logs and errors
-  - Release panel lists upcoming/ongoing releases, notes, and statuses
-- Agent Suggestions & Automation:
-  - Agent suggestions appear as cards; user can apply to automation, or convert into cronjobs
-  - Approvals queue surfaces scheduled actions requiring review; user approves or defers
-- Project Detail:
-  - User navigates to a single project detail page for deeper inspection: backlog, roadmap items, tickets, PRs, agent-run history, and action widgets
-  - All actions are reversible; an audit trail is accessible for every action
+
+1. User navigates to Project Detail for a specific project.
+2. Page loads: header shows project name and status; panels render backlog, roadmaps, tickets, PRs, and history; action widgets are visible.
+3. User uses BacklogPanel to search, filter, or quick-add a backlog item; UI validates input; on submit, item appears in UI and persists.
+4. User opens RoadmapPanel to view items; drags to reorder or updates progress; changes persist and reflect across UI.
+5. User reviews TicketsPanel and PRsPanel; can bulk select tickets to bulk-edit or assign; click “Summarize PR” to trigger PR summarization by agent.
+6. User clicks an Action Widget (e.g., Run Agent Triage) to start an agent run; a lightweight status toast appears; AgentHistoryPanel updates with the new run.
+7. AgentRun results render in AgentHistoryPanel with a link to logs/artifacts; user can click and view details.
+8. User navigates to Cronjobs via the Actions area to schedule or trigger a run; if approvals are required, an Approvals queue entry is created; user approves or adjusts constraints.
+9. If needed, user switches to the connected pages (Ticket Board, CI & Integrations Page, Projects Dashboard) for deeper work, with consistent navigation breadcrumbs.
+
+---
 
 ## Technical Specifications
 
-- Data Models: see Backend section for schema outlines
-- API Endpoints:
-  - GET /projects
-  - GET /projects/{id}
-  - GET /projects/{id}/roadmaps
-  - GET /projects/{id}/tickets
-  - GET /projects/{id}/prs
-  - GET /projects/{id}/releases
-  - GET /projects/{id}/ci
-  - GET /projects/{id}/agentsuggestions
-  - GET /projects/{id}/runs
-  - POST /tickets/{id}/move
-  - POST /tickets/{id}/comment
-  - POST /prs/{id}/review
-  - POST /cronjobs
-  - POST /approvals
-  - etc. All endpoints must defensively handle nulls and validate shapes
+- Data Models (TypeScript interfaces or schemas):
+  - Project
+    - id: string
+    - name: string
+    - owners: string[]  // user IDs or handles
+    - status: 'active' | 'paused' | 'archived'
+    - integrations: string[]
+  - BacklogItem
+    - id: string
+    - title: string
+    - description?: string
+    - status: 'New' | 'In Progress' | 'Blocked' | 'Done'
+    - priority: 'Low' | 'Medium' | 'High'
+    - assigneeId?: string
+    - createdAt: string
+  - RoadmapItem
+    - id: string
+    - title: string
+    - status: 'Planned' | 'In Progress' | 'Completed'
+    - ownerId?: string
+    - dueDate?: string
+    - progress: number  // 0-100
+  - Ticket
+    - id: string
+    - title: string
+    - status: 'Open' | 'In Review' | 'Closed'
+    - priority: 'Low' | 'Medium' | 'High'
+    - assigneeId?: string
+    - backlogItemId?: string
+    - createdAt: string
+  - PR
+    - id: string
+    - title: string
+    - state: 'OPEN' | 'MERGED' | 'CLOSED'
+    - checksSummary?: string
+    - authorId?: string
+    - linkedTicketIds?: string[]
+  - AgentRun
+    - id: string
+    - agentName: string
+    - type: 'triage' | 'summarizePR' | 'generateReleaseNotes' | 'ciTrigger'
+    - status: 'pending' | 'running' | 'succeeded' | 'failed'
+    - startedAt: string
+    - endedAt?: string
+    - logsUrl?: string
+    - artifactsUrl?: string
+  - CronJob
+    - id: string
+    - name: string
+    - enabled: boolean
+    - schedule: string  // cron or UI-based
+    - timezone: string
+    - target: 'agent' | 'workflowTemplate'
+    - inputPayload: any
+    - permissions: 'suggest-only' | 'approval-required' | 'conditional-auto' | 'bounded-autopilot'
+    - constraints: { maxActions?: number; spendLimit?: number; allowedTools?: string[] }
+    - safetyRails: { confirmationsRequired: boolean; requiredUserRoles?: string[] }
+    - retryPolicy: { maxRetries: number; backoffMs: number; deadLetter?: boolean }
+    - outputs: { runHistoryId?: string; logs?: string[]; artifacts?: string[] }
+
+- API Endpoints (RESTful guidance; implement in your tech stack):
+  - GET /api/projects/{projectId}
+  - GET /api/projects/{projectId}/backlog
+  - GET /api/projects/{projectId}/roadmaps
+  - GET /api/projects/{projectId}/tickets
+  - GET /api/projects/{projectId}/prs
+  - GET /api/projects/{projectId}/history
+  - POST /api/projects/{projectId}/backlog
+  - POST /api/projects/{projectId}/tickets
+  - POST /api/agents/run
+  - POST /api/cronjobs/trigger
+  - GET /api/cronjobs?projectId={projectId}
+  - PUT /api/projects/{projectId}/status
 - Security:
-  - JWT/OAuth-based authentication
-  - RBAC with roles: admin, maintainer, developer, viewer
-  - Compliance with data access restrictions per project
+  - JWT-based auth; role-based access control per project
+  - Audit trail for all data mutations and agent runs
 - Validation:
-  - Server-side validation for all inputs
-  - Client-side guards for arrays: (data ?? []) and Array.isArray checks
+  - Server-side validation for all input payloads
+  - Use defaults and type guards on responses
 - Validation Rules:
-  - IDs must be valid UUIDs
-  - Dates ISO 8601
-  - Strings trimmed and sanitized
-  - Numeric fields within expected ranges
-  - Optional fields gracefully handled with defaults
+  - All arrays should be treated as possibly null; guard before mapping
+  - Always coerce data to expected types; fallback to safe defaults
+
+- Validation Examples Guard Rules (runtime safety):
+  - const backlog = Array.isArray(response?.data?.backlog) ? response.data.backlog : []
+  - const items = (data ?? []) // Supabase-safe pattern
+  - const { items = [], count = 0 } = response ?? {}
+  - items.map(...) guarded by (Array.isArray(items) ? items.map(...) : [])
+
+---
 
 ## Acceptance Criteria
-- User Scenarios:
-  - The dashboard loads within 2 seconds for a project with up to 1,000 tickets and 100 PRs; all sections render without runtime errors
-  - All array data paths are guarded: no map/filter/reduce on potentially null values
-  - All API responses are validated and defaulted to empty arrays when data is missing
-  - Drag-and-drop Kanban works with optimistic updates and proper rollback on error
-  - Agent suggestions can be applied to create automation rules or initiate cronjobs
-  - Approvals queue correctly surfaces actions requiring review with accurate statuses
-  - Cronjob dashboard shows next run time, last outcome, and per-run details
-  - Project Detail view mirrors dashboard data with additional backlog and agent-run history
-- Accessibility and keyboard navigation pass
-- Security: unauthorized users cannot access project data
-- Visual fidelity: UI adheres to color, typography, spacing, and component guidelines with no broken layouts
+
+- [ ] The Project Detail page renders with header, backlog, roadmaps, tickets, PRs, agent history, and action widgets, each backed by safe data-loading flows (no crashes if data is missing).
+- [ ] All array operations guard against null/undefined: e.g., (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
+- [ ] State initialization: all arrays use useState<T[]>([]) defaults; object states initialized safely.
+- [ ] Actions (Run Agent, Generate Release Notes, Schedule Cronjobs) create AgentRun/CronJob records and reflect immediately in AgentHistoryPanel.
+- [ ] Bulk edit and quick-add work without throwing on empty data; UI shows appropriate empty states.
+- [ ] Data fetches are resilient: if a dataset is missing, the UI renders without crashing and shows empty-state indicators.
+- [ ] Security: protected routes require authentication; unauthorized users cannot mutate project data; audit logs are created for agent runs and cronjob actions.
+- [ ] UI consistency: components adhere to the provided visual style, typography, spacing, and color tokens.
+
+---
 
 ## UI/UX Guidelines
-Apply the project's design system:
-- Dark UI with high contrast headings and muted metadata
-- Dense information architecture with clear visual hierarchy
-- Consistent card-based surfaces with depth and subtle borders
-- Left navigation rail and top controls for efficient multi-project management
-- Minimal but meaningful accent usage to indicate actions, alerts, and status
-- Data viz uses limited color palette for clarity and legibility
+
+Apply the project’s design system strictly:
+- Color Palette, Typography, Spacing, and Layout: as defined in the Visual Style section
+- Card Design: elevated dark cards with subtle borders and soft shadows
+- Navigation: left vertical nav with active-state pills and collapsible sections
+- Data Visualization: minimal charts with low-contrast axes and accent series
+- Interactions: responsive hover/focus states; accessible, keyboard-navigable controls
+- Design Philosophy: dense, developer-centric interface with strong affordances for auditing, reversibility, and agent-assisted actions
+
+---
 
 ## Visual Style
 
-Color Palette (as given):
-- Primary background: #0B0B0C
-- Secondary surface: #151718
-- Tertiary surface / panel outline: #1F1F20
-- Primary text: #FFFFFF
-- Secondary text: #9DA3A6
-- Subtle text: #56595B
-- Accent: #FF3B30
-- Neutral highlight: #CFCFCF
-- Soft highlight: #E6E7E8
-- Chart accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
-- Borders: rgba(255,255,255,0.03)
-- Gradients: #111213 → #1A1A1B
+- Use the specified color palette and typography guidelines
+- Cards: 8–12px radius, gradient fill from #0B0B0C to #151718, subtle top highlight
+- Borders/Dividers: rgba(255,255,255,0.03)
+- Shadows: soft shadows for depth around panels
+- Accents: red #FF3B30 for action states and alerts
+- Data Viz: teal #00C2A8, amber #FFB020, purple #8B5CF6
 
-Typography & Layout:
-- Font: Inter or SF Pro Display / Roboto fallback
-- Headings: 20–28px, weight 600–700
-- Card titles: 14–16px, weight 500–600
-- Body: 12–14px, weight 400
-- Microcopy: 11–12px, weight 300–400
-- Baseline grid: 8px; gutters 220–260px; header 56–64px
-- Card padding: 16–20px; rounded corners 8–12px
-- Alignment: left-aligned lists; dense density in lists for power users
+---
 
-Key Design Elements (summary):
-- Card design: dark, elevated, rounded, gradient backdrop, subtle borders, hover lift
-- Navigation: left rail with active state accent pill; collapsible sections
-- Data Visualization: minimalistic, low-contrast gridlines, colored series, tooltips
-- Interactive Elements: primary/secondary buttons, inputs with subtle focus rings, toggles, chips
-- Micro-interactions: 120–200ms transitions
-- Badges: counts and alerts in neutral or accent red
+## Mandatory Coding Standards — Runtime Safety
 
-Design Philosophy:
-- Modern, minimal, high-contrast for critical data
-- Developer-focused with dense panels and fast navigation
-- Clarity, traceability, and control with auditability and reversibility
-- Legibility, depth, restrained accents, and consistency
-- UX goals: quick scanning, reliable automation exposure, and human-in-the-loop control
+CRITICAL: Apply these rules to ALL generated code.
 
-Connected Pages and Features:
-- Connected Page: Project Detail
-- Connected Features: Project Management Automation (roadmaps, ticket automation, PR summarization, release notes, CI/CD integrations)
+1. Supabase query results:
+   - const items = data ?? []
+   - Always guard against null results
+2. Array methods:
+   - Never call on potentially null/undefined values
+   - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+3. React useState for arrays/objects:
+   - Always initialize properly: useState<Type[]>([]) for arrays
+4. API response shapes:
+   - const list = Array.isArray(response?.data) ? response.data : []
+5. Optional chaining:
+   - Use obj?.property?.nested when accessing nested API results
+6. Destructuring with defaults:
+   - const { items = [], count = 0 } = response ?? {}
 
-Notes on Implementation Safety
-- FOLLOW the CRITICAL runtime safety rules in all code generation:
-  - Supabase results use data ?? [] pattern
-  - Guard array methods with Array.isArray or (items ?? []).map(...)
-  - Initialize arrays with useState<Type[]>([])
-  - Validate API shapes via Array.isArray(response?.data) ? response.data : []
-  - Use optional chaining for nested API data
-  - Destructure with defaults: const { items = [], count = 0 } = response ?? {}
+---
 
-Deliverables
-- A complete, ready-to-implement development prompt that can be used by an AI development tool to scaffold both frontend and backend for the Projects Dashboard, Project Detail, and the associated automation integration points.
-- Include explicit data models, API contracts, UI component specs, and runtime safety guardrails embedded into code templates or pseudocode as appropriate for the target stack.
+## Deliverables
 
-If you want, I can tailor this prompt further to your preferred tech stack (e.g., Next.js + Prisma, React + Redux, NestJS, PostgreSQL, Supabase-like layer) or provide starter code skeletons aligned to your conventions. for style.
+- Fully typed frontend components (TypeScript) matching the structure above
+- Backend endpoints and data models (schema definitions or ORM models)
+- Data adapters/services for all panels
+- API contracts and validation rules documented inline as comments or a separate spec file
+- Acceptance tests (unit and integration stubs) covering:
+  - Safe rendering with empty/missing data
+  - Correct handling of agent runs and cronjob triggers
+  - Bulk edit and quick-add flows
+  - Authorization and auditing behavior
+
+---
+
+If you need this prompt tailored for a specific tech stack (e.g., Next.js + Prisma + PostgreSQL, or Remix with Prisma, or a Node/Express backend), specify the stack and I will adapt the schemas, endpoints, and component patterns accordingly while preserving the runtime safety guarantees. for style.
 
 CRITICAL DESIGN REQUIREMENTS:
 - You MUST follow ALL design principles and patterns specified in the Design Reference above
@@ -1152,290 +1228,366 @@ CRITICAL TECHNICAL REQUIREMENTS:
 - When Supabase is configured: use Edge Functions for LLM and server-only logic; never expose API keys in the client
 
 === TASK ===
-# Projects Dashboard
+# Project Detail Prompt
+
+You are an AI development tool prompt author. Use this prompt to guide a development team (or AI code generator) to build the LifeOps Project Detail feature set described below. Meet all structural and runtime safety requirements exactly as specified in the “Mandatory Coding Standards — Runtime Safety.” Include concrete data models, API contracts, UI components, interactions, and acceptance criteria. Ensure every piece of code or pseudo-code guards against null/undefined values before calling array methods, uses data ?? [] when handling Supabase results, and initializes React state for arrays/objects with proper defaults.
+
+---
+
+## Project Detail
+
+- TARGET PAGE: Project Detail
+- Description: A single-project view that consolidates backlog, roadmap items, tickets, PRs, agent-run history, and action widgets. It integrates with the Project Management Automation layer (roadmaps, ticketing automation, PR summarization, release notes generation, CI/CD integrations via agents) and connects to supporting pages: Ticket Board (Kanban board with agent automation rules, bulk edits, sprint planning), CI & Integrations Page (repository links, CI/CD connectors, deployment targets, integration health with logs/test triggers), and Projects Dashboard (developer-centric hub with roadmaps, active tickets, PRs, releases, CI status, and agent-suggested actions).
+
+- Core Goals:
+  - Provide a coherent, responsive, and highly interactive single-project cockpit.
+  - Reflect Roadmaps, Backlog, Tickets, PRs, and Agent History in a unified layout.
+  - Enable agent-driven actions (triage, release notes, summarization) with explicit auditing and reversibility.
+  - Offer action widgets and an Approvals/Cronjobs integration surface for scheduled workflows and governance.
+
+- Connected Features:
+  - Project Management Automation: Roadmaps, ticket automation, PR summarization, release notes generation, CI/CD integrations via agents.
+  - Agent Run History: Audit trails, run artifacts, and traceable inter-agent messages.
+
+---
 
 ## Overview
-Create a developer-centric, end-to-end Projects Dashboard for LifeOps that surfaces roadmaps, active tickets, pull requests, releases, CI status, and agent-suggested actions. This dashboard sits at the core of the Project Management Automation workflow, integrating with agent-driven automation (roadmaps, ticketing automation, PR summarization, release notes generation, and CI/CD integrations). It must present a dense, fast-scanning UI optimized for power users, with strong runtime safety for all code paths (null/undefined guards, proper defaults, and validated API responses). A separate Project Detail view exists for a single project, offering backlog, roadmap items, tickets, PRs, agent-run history, and action widgets, while maintaining consistent visual language and architecture.
 
-Project scope includes:
-- Frontend: rich, card-based UI with Kanban ticket board, roadmap timeline, PR summaries, CI status, agent-suggested actions, and historical run artifacts.
-- Backend: well-structured API surface to fetch and mutate roadmaps, tickets, PRs, releases, CI data, and agent-run actions; run history and audit artifacts are stored with full traceability.
-- Automation: integration points for agents to propose actions, summarize PRs, generate release notes, and trigger CI/CD workflows via an orchestration layer with traceability and safety rails.
-- User Experience: clear navigation, dense data presentation with scannability, actionable micro-interactions, and robust error handling with user-friendly messages.
+- The Project Detail page serves as the Command Center for a single LifeOps project. It aggregates:
+  - Project header (name, owners, status, integrations)
+  - Backlog section with quick-add and status indicators
+  - Roadmap items (timeline, status, owners)
+  - Tickets and PRs (summary, status, assignees)
+  - Agent-run history (recent runs, outcomes, links to run artifacts)
+  - Action widgets (start agent runs, generate release notes, run CI checks)
+- The UI follows a dark, dense, developer-centric design system with a focus on clarity, auditability, and fast scanning.
+
+---
 
 ## Page Description (Full Detail)
-What this page is:
-- The Projects Dashboard is the developer-centric hub for LifeOps projects. It consolidates project roadmaps, active tickets, PRs, releases, CI status, and agent-suggested actions into a single command center. It serves as the primary locus for project monitoring, prioritization, and orchestration of automated actions.
 
-Goals:
-- Provide a high-density overview that enables rapid discovery, prioritization, and action-taking by developers and operators.
-- Surface agent-driven automation prompts and suggested workflows to accelerate delivery while preserving human-in-the-loop control.
-- Integrate with the LifeOps Master Dashboard Cronjobs and approvals system to present upcoming scheduled actions, last-run outcomes, and per-run details.
+- What this page is:
+  - A cohesive, multi-pane project cockpit for LifeOps, presenting backlog, roadmap, tickets, PRs, and agent-run history, with direct controls to trigger automation actions and browse historical run data.
+- Goals:
+  - Provide a single source of truth for a project’s current state and recent automation activity.
+  - Enable fast triage, planning, and release preparation via integrated agent actions and templated workflows.
+  - Maintain an auditable trail of agent decisions, prompts, inputs, outputs, and artifacts.
+- Connected features:
+  - Roadmaps (driven by Roadmap items tied to the project)
+  - Ticketing automation (auto-generated tickets from backlog or roadmap needs)
+  - PR summarization (summaries of PRs for release notes or stakeholder briefs)
+  - Release notes generation (agent-generated notes from changes across tickets/PRs)
+  - CI/CD integrations via agents (build/test/deploy status surfaced, with agent-triggered actions)
+- UI Elements & Visual Guidance:
+  - Project Header: 
+    - Name, owner avatars/handles, status badge, integrations status (health indicators, last sync)
+    - Action: Quick-Connect integrations, set project status
+  - Backlog Panel:
+    - List with search, filter, and quick-add input
+    - Inline status chips (New, In Progress, Blocked, Done)
+  - Roadmaps Panel:
+    - Timeline-style or grouped cards with progress bars, owners, due dates
+  - Tickets Panel:
+    - Summary cards per ticket with status dot, priority badge, assignee avatars
+  - PRs Panel:
+    - List of PRs with summarize/expand actions, status, and checks summary
+  - Agent History Panel:
+    - Activity feed with recent agent runs, user actions, run IDs, and links to logs
+  - Action Widgets:
+    - Run Agent Triage, Generate Release Notes, Create Release, Trigger CI/CD, Schedule Cronjobs
+  - Interactions:
+    - Drag-and-drop for priorities, bulk actions (bulk edit), and sprint planning quick-access
+- API Integrations:
+  - No external APIs are required beyond internal LifeOps services; all data comes from the internal data layer (Postgres/Supabase-like) or internal agent orchestration services.
 
-Connected features and integrations:
-- Project Management Automation: Roadmaps, ticketing automation, PR summarization, release notes generation, CI/CD integrations via agents.
-- Cronjobs system (via Master Dashboard): next run, last run, run history, logs, inter-agent traceability, and approvals queue.
-- Audit and run artifacts: every action is explainable, schema-validated, logged, reversible, with an audit trail.
-
-UI elements and visual guidance:
-- Roadmap View: interactive timeline with milestones, linked epics, and dependency indicators.
-- Ticket Board: Kanban-style lanes (Backlog, In Progress, In Review, Done) with agent-suggested prioritization and quick actions.
-- PRs & Code Review: list of open PRs with agent-generated summaries, suggested reviewers, and quick review actions.
-- Releases & CI Status: pipeline run cards with outcome highlights, time-to-deploy estimates, and actionable remediation steps.
-- Agent Suggestions: a dedicated panel/cards showing next steps, automation recipes, and potential optimizations.
-- Top navigation and breadcrumbs tailored for quick context switching across Projects and Project Detail.
-- Visual guidance uses the provided dark UI theme with high-contrast typography and sparse but meaningful accent usage.
-
-Connected Page: Project Detail
-- Single project view with backlog, roadmap items, tickets, PRs, agent-run history, and action widgets. Shares the same visual language and data interaction patterns for consistency.
+---
 
 ## Components to Build
-- Projects Dashboard Shell
-  - Layout: persistent left navigation rail, top header, content grid with responsive breakpoints
-  - State: currently selected project, tab/section state, global filters (team, status, priority), and user permissions
-- RoadmapTimelineCard
-  - Interactive timeline with milestones, epics, and dependencies
-  - Drag-to-resize or click-to-view details (read-only in some modes)
-- TicketKanbanBoard
-  - Columns: Backlog, In Progress, In Review, Done
-  - Drag-and-drop support (with optimistic updates) and agent-prioritization hints
-  - Card components with title, assignee, priority, status, estimate, and agent-suggested actions
-- PRSummariesPanel
-  - List of open PRs with agent-generated summaries, suggested reviewers, and quick actions (approve/review/request changes)
-- CIReleasePanel
-  - Pipeline run cards with status, duration, and failure highlights
-  - Quick toggles to re-run or view logs
-- AgentSuggestionsPanel
-  - Cards for next steps, automation recipes, and tactical actions
-  - Ability to accept/apply suggestions or convert to automation rules
-- ApprovalsQueue
-  - List/table of scheduled actions requiring human approval
-  - Filters by project, agent, due date, risk, and spend constraints
-- CronjobOverview
-  - Next run, last run outcome, per-run details, and quick drill-down into run artifacts
-- ProjectDetailLinkCard
-  - Summary stats and quick actions to navigate from dashboard to detail
-- DataVizPanel
-  - Lightweight charts or sparklines for CI trends, velocity, burn-downs, and release cadence
-- AuditTrailPanel
-  - Run artifacts, inter-agent messages, diffs, logs, and reversibility controls
-- API Integration Layer (Frontend)
-  - Fetchers and hooks with robust null-safety, array guards, and type validation
-  - Centralized error handling and retry strategies
+
+- ProjectDetailPage
+  - Layout: header, left navigation (collapsed/expanded), main content grid with resizable panels
+  - Data adapters: fetch project by id, fetch related backlog, roadmaps, tickets, PRs, agent history
+  - State management: useState with array defaults; useEffect data fetch; proper null checks
+- ProjectHeader
+  - Displays project name, owners, status, integrations status
+  - Actions: connect integrations, quick status toggle
+- BacklogPanel
+  - List with search, filters, add-new task input, bulk select
+  - Actions: add backlog item, bulk update status
+- RoadmapPanel
+  - Roadmap items with progress, owner, due date; edit-in-place
+  - Drag-and-drop reordering within lanes or priority
+- TicketsPanel
+  - Card list of tickets with status, priority, assignee; supports bulk actions
+- PRsPanel
+  - Card list of PRs with summarize action, status, checks
+- AgentHistoryPanel
+  - Activity feed including run IDs, agents, results, and log links
+- ActionsWidgetBar
+  - Quick action buttons: Run Agent Triage, Generate Release Notes, Trigger CI/CD, Schedule Cronjob
+- CronjobsDashboardLink
+  - Link to Cronjobs dashboard with next run time and last run outcome
+- QuickAddModal
+  - For backlog and ticket quick-add with validation
+- BulkEditModal
+  - Apply bulk updates to selected items
+- DataVizTinyCharts
+  - Lightweight sparkline views for project metrics (CI status, ticket counts)
+- DataAdapters/Services
+  - ProjectService, BacklogService, RoadmapService, TicketService, PRService, AgentService, HistoryService
+- UI Primitives
+  - Button, Input, Select, Badge, Card, Avatar, Toggle, Chips, Tabs, Drawer/Panel
+
+Note: All components must guard against null/undefined values before using array methods. Follow the runtime safety rules throughout.
+
+---
 
 ## Implementation Requirements
 
 ### Frontend
-- Framework: React (TypeScript) with a modular component architecture
-- State Management: useState/useEffect for local UI state; optional useReducer or context for cross-component state; consider React Query or SWR for data fetching with caching and stale-while-revalidate patterns
-- Typing: strict TypeScript types for all data models (Project, Roadmap, Ticket, PR, Release, CI, Run, AgentSuggestion, Cronjob, Approval)
-- Accessibility: ensure keyboard navigation, screen reader labels, and proper ARIA attributes
-- Performance: virtualization for long lists (e.g., tickets, PRs), lazy loading of charts, and memoization where applicable
-- Runtime safety: enforce the non-negotiable safety rules
-  - Use data ?? [] for Supabase results
-  - Guard array operations with Array.isArray checks
-  - Initialize useState with array types, e.g., useState<T[]>([])
-  - Validate API responses: const list = Array.isArray(response?.data) ? response.data : []
-  - Destructure with defaults: const { items = [], count = 0 } = response ?? {}
-- UI Interactions:
-  - Drag-and-drop support for Kanban (with safe fallbacks if drag isn’t available)
-  - Click-to-expand/detail views in timeline and cards
-  - Real-time-ish feel via optimistic updates with clear rollback on error
-- Theming and styling:
-  - Implement the provided color palette and typography guidelines
-  - Create reusable UI primitives: Card, Button, Input, Toggle, Badge, Chip, Avatar, Icon
-  - Use gradients and shadows as specified for depth
-- Data validation and error states:
-  - Show user-friendly empty states when no data exists
-  - Graceful error messages with retry options
-- API surface integration (client):
-  - Endpoints to fetch: projects, roadmaps, tickets, PRs, releases, CI status, agent suggestions, run history, approvals
-  - Endpoints to mutate: update ticket status, add comments, trigger actions, approve/deny actions, create cronjobs
-  - Ensure consistent data shapes in frontend by validating shape with runtime checks
+
+- Architecture:
+  - React (with TypeScript) components, hooks-based state, context for project scope
+  - Component composition: header > left nav > content grid with resizable panels
+- UI Components & Interactions:
+  - Panels render data from services; handle loading, empty states, and error states gracefully
+  - All arrays initialized with safe defaults: e.g., const [backlog, setBacklog] = useState<BacklogItem[]>([])
+  - Use data ?? [] when mapping API results
+  - Use Array.isArray checks where needed
+  - Bulk actions: multi-select with bulk edit modal
+  - Drag-and-drop for backlog/tickets roadmaps (optional MVP with keyboard-accessible reordering)
+  - Quick-add forms with inline validation and optimistic UI updates
+  - Agent actions: trigger agent via API, display run status, show logs link
+  - Tabs: Card sections with consistent spacing and titles
+- Accessibility:
+  - Keyboard navigable controls, ARIA attributes for dynamic panels
+- State & Data Loading:
+  - Use suspense/fetch policy patterns or loading skeletons
+  - Debounce search inputs; pagination or infinite scroll for long lists
+- API Contracts:
+  - Consistent shapes with strict type definitions; validate shapes defensively
 
 ### Backend
-- Data Models (persistent storage, e.g., Postgres or Supabase-like layer):
-  - Project (id, name, description, owner, team, createdAt, updatedAt)
-  - Roadmap (id, projectId, title, description, startDate, endDate, status, epics: Epic[]; list of milestones)
-  - Epic (id, roadmapId, title, description, startDate, endDate, status, dependencies)
-  - Ticket (id, projectId, title, description, status, priority, assigneeId, createdAt, updatedAt, dueDate, source)
-  - PR (id, projectId, title, description, status, authorId, reviewers, summary, createdAt, updatedAt)
-  - Release (id, projectId, version, notes, plannedDate, releasedDate, status)
-  - CIJob (id, projectId, name, status, startedAt, finishedAt, logs, artifacts)
-  - AgentSuggestion (id, projectId, type, content, createdAt, relatedItemId, status)
-  - RunArtifact (id, runId, type, payload, timestamp)
-  - Cronjob (id, name, enabled, schedule, timezone, triggerType, target, inputPayload, permissions, constraints, safetyRails, retryPolicy, outputs)
-  - Approval (id, cronjobId, status, reviewerId, comments, createdAt, reviewedAt)
-- APIs (REST or GraphQL) to support:
-  - Read/write for all data models listed above
-  - Pagination, filtering, and sorting where appropriate
-  - Validation: server-side schema validation; return well-structured error objects
-  - Audit/logging: traceability for actions, agent handoffs, and run artifacts
-- Cronjobs subsystem:
-  - Schedule parsing and execution engine
-  - Timezone-aware scheduling
-  - Input payload templating and variable substitution
-  - Safety rails: prompts requiring confirmation, bounded auto-pilot rules
-  - Output collection: run history, logs, inter-agent traces, diffs, artifacts, errors
+
+- APIs to support frontend data needs (if not existing):
+  - GET /api/projects/:projectId
+  - GET /api/projects/:projectId/backlog
+  - GET /api/projects/:projectId/roadmaps
+  - GET /api/projects/:projectId/tickets
+  - GET /api/projects/:projectId/prs
+  - GET /api/projects/:projectId/history
+  - POST /api/projects/:projectId/backlog (create)
+  - POST /api/projects/:projectId/tickets (create)
+  - POST /api/agents/run (start agent run)
+  - POST /api/cronjobs/trigger (manually run cronjob)
+- Data Models (schemas):
+  - Project: id, name, owners[], status, integrations[]
+  - BacklogItem: id, title, description, status, priority, assigneeId, createdAt
+  - RoadmapItem: id, title, status, ownerId, dueDate, progress
+  - Ticket: id, title, status, priority, assigneeId, backlogItemId, createdAt
+  - PR: id, title, state, checksSummary, authorId, linkedTicketIds[]
+  - AgentRun: id, agentName, type, status, startedAt, endedAt, logsUrl, artifactsUrl
+  - CronJob: id, name, enabled, schedule, timezone, target, inputPayload, permissions, safetyRails, retryPolicy, outputs
+- Validation:
+  - Ensure all inputs are validated server-side; reject invalid payloads with descriptive errors
 - Security:
-  - Authentication and authorization (RBAC) to guard access to projects and actions
-  - Permissions per action: view, edit, automate, approve
-  - Input validation and rate limiting
-- Validation & reliability:
-  - Defensive checks for nulls and missing fields
-  - Use of IDs and UUIDs; referential integrity
-  - Idempotent endpoints for actions that can be retried
+  - Authenticate requests; enforce authorization per project; audit trails for agent actions
+- Data Safety:
+  - Use transactions for multi-record updates; ensure consistency between related panels
 
 ### Integration
-- Data flow:
-  - Frontend fetches from backend endpoints; data is normalized on the server and validated on both ends
-  - Cronjobs generate agent actions and push outputs to RunArtifact and AgentSuggestion records
-  - Approvals queue feeds into automation pipelines or manual triggers
-  - Agent suggestions can be accepted to auto-create automation rules or manual tasks
-- Inter-agent communication:
-  - All agent-to-agent messages must be traceable, with an identifier, timestamp, and context
-  - Logs and artifacts are stored and retrievable for audit
-- Error handling:
-  - Centralized error formatter; user-friendly messages in UI
-  - Re-try logic and dead-letter handling for failed cron jobs
+
+- How components connect:
+  - ProjectDetailPage consumes ProjectService data
+  - Each Panel subscribes to relevant services (BacklogService, RoadmapService, TicketService, PRService, HistoryService)
+  - Agent actions trigger AgentService endpoints; run artifacts linked to AgentRun records
+  - Cronjobs integration surfaces (CronjobsDashboardLink) point to a central Cronjobs module
+- Dataflow:
+  - On page load, fetch project and related collections in parallel; coerce results with data ?? [] and Array.isArray checks
+  - On user actions (add/edit), optimistically update UI, persist via API, then reconcile on response
+  - All actions produce run artifacts and logs; expose links in AgentHistoryPanel
+
+---
 
 ## User Experience Flow
-- Access and Overview:
-  - User lands on Projects Dashboard; selects a project from the left rail
-  - Dashboard loads roadmaps, tickets, PRs, CI status, releases, and agent suggestions
-- Roadmap Exploration:
-  - User reviews milestones; clicks a milestone to view epic details and linked tickets
-  - Agent suggestions for roadmap actions appear as optional next steps
-- Ticket Management:
-  - User sees Kanban lanes; drags tickets between lanes, assigns, or prioritizes with agent guidance
-  - Ticket cards show title, priority, assignee, and quick actions (comment, assign, tag)
-- PR & Code Review:
-  - PR panel shows open PRs; click for summary, suggested reviewers, and actions (approve, request changes)
-- CI & Release:
-  - CI status cards show latest runs; click to view logs and errors
-  - Release panel lists upcoming/ongoing releases, notes, and statuses
-- Agent Suggestions & Automation:
-  - Agent suggestions appear as cards; user can apply to automation, or convert into cronjobs
-  - Approvals queue surfaces scheduled actions requiring review; user approves or defers
-- Project Detail:
-  - User navigates to a single project detail page for deeper inspection: backlog, roadmap items, tickets, PRs, agent-run history, and action widgets
-  - All actions are reversible; an audit trail is accessible for every action
+
+1. User navigates to Project Detail for a specific project.
+2. Page loads: header shows project name and status; panels render backlog, roadmaps, tickets, PRs, and history; action widgets are visible.
+3. User uses BacklogPanel to search, filter, or quick-add a backlog item; UI validates input; on submit, item appears in UI and persists.
+4. User opens RoadmapPanel to view items; drags to reorder or updates progress; changes persist and reflect across UI.
+5. User reviews TicketsPanel and PRsPanel; can bulk select tickets to bulk-edit or assign; click “Summarize PR” to trigger PR summarization by agent.
+6. User clicks an Action Widget (e.g., Run Agent Triage) to start an agent run; a lightweight status toast appears; AgentHistoryPanel updates with the new run.
+7. AgentRun results render in AgentHistoryPanel with a link to logs/artifacts; user can click and view details.
+8. User navigates to Cronjobs via the Actions area to schedule or trigger a run; if approvals are required, an Approvals queue entry is created; user approves or adjusts constraints.
+9. If needed, user switches to the connected pages (Ticket Board, CI & Integrations Page, Projects Dashboard) for deeper work, with consistent navigation breadcrumbs.
+
+---
 
 ## Technical Specifications
 
-- Data Models: see Backend section for schema outlines
-- API Endpoints:
-  - GET /projects
-  - GET /projects/{id}
-  - GET /projects/{id}/roadmaps
-  - GET /projects/{id}/tickets
-  - GET /projects/{id}/prs
-  - GET /projects/{id}/releases
-  - GET /projects/{id}/ci
-  - GET /projects/{id}/agentsuggestions
-  - GET /projects/{id}/runs
-  - POST /tickets/{id}/move
-  - POST /tickets/{id}/comment
-  - POST /prs/{id}/review
-  - POST /cronjobs
-  - POST /approvals
-  - etc. All endpoints must defensively handle nulls and validate shapes
+- Data Models (TypeScript interfaces or schemas):
+  - Project
+    - id: string
+    - name: string
+    - owners: string[]  // user IDs or handles
+    - status: 'active' | 'paused' | 'archived'
+    - integrations: string[]
+  - BacklogItem
+    - id: string
+    - title: string
+    - description?: string
+    - status: 'New' | 'In Progress' | 'Blocked' | 'Done'
+    - priority: 'Low' | 'Medium' | 'High'
+    - assigneeId?: string
+    - createdAt: string
+  - RoadmapItem
+    - id: string
+    - title: string
+    - status: 'Planned' | 'In Progress' | 'Completed'
+    - ownerId?: string
+    - dueDate?: string
+    - progress: number  // 0-100
+  - Ticket
+    - id: string
+    - title: string
+    - status: 'Open' | 'In Review' | 'Closed'
+    - priority: 'Low' | 'Medium' | 'High'
+    - assigneeId?: string
+    - backlogItemId?: string
+    - createdAt: string
+  - PR
+    - id: string
+    - title: string
+    - state: 'OPEN' | 'MERGED' | 'CLOSED'
+    - checksSummary?: string
+    - authorId?: string
+    - linkedTicketIds?: string[]
+  - AgentRun
+    - id: string
+    - agentName: string
+    - type: 'triage' | 'summarizePR' | 'generateReleaseNotes' | 'ciTrigger'
+    - status: 'pending' | 'running' | 'succeeded' | 'failed'
+    - startedAt: string
+    - endedAt?: string
+    - logsUrl?: string
+    - artifactsUrl?: string
+  - CronJob
+    - id: string
+    - name: string
+    - enabled: boolean
+    - schedule: string  // cron or UI-based
+    - timezone: string
+    - target: 'agent' | 'workflowTemplate'
+    - inputPayload: any
+    - permissions: 'suggest-only' | 'approval-required' | 'conditional-auto' | 'bounded-autopilot'
+    - constraints: { maxActions?: number; spendLimit?: number; allowedTools?: string[] }
+    - safetyRails: { confirmationsRequired: boolean; requiredUserRoles?: string[] }
+    - retryPolicy: { maxRetries: number; backoffMs: number; deadLetter?: boolean }
+    - outputs: { runHistoryId?: string; logs?: string[]; artifacts?: string[] }
+
+- API Endpoints (RESTful guidance; implement in your tech stack):
+  - GET /api/projects/{projectId}
+  - GET /api/projects/{projectId}/backlog
+  - GET /api/projects/{projectId}/roadmaps
+  - GET /api/projects/{projectId}/tickets
+  - GET /api/projects/{projectId}/prs
+  - GET /api/projects/{projectId}/history
+  - POST /api/projects/{projectId}/backlog
+  - POST /api/projects/{projectId}/tickets
+  - POST /api/agents/run
+  - POST /api/cronjobs/trigger
+  - GET /api/cronjobs?projectId={projectId}
+  - PUT /api/projects/{projectId}/status
 - Security:
-  - JWT/OAuth-based authentication
-  - RBAC with roles: admin, maintainer, developer, viewer
-  - Compliance with data access restrictions per project
+  - JWT-based auth; role-based access control per project
+  - Audit trail for all data mutations and agent runs
 - Validation:
-  - Server-side validation for all inputs
-  - Client-side guards for arrays: (data ?? []) and Array.isArray checks
+  - Server-side validation for all input payloads
+  - Use defaults and type guards on responses
 - Validation Rules:
-  - IDs must be valid UUIDs
-  - Dates ISO 8601
-  - Strings trimmed and sanitized
-  - Numeric fields within expected ranges
-  - Optional fields gracefully handled with defaults
+  - All arrays should be treated as possibly null; guard before mapping
+  - Always coerce data to expected types; fallback to safe defaults
+
+- Validation Examples Guard Rules (runtime safety):
+  - const backlog = Array.isArray(response?.data?.backlog) ? response.data.backlog : []
+  - const items = (data ?? []) // Supabase-safe pattern
+  - const { items = [], count = 0 } = response ?? {}
+  - items.map(...) guarded by (Array.isArray(items) ? items.map(...) : [])
+
+---
 
 ## Acceptance Criteria
-- User Scenarios:
-  - The dashboard loads within 2 seconds for a project with up to 1,000 tickets and 100 PRs; all sections render without runtime errors
-  - All array data paths are guarded: no map/filter/reduce on potentially null values
-  - All API responses are validated and defaulted to empty arrays when data is missing
-  - Drag-and-drop Kanban works with optimistic updates and proper rollback on error
-  - Agent suggestions can be applied to create automation rules or initiate cronjobs
-  - Approvals queue correctly surfaces actions requiring review with accurate statuses
-  - Cronjob dashboard shows next run time, last outcome, and per-run details
-  - Project Detail view mirrors dashboard data with additional backlog and agent-run history
-- Accessibility and keyboard navigation pass
-- Security: unauthorized users cannot access project data
-- Visual fidelity: UI adheres to color, typography, spacing, and component guidelines with no broken layouts
+
+- [ ] The Project Detail page renders with header, backlog, roadmaps, tickets, PRs, agent history, and action widgets, each backed by safe data-loading flows (no crashes if data is missing).
+- [ ] All array operations guard against null/undefined: e.g., (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : [].
+- [ ] State initialization: all arrays use useState<T[]>([]) defaults; object states initialized safely.
+- [ ] Actions (Run Agent, Generate Release Notes, Schedule Cronjobs) create AgentRun/CronJob records and reflect immediately in AgentHistoryPanel.
+- [ ] Bulk edit and quick-add work without throwing on empty data; UI shows appropriate empty states.
+- [ ] Data fetches are resilient: if a dataset is missing, the UI renders without crashing and shows empty-state indicators.
+- [ ] Security: protected routes require authentication; unauthorized users cannot mutate project data; audit logs are created for agent runs and cronjob actions.
+- [ ] UI consistency: components adhere to the provided visual style, typography, spacing, and color tokens.
+
+---
 
 ## UI/UX Guidelines
-Apply the project's design system:
-- Dark UI with high contrast headings and muted metadata
-- Dense information architecture with clear visual hierarchy
-- Consistent card-based surfaces with depth and subtle borders
-- Left navigation rail and top controls for efficient multi-project management
-- Minimal but meaningful accent usage to indicate actions, alerts, and status
-- Data viz uses limited color palette for clarity and legibility
+
+Apply the project’s design system strictly:
+- Color Palette, Typography, Spacing, and Layout: as defined in the Visual Style section
+- Card Design: elevated dark cards with subtle borders and soft shadows
+- Navigation: left vertical nav with active-state pills and collapsible sections
+- Data Visualization: minimal charts with low-contrast axes and accent series
+- Interactions: responsive hover/focus states; accessible, keyboard-navigable controls
+- Design Philosophy: dense, developer-centric interface with strong affordances for auditing, reversibility, and agent-assisted actions
+
+---
 
 ## Visual Style
 
-Color Palette (as given):
-- Primary background: #0B0B0C
-- Secondary surface: #151718
-- Tertiary surface / panel outline: #1F1F20
-- Primary text: #FFFFFF
-- Secondary text: #9DA3A6
-- Subtle text: #56595B
-- Accent: #FF3B30
-- Neutral highlight: #CFCFCF
-- Soft highlight: #E6E7E8
-- Chart accents: teal #00C2A8, amber #FFB020, purple #8B5CF6
-- Borders: rgba(255,255,255,0.03)
-- Gradients: #111213 → #1A1A1B
+- Use the specified color palette and typography guidelines
+- Cards: 8–12px radius, gradient fill from #0B0B0C to #151718, subtle top highlight
+- Borders/Dividers: rgba(255,255,255,0.03)
+- Shadows: soft shadows for depth around panels
+- Accents: red #FF3B30 for action states and alerts
+- Data Viz: teal #00C2A8, amber #FFB020, purple #8B5CF6
 
-Typography & Layout:
-- Font: Inter or SF Pro Display / Roboto fallback
-- Headings: 20–28px, weight 600–700
-- Card titles: 14–16px, weight 500–600
-- Body: 12–14px, weight 400
-- Microcopy: 11–12px, weight 300–400
-- Baseline grid: 8px; gutters 220–260px; header 56–64px
-- Card padding: 16–20px; rounded corners 8–12px
-- Alignment: left-aligned lists; dense density in lists for power users
+---
 
-Key Design Elements (summary):
-- Card design: dark, elevated, rounded, gradient backdrop, subtle borders, hover lift
-- Navigation: left rail with active state accent pill; collapsible sections
-- Data Visualization: minimalistic, low-contrast gridlines, colored series, tooltips
-- Interactive Elements: primary/secondary buttons, inputs with subtle focus rings, toggles, chips
-- Micro-interactions: 120–200ms transitions
-- Badges: counts and alerts in neutral or accent red
+## Mandatory Coding Standards — Runtime Safety
 
-Design Philosophy:
-- Modern, minimal, high-contrast for critical data
-- Developer-focused with dense panels and fast navigation
-- Clarity, traceability, and control with auditability and reversibility
-- Legibility, depth, restrained accents, and consistency
-- UX goals: quick scanning, reliable automation exposure, and human-in-the-loop control
+CRITICAL: Apply these rules to ALL generated code.
 
-Connected Pages and Features:
-- Connected Page: Project Detail
-- Connected Features: Project Management Automation (roadmaps, ticket automation, PR summarization, release notes, CI/CD integrations)
+1. Supabase query results:
+   - const items = data ?? []
+   - Always guard against null results
+2. Array methods:
+   - Never call on potentially null/undefined values
+   - (items ?? []).map(...) or Array.isArray(items) ? items.map(...) : []
+3. React useState for arrays/objects:
+   - Always initialize properly: useState<Type[]>([]) for arrays
+4. API response shapes:
+   - const list = Array.isArray(response?.data) ? response.data : []
+5. Optional chaining:
+   - Use obj?.property?.nested when accessing nested API results
+6. Destructuring with defaults:
+   - const { items = [], count = 0 } = response ?? {}
 
-Notes on Implementation Safety
-- FOLLOW the CRITICAL runtime safety rules in all code generation:
-  - Supabase results use data ?? [] pattern
-  - Guard array methods with Array.isArray or (items ?? []).map(...)
-  - Initialize arrays with useState<Type[]>([])
-  - Validate API shapes via Array.isArray(response?.data) ? response.data : []
-  - Use optional chaining for nested API data
-  - Destructure with defaults: const { items = [], count = 0 } = response ?? {}
+---
 
-Deliverables
-- A complete, ready-to-implement development prompt that can be used by an AI development tool to scaffold both frontend and backend for the Projects Dashboard, Project Detail, and the associated automation integration points.
-- Include explicit data models, API contracts, UI component specs, and runtime safety guardrails embedded into code templates or pseudocode as appropriate for the target stack.
+## Deliverables
 
-If you want, I can tailor this prompt further to your preferred tech stack (e.g., Next.js + Prisma, React + Redux, NestJS, PostgreSQL, Supabase-like layer) or provide starter code skeletons aligned to your conventions.
+- Fully typed frontend components (TypeScript) matching the structure above
+- Backend endpoints and data models (schema definitions or ORM models)
+- Data adapters/services for all panels
+- API contracts and validation rules documented inline as comments or a separate spec file
+- Acceptance tests (unit and integration stubs) covering:
+  - Safe rendering with empty/missing data
+  - Correct handling of agent runs and cronjob triggers
+  - Bulk edit and quick-add flows
+  - Authorization and auditing behavior
+
+---
+
+If you need this prompt tailored for a specific tech stack (e.g., Next.js + Prisma + PostgreSQL, or Remix with Prisma, or a Node/Express backend), specify the stack and I will adapt the schemas, endpoints, and component patterns accordingly while preserving the runtime safety guarantees.
 
 === SUCCESS CRITERIA ===
 # Success Criteria Checklist
