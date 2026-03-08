@@ -2,6 +2,7 @@
  * QuickCreateModal — rapid create flow for content items.
  */
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -77,13 +78,28 @@ export function QuickCreateModal({
     defaultValues: {
       title: "",
       type: "draft",
-      channelId: channels[0]?.id ?? "",
+      channelId: "",
       tentativePublishAt:
         defaultPublishAt ??
         new Date().toISOString().slice(0, 16),
       durationMinutes: 60,
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const iso = defaultPublishAt ?? new Date().toISOString();
+      const local = iso.length >= 16 ? iso.slice(0, 16) : iso.slice(0, 10) + "T10:00";
+      const firstChannelId = (channels ?? [])[0]?.id ?? "";
+      reset({
+        title: "",
+        type: "draft",
+        channelId: firstChannelId,
+        tentativePublishAt: local,
+        durationMinutes: 60,
+      });
+    }
+  }, [open, defaultPublishAt, channels, reset]);
 
   const channelId = watch("channelId");
 
@@ -99,7 +115,6 @@ export function QuickCreateModal({
       publishAt,
       durationMinutes: data.durationMinutes,
     });
-    reset();
     onOpenChange(false);
   };
 
@@ -132,8 +147,8 @@ export function QuickCreateModal({
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
             <Select
+              value={watch("type")}
               onValueChange={(v) => setValue("type", v as FormValues["type"])}
-              defaultValue="draft"
             >
               <SelectTrigger id="type">
                 <SelectValue placeholder="Select type" />

@@ -38,7 +38,7 @@ export function ChannelLane({
     <div
       ref={setNodeRef}
       className={cn(
-        "min-h-[120px] rounded-lg border border-white/[0.03] p-3 transition-all duration-200",
+        "min-h-[120px] rounded-lg border border-[rgb(255_255_255/0.03)] p-4 transition-all duration-200",
         "bg-card/50",
         over && "ring-2 ring-primary/40 ring-offset-2 ring-offset-background bg-primary/5",
         hasConflict && "ring-1 ring-destructive/50"

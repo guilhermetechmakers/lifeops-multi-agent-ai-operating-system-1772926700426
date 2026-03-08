@@ -41,7 +41,7 @@ export function ConflictsPanel({
   return (
     <div
       className={cn(
-        "rounded-lg border border-white/[0.03] bg-card p-4",
+        "rounded-lg border border-[rgb(255_255_255/0.03)] bg-card p-4 shadow-card",
         className
       )}
       role="region"
@@ -72,7 +72,7 @@ export function ConflictsPanel({
               return (
                 <div
                   key={conflict.id}
-                  className="rounded-lg border border-white/[0.03] bg-secondary/50 p-3 space-y-2"
+                  className="rounded-lg border border-[rgb(255_255_255/0.03)] bg-secondary/50 p-3 space-y-2"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span

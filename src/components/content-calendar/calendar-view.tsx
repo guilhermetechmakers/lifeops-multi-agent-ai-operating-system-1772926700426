@@ -31,6 +31,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { ContentCard } from "./content-card";
@@ -49,6 +50,7 @@ export interface CalendarViewProps {
   onViewDateChange: (date: Date) => void;
   onItemMove?: (itemId: string, newPublishAt: string, newChannelId?: string) => void;
   onItemClick?: (item: ContentItem) => void;
+  onEmptyStateAction?: () => void;
   isLoading?: boolean;
 }
 
@@ -60,6 +62,7 @@ export function CalendarView({
   onViewDateChange,
   onItemMove,
   onItemClick,
+  onEmptyStateAction,
   isLoading = false,
 }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
@@ -169,19 +172,21 @@ export function CalendarView({
     [viewMode, viewDate, onViewDateChange]
   );
 
+  const hasItems = Array.isArray(items) && items.length > 0;
+
   if (isLoading) {
     return (
-      <Card className="border-white/[0.03] bg-card">
-        <CardHeader className="pb-2">
+      <Card className="border-[rgb(255_255_255/0.03)] bg-card shadow-card">
+        <CardHeader className="pb-2 px-4 md:px-5">
           <CardTitle className="flex items-center gap-2 text-base">
             <Calendar className="h-5 w-5 text-teal" />
             Content Calendar
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-5">
           <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: 35 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-lg" />
+              <Skeleton key={i} className="h-32 rounded-lg animate-pulse" />
             ))}
           </div>
         </CardContent>
@@ -189,9 +194,46 @@ export function CalendarView({
     );
   }
 
+  if (!hasItems) {
+    return (
+      <Card className="border-[rgb(255_255_255/0.03)] bg-card shadow-card overflow-hidden">
+        <div
+          className="flex flex-col items-center justify-center py-16 px-6 text-center"
+          role="status"
+          aria-label="Calendar empty"
+        >
+          <div className="rounded-xl bg-secondary/50 p-4 mb-4">
+            <Calendar className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">
+            No content scheduled
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-sm mb-6">
+            Add your first content item with Quick Create. You can drag cards to
+            reschedule once channels and items are set up.
+          </p>
+          {onEmptyStateAction && (
+            <Button
+              size="sm"
+              className="gap-1.5 transition-all duration-200 hover:scale-[1.02]"
+              onClick={onEmptyStateAction}
+            >
+              <Plus className="h-4 w-4" />
+              Quick Create
+            </Button>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-white/[0.03] bg-card">
-      <CardHeader className="pb-2">
+    <Card
+      className="border-[rgb(255_255_255/0.03)] bg-card shadow-card"
+      role="region"
+      aria-label="Publishing schedule calendar"
+    >
+      <CardHeader className="pb-2 px-4 md:px-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <Calendar className="h-5 w-5 text-teal" />
@@ -239,14 +281,14 @@ export function CalendarView({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 md:px-5">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="grid" aria-label="Calendar grid by channel and date">
             <div className="min-w-[600px]">
               <div className="grid gap-2" style={{ gridTemplateColumns: `200px repeat(${days.length}, minmax(140px, 1fr))` }}>
                 <div className="p-2" />

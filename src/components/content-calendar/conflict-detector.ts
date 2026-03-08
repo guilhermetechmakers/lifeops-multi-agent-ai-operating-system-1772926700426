@@ -1,5 +1,6 @@
 /**
  * ConflictDetector — detects overlaps, capacity, and channel conflicts.
+ * One conflict per (channelId, slot) with all overlapping itemIds.
  */
 
 import type { ContentItem, Channel, Conflict } from "@/types/content-calendar";
@@ -9,7 +10,6 @@ export function detectConflicts(
   channels: Channel[],
   capacityMap: Record<string, number>
 ): Conflict[] {
-  const conflicts: Conflict[] = [];
   const channelCapacity = new Map<string, number>();
   for (const ch of channels ?? []) {
     channelCapacity.set(ch.id, capacityMap[ch.id] ?? ch.capacityPerSlot ?? 2);
@@ -17,11 +17,14 @@ export function detectConflicts(
 
   const byChannel = new Map<string, ContentItem[]>();
   for (const item of items ?? []) {
-    if (!item.publishAt) continue;
+    if (!item?.publishAt) continue;
     const list = byChannel.get(item.channelId) ?? [];
     list.push(item);
     byChannel.set(item.channelId, list);
   }
+
+  const seenSlots = new Set<string>();
+  const conflicts: Conflict[] = [];
 
   for (const [channelId, channelItems] of byChannel) {
     const cap = channelCapacity.get(channelId) ?? 2;
@@ -44,22 +47,28 @@ export function detectConflicts(
         } else if (bStart >= aEnd) break;
       }
 
-      if (overlapping.length > cap) {
-        const severity =
-          overlapping.length > cap + 2 ? "high" : overlapping.length > cap ? "medium" : "low";
-        const conflict: Conflict = {
-          id: `conflict-${channelId}-${aStart}`,
-          channelId,
-          slotStart: a.publishAt,
-          slotEnd: new Date(aEnd).toISOString(),
-          reason: "overlap",
-          severity,
-          itemIds: overlapping.map((o) => o.id),
-        };
-        if (!conflicts.some((c) => c.id === conflict.id)) {
-          conflicts.push(conflict);
-        }
-      }
+      if (overlapping.length <= cap) continue;
+
+      const slotKey = `${channelId}-${aStart}`;
+      if (seenSlots.has(slotKey)) continue;
+      seenSlots.add(slotKey);
+
+      const severity: Conflict["severity"] =
+        overlapping.length > cap + 2 ? "high" : overlapping.length > cap ? "medium" : "low";
+      const reason: Conflict["reason"] =
+        overlapping.length > cap + 1 ? "capacity" : "overlap";
+
+      conflicts.push({
+        id: `conflict-${slotKey}`,
+        channelId,
+        slotStart: a.publishAt,
+        slotEnd: new Date(
+          Math.max(...overlapping.map((o) => new Date(o.publishAt).getTime() + (o.durationMinutes ?? 60) * 60 * 1000))
+        ).toISOString(),
+        reason,
+        severity,
+        itemIds: overlapping.map((o) => o.id),
+      });
     }
   }
 

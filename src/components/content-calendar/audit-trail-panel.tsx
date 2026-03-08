@@ -23,7 +23,7 @@ export function AuditTrailPanel({
   return (
     <div
       className={cn(
-        "rounded-lg border border-white/[0.03] bg-card p-4",
+        "rounded-lg border border-[rgb(255_255_255/0.03)] bg-card p-4 shadow-card",
         className
       )}
       role="region"
@@ -49,7 +49,7 @@ export function AuditTrailPanel({
             {items.map((log) => (
               <div
                 key={log.id}
-                className="rounded border border-white/[0.03] bg-secondary/30 px-3 py-2 text-xs"
+                className="rounded border border-[rgb(255_255_255/0.03)] bg-secondary/30 px-3 py-2 text-xs"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium text-foreground capitalize">

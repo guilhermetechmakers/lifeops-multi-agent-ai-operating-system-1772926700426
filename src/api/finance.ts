@@ -41,9 +41,15 @@ function asRecommendations(data: unknown): AgentRecommendation[] {
   return safeArray<AgentRecommendation>(data);
 }
 
+function isDashboardData(v: unknown): v is FinanceDashboardData {
+  return typeof v === "object" && v !== null && "balances" in v;
+}
+
 export async function fetchFinanceDashboard(): Promise<FinanceDashboardData> {
   const raw = await api.get<FinanceDashboardData | { data?: FinanceDashboardData }>(`${BASE}/dashboard`);
-  const data = (raw as { data?: FinanceDashboardData })?.data ?? raw;
+  const data: FinanceDashboardData = isDashboardData(raw)
+    ? raw
+    : ((raw as { data?: FinanceDashboardData }).data ?? getDefaultDashboardData());
   if (typeof data !== "object" || data === null) {
     return getDefaultDashboardData();
   }

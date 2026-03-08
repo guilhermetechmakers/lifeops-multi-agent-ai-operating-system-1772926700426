@@ -59,9 +59,9 @@ export function ContentCard({
         }
       }}
       className={cn(
-        "group rounded-lg border border-white/[0.03] bg-secondary/80 p-3 transition-all duration-200",
+        "group rounded-lg border border-[rgb(255_255_255/0.03)] bg-secondary/80 p-4 transition-all duration-200",
         "hover:shadow-card-hover hover:-translate-y-0.5 cursor-grab active:cursor-grabbing",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isDragging && "opacity-90 shadow-lg scale-[1.02] ring-2 ring-primary/40"
       )}
       aria-label={`${item.title}, scheduled ${publishTime}`}
